@@ -8,6 +8,7 @@
 #include "Predictor.h"
 #include <fstream>
 
+using namespace std;
 
 namespace RiceAlgorithm
 {
@@ -28,8 +29,8 @@ Predictor::~Predictor()
 
 bool Predictor::readSamples(char* fileName)
 {
-    std::fstream sampleStream;
-	sampleStream.open(fileName, std::fstream::out | std::fstream::binary);
+    fstream sampleStream;
+	sampleStream.open(fileName, fstream::out | fstream::binary);
 
 	unsigned int s_min = 0;
 	unsigned int s_max = (0x1 << DynamicRange) - 1;
