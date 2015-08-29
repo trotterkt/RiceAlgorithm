@@ -29,6 +29,7 @@ Predictor::~Predictor()
 
 bool Predictor::readSamples(char* fileName)
 {
+	//:TODO: Need to read in samples from file
     fstream sampleStream;
 	sampleStream.open(fileName, fstream::out | fstream::binary);
 
