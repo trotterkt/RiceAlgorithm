@@ -8,7 +8,7 @@
 #include "Predictor.h"
 #include <iostream>
 #include <fstream>
-
+#include <stdlib.h>
 
 using namespace std;
 
@@ -37,7 +37,7 @@ bool Predictor::readSamples(char* fileName)
 
 	if(!sampleStream)
 	{
-	    exit(-1);
+	    exit(EXIT_FAILURE);
 	}
 
 
