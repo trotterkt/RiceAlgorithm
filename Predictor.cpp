@@ -33,9 +33,9 @@ bool Predictor::readSamples(char* fileName)
 {
 	//:TODO: Need to read in samples from file
     ifstream sampleStream;
-    sampleStream.open(fileName, ios::in | ios::binary);
+    sampleStream.open(fileName, ios::out | ios::binary);
 
-	if(!sampleStream)
+	if(!sampleStream.is_open())
 	{
 	    exit(EXIT_FAILURE);
 	}
