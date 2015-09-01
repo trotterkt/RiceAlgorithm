@@ -43,14 +43,16 @@ bool Predictor::readSamples(char* fileName)
 
 
     //============================================================================================================
-    int availableBytes = 0;
+//    int availableBytes = 0;
     unsigned short int buffer = 0;
-    unsigned int readElements = 0;
+    unsigned long readElements = 0;
 
     // get the length of the file
     sampleStream.seekg(0, ios::end);
-    int length = sampleStream.tellg();
+    unsigned long length = sampleStream.tellg();
     sampleStream.seekg(0, ios::beg);
+
+    cout << "TRACE #1" << endl;
 
     streamsize sampleSize = sizeof(buffer);
 
@@ -60,12 +62,16 @@ bool Predictor::readSamples(char* fileName)
     //signicant bits, in case the length of the residuals is smaller than 16 bits,
     //keeping the remaining bits for the next residual
     //I repeat until the input file is empty
-    while (!sampleStream.eof())
+    while ((readElements*sampleSize) < length)
     {
         sampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
 
+
         // This assumes the data is in BSQ format and we do not need to adjust the indexing
         mySamples[readElements] = buffer;
+
+        //cout << "TRACE #2, mySamples[" << dec << readElements << "] = 0x" << hex << mySamples[readElements] << endl;
+
         readElements++;
     }
 
@@ -74,9 +80,12 @@ bool Predictor::readSamples(char* fileName)
     {
         sampleStream.read(reinterpret_cast<char*>(&buffer), 1);
         mySamples[readElements] = buffer;
+
+        cout << "TRACE #A" << endl;
     }
 
     sampleStream.close();
+    cout << "TRACE #3" << endl;
 
 //    availableBytes = fread(&buffer, 1, 2, inputFile);
 //    while(availableBytes == 2 && readElements < (input_params.x_size*input_params.y_size*input_params.z_size)){
@@ -125,6 +134,7 @@ bool Predictor::readSamples(char* fileName)
 	unsigned int s_mid = 0x1 << (DynamicRange - 1);
 
 	int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
+    cout << "TRACE #4, weights_len=" << weights_len << endl;
 
 	int* weights = reinterpret_cast<int *>(new int[weights_len]);
 	int ** local_differences = NULL;
@@ -138,6 +148,7 @@ bool Predictor::readSamples(char* fileName)
 		{
 			for (unsigned int x = 0; x < myX; x++)
 			{
+
 				int predicted_sample = 0;
 				unsigned short int mapped_residual = 0;
 				int error = 0;
@@ -163,11 +174,15 @@ bool Predictor::readSamples(char* fileName)
 					update_weights(weights, x, y, z, error,
 							local_differences, mySamples);
 				}
+
 			}
 		}
 	}
 
 	sampleStream.close();
+
+
+    cout << "TRACE #5" << endl;
 
 	return 0;
 }
@@ -466,30 +481,21 @@ void Predictor::update_weights(int *weights, unsigned int x, unsigned int y,
 	// the various weights: pred_1, pred_2, pred_p, N, W, NW.
 	if (z > 0)
 	{
-		int cur_pred_bands =
-				z < PredictionBands ?
-						z : PredictionBands;
+		int cur_pred_bands = z < PredictionBands ?	z : PredictionBands;
+	    //cout << "TRACE #B, cur_pred_bands=" << cur_pred_bands << endl;
+
 		for (i = 0; i < cur_pred_bands; i++)
 		{
 
 			if (scaling_exp > 0)
 			{
-
-				weights[i] = weights[i]
-						+ ((((sign_error
-								* (MATRIX_BSQ_INDEX(local_differences[0],
-										x, y, z - i - 1)))
-								>> scaling_exp) + 1) >> 1);
+                weights[i] = weights[i] + ((((sign_error * (MATRIX_BSQ_INDEX(local_differences[0], x, y, z - i - 1))) >> scaling_exp) + 1) >> 1);
 			}
 			else
 			{
+		        cout << "TRACE #C, i=" << i << ", x=" << x << ", y=" << y << ", z=" << z << ", weights[i]=" << weights[i] <<  endl;
 
-				weights[i] = weights[i]
-						+ ((((sign_error
-								* (MATRIX_BSQ_INDEX(local_differences[0],
-										x, y, z - i - 1)))
-								<< -1 * scaling_exp) + 1) >> 1);
-
+                weights[i] = weights[i] + ((((sign_error * (MATRIX_BSQ_INDEX(local_differences[0], x, y, z - i - 1))) << -1 * scaling_exp) + 1) >> 1);
 			}
 			if (weights[i] < (-1 * weight_limit))
 			{
@@ -501,42 +507,42 @@ void Predictor::update_weights(int *weights, unsigned int x, unsigned int y,
 			}
 		}
 	}
-	if (PredictionFull != 0)
-	{
-
-		for (i = 0; i < 3; i++)
-		{
-			if (scaling_exp > 0)
-			{
-				weights[PredictionBands + i] =
-						weights[PredictionBands + i]
-								+ ((((sign_error
-										* (MATRIX_BSQ_INDEX(
-												local_differences[i + 1],
-											 x, y, z)))
-										>> scaling_exp) + 1) >> 1);
-
-			}
-			else
-			{
-				weights[PredictionBands + i] =
-						weights[PredictionBands + i]
-								+ ((((sign_error
-										* (MATRIX_BSQ_INDEX(
-												local_differences[i + 1],
-											 x, y, z)))
-										<< -1 * scaling_exp) + 1) >> 1);
-			}
-			if (weights[PredictionBands + i] < (-1 * weight_limit))
-			{
-				weights[PredictionBands + i] = -1 * weight_limit;
-			}
-			if (weights[PredictionBands + i] > (weight_limit - 1))
-			{
-				weights[PredictionBands + i] = weight_limit - 1;
-			}
-		}
-	}
+//	if (PredictionFull != 0)
+//	{
+//
+//		for (i = 0; i < 3; i++)
+//		{
+//			if (scaling_exp > 0)
+//			{
+//				weights[PredictionBands + i] =
+//						weights[PredictionBands + i]
+//								+ ((((sign_error
+//										* (MATRIX_BSQ_INDEX(
+//												local_differences[i + 1],
+//											 x, y, z)))
+//										>> scaling_exp) + 1) >> 1);
+//
+//			}
+//			else
+//			{
+//				weights[PredictionBands + i] =
+//						weights[PredictionBands + i]
+//								+ ((((sign_error
+//										* (MATRIX_BSQ_INDEX(
+//												local_differences[i + 1],
+//											 x, y, z)))
+//										<< -1 * scaling_exp) + 1) >> 1);
+//			}
+//			if (weights[PredictionBands + i] < (-1 * weight_limit))
+//			{
+//				weights[PredictionBands + i] = -1 * weight_limit;
+//			}
+//			if (weights[PredictionBands + i] > (weight_limit - 1))
+//			{
+//				weights[PredictionBands + i] = weight_limit - 1;
+//			}
+//		}
+//	}
 }
 
 
