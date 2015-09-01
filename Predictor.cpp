@@ -32,8 +32,93 @@ Predictor::~Predictor()
 bool Predictor::readSamples(char* fileName)
 {
 	//:TODO: Need to read in samples from file
-    fstream sampleStream;
-	sampleStream.open(fileName, fstream::out | fstream::binary);
+    ifstream sampleStream;
+    sampleStream.open(fileName, ios::in | ios::binary);
+
+	if(!sampleStream)
+	{
+	    exit(-1);
+	}
+
+
+
+    //============================================================================================================
+    int availableBytes = 0;
+    unsigned short int buffer = 0;
+    unsigned int readElements = 0;
+
+    // get the length of the file
+    sampleStream.seekg(0, ios::end);
+    int length = sampleStream.tellg();
+    sampleStream.seekg(0, ios::beg);
+
+    streamsize sampleSize = sizeof(buffer);
+
+    //Now, instead, we are in the situation that only the exact D bits are specified for
+    //every sample.
+    //I read two bytes (16 bits) at a time, eventually eliminating the most
+    //signicant bits, in case the length of the residuals is smaller than 16 bits,
+    //keeping the remaining bits for the next residual
+    //I repeat until the input file is empty
+    while (!sampleStream.eof())
+    {
+        sampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
+
+        // This assumes the data is in BSQ format and we do not need to adjust the indexing
+        mySamples[readElements] = buffer;
+        readElements++;
+    }
+
+    // Determine if uneven number (1) of bytes left
+    if((length - sampleStream.tellg()) == 1)
+    {
+        sampleStream.read(reinterpret_cast<char*>(&buffer), 1);
+        mySamples[readElements] = buffer;
+    }
+
+    sampleStream.close();
+
+//    availableBytes = fread(&buffer, 1, 2, inputFile);
+//    while(availableBytes == 2 && readElements < (input_params.x_size*input_params.y_size*input_params.z_size)){
+//        //I compose the current element
+//        samples[indexToBSQ(input_params.in_interleaving, input_params.in_interleaving_depth, input_params.x_size, input_params.y_size, input_params.z_size, readElements)] = ((buffer << num_inBuffer) | prevBuffer) & (((unsigned short int)0xFFFF) >> (16 - input_params.dyn_range));
+//        readElements++;
+//        prevBuffer = buffer >> (input_params.dyn_range - num_inBuffer);
+//        num_inBuffer = 16 - (input_params.dyn_range - num_inBuffer);
+//        //Now it might be the case that num_inBuffer >= input_params.residual_width: in this
+//        //case it is not necessary anymore to read another element, but I can directly use the buffer
+//        while(num_inBuffer >= input_params.dyn_range && readElements < input_params.x_size*input_params.y_size*input_params.z_size){
+//            samples[indexToBSQ(input_params.in_interleaving, input_params.in_interleaving_depth, input_params.x_size, input_params.y_size, input_params.z_size, readElements)] = prevBuffer & (((unsigned short int)0xFFFF) >> (16 - input_params.dyn_range));
+//            readElements++;
+//            prevBuffer = prevBuffer >> input_params.dyn_range;
+//            num_inBuffer -= input_params.dyn_range;
+//        }
+//        buffer = 0;
+//        availableBytes = fread(&buffer, 1, 2, inputFile);
+//    }
+//    // I still have a byte to go
+//    if(availableBytes == 1 && readElements < input_params.x_size*input_params.y_size*input_params.z_size){
+//        samples[indexToBSQ(input_params.in_interleaving, input_params.in_interleaving_depth, input_params.x_size, input_params.y_size, input_params.z_size, readElements)] = ((buffer << num_inBuffer) | prevBuffer) & (((unsigned short int)0xFFFF) >> (8 - input_params.dyn_range));
+//        readElements++;
+//        prevBuffer = buffer >> (input_params.dyn_range - num_inBuffer);
+//        num_inBuffer = 8 - (input_params.dyn_range - num_inBuffer);
+//        //Now it might be the case that num_inBuffer >= input_params.residual_width: in this
+//        //case it is not necessary anymore to read another element, but I can directly use the buffer
+//        while(num_inBuffer >= input_params.dyn_range && readElements < input_params.x_size*input_params.y_size*input_params.z_size){
+//            samples[indexToBSQ(input_params.in_interleaving, input_params.in_interleaving_depth, input_params.x_size, input_params.y_size, input_params.z_size, readElements)] = prevBuffer & (((unsigned short int)0xFFFF) >> (8 - input_params.dyn_range));
+//            readElements++;
+//            prevBuffer = prevBuffer >> input_params.dyn_range;
+//            num_inBuffer -= input_params.dyn_range;
+//        }
+//    }
+
+    //============================================================================================================
+
+
+
+
+
+
 
 	unsigned int s_min = 0;
 	unsigned int s_max = (0x1 << DynamicRange) - 1;
