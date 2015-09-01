@@ -24,43 +24,37 @@ const unsigned char DynamicRange(16);
 
 class Predictor
 {
-	public:
-		Predictor(unsigned int x, unsigned int y, unsigned int z);
-		virtual ~Predictor();
+    public:
+        Predictor(unsigned int x, unsigned int y, unsigned int z);
+        virtual ~Predictor();
 
-		bool readSamples(char* fileName);
+        bool readSamples(char* fileName);
 
-	private:
-		unsigned short int * mySamples;
-		unsigned short int * myResiduals;
-		unsigned int myX;
-		unsigned int myY;
-		unsigned int myZ;
+    private:
+        unsigned short int * mySamples;
+        unsigned short int * myResiduals;
+        unsigned int myXDimension;
+        unsigned int myYDimension;
+        unsigned int myZDimension;
 
-		/// given the local differences and the samples, it computes the scaled predicted
-		/// sample value
-		int compute_predicted_sample(unsigned int x, unsigned int y, unsigned int z,
-				unsigned int s_min, unsigned int s_mid, unsigned int s_max,
-				unsigned short int * samples, int * weights);
+        /// given the local differences and the samples, it computes the scaled predicted
+        /// sample value
+        int compute_predicted_sample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
+                                     unsigned int s_mid, unsigned int s_max, int * weights);
 
+        int local_sum(unsigned int x, unsigned int y, unsigned int z);
+        long long mod_star(long long arg, long long op);
 
-		int local_sum(unsigned int x, unsigned int y, unsigned int z, unsigned short int * samples);
-		long long mod_star(long long arg, long long op);
+        unsigned short int compute_mapped_residual(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
+                                                   unsigned int s_mid, unsigned int s_max, int scaled_predicted);
+        void init_weights(int * weights, unsigned int z);
+        void update_weights(int * weights, unsigned int x, unsigned int y, unsigned int z, int error);
 
-		int compute_local_differences(int *** local_differences, unsigned short int * samples);
+        int get_central_difference(int * central_difference, unsigned int x, unsigned int y, unsigned int z);
 
-		unsigned short int compute_mapped_residual(unsigned int x, unsigned int y, unsigned int z,
-				unsigned int s_min, unsigned int s_mid, unsigned int s_max,
-				unsigned short int * samples, int scaled_predicted);
-		void init_weights(int * weights, unsigned int z);
-		void update_weights(int *weights, unsigned int x, unsigned int y,
-				unsigned int z, int error, int ** local_differences,
-				unsigned short int * samples);
-		int get_central_difference(int * central_difference, unsigned short int * samples, unsigned int x, unsigned int y, unsigned int z);
+        int get_directional_difference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z);
 
-		int get_directional_difference(int directional_difference[3], unsigned short int * samples, unsigned int x, unsigned int y, unsigned int z);
-
-#define MATRIX_BSQ_INDEX(matrix, x, y, z) matrix[myX*((z)*myY + (y)) + (x)]
+#define MATRIX_BSQ_INDEX(matrix, x, y, z) matrix[myXDimension*((z)*myYDimension + (y)) + (x)]
 
 };
 
