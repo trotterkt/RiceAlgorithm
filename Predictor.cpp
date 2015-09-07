@@ -21,12 +21,15 @@ Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
     mySamples = reinterpret_cast<unsigned short int*>(new unsigned short int[myXDimension * myYDimension * myZDimension]);
     myResiduals = reinterpret_cast<unsigned short int*>(new unsigned short int[myXDimension * myYDimension * myZDimension]);
 
+    int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
+    myWeights = reinterpret_cast<int *>(new int[weights_len]);
 }
 
 Predictor::~Predictor()
 {
     delete[] mySamples;
     delete[] myResiduals;
+    delete[] myWeights;
 }
 
 bool Predictor::readSamples(char* fileName)
@@ -90,10 +93,6 @@ bool Predictor::readSamples(char* fileName)
     unsigned int s_max = (0x1 << DynamicRange) - 1;
     unsigned int s_mid = 0x1 << (DynamicRange - 1);
 
-    int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
-    cout << "TRACE #4, weights_len=" << weights_len << endl;
-
-    int* weights = reinterpret_cast<int *>(new int[weights_len]);
 
     // Now actually it goes over the various samples and it computes the prediction
     // residual for each of them
@@ -109,20 +108,31 @@ bool Predictor::readSamples(char* fileName)
                 int error = 0;
 
                 // prediction of the current sample and saving the residual
-                predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max, weights);
+                predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
 
-                mapped_residual = compute_mapped_residual(x, y, z, s_min, s_mid, s_max, predicted_sample);
-                MATRIX_BSQ_INDEX(myResiduals, x, y, z)= mapped_residual;
+                //**********************************************************************************
+                fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
+                fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
+                //**********************************************************************************
+
+                mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
+
+                //**********************************************************************************
+                 fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
+                //**********************************************************************************
+
+
+                MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
                 if (x == 0 && y == 0)
                 {
                     //  weights initialization
-                    init_weights(weights, z);
+                    initializeWeights(z);
                 }
                 else
                 {
                     // finally I can update the weights, preparing for the prediction of the next sample
                     error = 2 * (MATRIX_BSQ_INDEX(mySamples, x, y, z)) - predicted_sample;
-                    update_weights(weights, x, y, z, error);
+                    updateWeights(x, y, z, error);
                 }
 
             }
@@ -139,7 +149,7 @@ bool Predictor::readSamples(char* fileName)
 /// given the local differences and the samples, it computes the scaled predicted
 /// sample value
 int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
-                                        unsigned int s_mid, unsigned int s_max, int * weights)
+                                        unsigned int s_mid, unsigned int s_max)
 {
     long long scaled_predicted = 0;
     long long diff_predicted = 0;
@@ -167,7 +177,7 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
                     fprintf(stderr, "Error in getting the central differences for band %d", z - i);
                 }
 
-                diff_predicted += ((long long) weights[i]) * (long long) central_difference;
+                diff_predicted += ((long long) myWeights[i]) * (long long) central_difference;
             }
         }
         if (PredictionFull != 0)
@@ -180,7 +190,7 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
 
             for (i = 0; i < 3; i++)
             {
-                diff_predicted += ((long long) weights[PredictionBands + i]) * (long long) directional_difference[i];
+                diff_predicted += ((long long) myWeights[PredictionBands + i]) * (long long) directional_difference[i];
             }
         }
 
@@ -240,7 +250,7 @@ long long Predictor::mod_star(long long arg, long long op)
 
 /// Given the scaled predicted sample value it maps it to an unsigned value
 /// enabling it to be represented with D bits
-unsigned short int Predictor::compute_mapped_residual(unsigned int x, unsigned int y, unsigned int z,
+unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
                                                       unsigned int s_min, unsigned int s_mid, unsigned int s_max,
                                                       int scaled_predicted)
 {
@@ -271,29 +281,29 @@ unsigned short int Predictor::compute_mapped_residual(unsigned int x, unsigned i
     return mapped;
 }
 
-void Predictor::init_weights(int * weights, unsigned int z)
+void Predictor::initializeWeights(unsigned int z)
 {
-    unsigned int i = 0;
+	unsigned int i = 0;
 
-    // default weights initialization
-    if (PredictionBands > 0)
-    {
-        weights[0] = 7 << (PredictionWeightResolution - 3);
-        for (i = 1; i < PredictionBands; i++)
-        {
-            weights[i] = weights[i - 1] >> 3;
-        }
-    }
-    if (PredictionFull != 0)
-    {
-        for (i = 0; i < 3; i++)
-        {
-            weights[PredictionBands + i] = 0;
-        }
-    }
+	// default weights initialization
+	if (PredictionBands > 0)
+	{
+		myWeights[0] = 7 << (PredictionWeightResolution - 3);
+		for (i = 1; i < PredictionBands; i++)
+		{
+			myWeights[i] = myWeights[i - 1] >> 3;
+		}
+	}
+	if (PredictionFull != 0)
+	{
+		for (i = 0; i < 3; i++)
+		{
+			myWeights[PredictionBands + i] = 0;
+		}
+	}
 }
 
-void Predictor::update_weights(int * weights, unsigned int x, unsigned int y, unsigned int z, int error)
+void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, int error)
 {
     int i = 0;
     int weight_limit = 0x1 << (PredictionWeightResolution + 2);
@@ -321,20 +331,20 @@ void Predictor::update_weights(int * weights, unsigned int x, unsigned int y, un
 
             if (scaling_exp > 0)
             {
-                weights[i] = weights[i] + ((((sign_error * central_difference) >> scaling_exp) + 1) >> 1);
+            	myWeights[i] = myWeights[i] + ((((sign_error * central_difference) >> scaling_exp) + 1) >> 1);
             }
             else
             {
                 //cout << "TRACE #C, i=" << i << ", x=" << x << ", y=" << y << ", z=" << z << ", weights[i]=" << weights[i] <<  endl;
-                weights[i] = weights[i] + ((((sign_error * central_difference) << -1 * scaling_exp) + 1) >> 1);
+            	myWeights[i] = myWeights[i] + ((((sign_error * central_difference) << -1 * scaling_exp) + 1) >> 1);
             }
-            if (weights[i] < (-1 * weight_limit))
+            if (myWeights[i] < (-1 * weight_limit))
             {
-                weights[i] = -1 * weight_limit;
+            	myWeights[i] = -1 * weight_limit;
             }
-            if (weights[i] > (weight_limit - 1))
+            if (myWeights[i] > (weight_limit - 1))
             {
-                weights[i] = weight_limit - 1;
+            	myWeights[i] = weight_limit - 1;
             }
         }
     }
@@ -351,23 +361,23 @@ void Predictor::update_weights(int * weights, unsigned int x, unsigned int y, un
         {
             if (scaling_exp > 0)
             {
-                weights[PredictionBands + i] = weights[PredictionBands + i]
+            	myWeights[PredictionBands + i] = myWeights[PredictionBands + i]
                         + ((((sign_error * directional_difference[i]) >> scaling_exp) + 1) >> 1);
             }
             else
             {
-                weights[PredictionBands + i] = weights[PredictionBands + i]
+            	myWeights[PredictionBands + i] = myWeights[PredictionBands + i]
                         + ((((sign_error * directional_difference[i]) << -1 * scaling_exp) + 1) >> 1);
             }
 
-            if (weights[PredictionBands + i] < (-1 * weight_limit))
+            if (myWeights[PredictionBands + i] < (-1 * weight_limit))
             {
-                weights[PredictionBands + i] = -1 * weight_limit;
+            	myWeights[PredictionBands + i] = -1 * weight_limit;
             }
 
-            if (weights[PredictionBands + i] > (weight_limit - 1))
+            if (myWeights[PredictionBands + i] > (weight_limit - 1))
             {
-                weights[PredictionBands + i] = weight_limit - 1;
+            	myWeights[PredictionBands + i] = weight_limit - 1;
             }
         }
     }
