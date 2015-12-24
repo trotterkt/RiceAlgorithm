@@ -30,6 +30,9 @@ class Predictor
 
         bool readSamples(char* fileName);
 
+        unsigned short int * getSamples() { return mySamples; }
+        size_t getSizeOfSamples() { return ( sizeof(unsigned short int) * (myXDimension * myXDimension * myXDimension)); }
+
     private:
         unsigned short int * mySamples;
         int* myWeights;
