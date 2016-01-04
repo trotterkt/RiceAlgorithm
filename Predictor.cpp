@@ -18,8 +18,8 @@ namespace RiceAlgorithm
 Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
         myXDimension(x), myYDimension(y), myZDimension(z)
 {
-    mySamples = reinterpret_cast<unsigned short int*>(new unsigned short int[myXDimension * myYDimension * myZDimension]);
-    myResiduals = reinterpret_cast<unsigned short int*>(new unsigned short int[myXDimension * myYDimension * myZDimension]);
+    mySamples = reinterpret_cast<u_short*>(new u_short[myXDimension * myYDimension * myZDimension]);
+    myResiduals = reinterpret_cast<u_short*>(new u_short[myXDimension * myYDimension * myZDimension]);
 
     int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
     myWeights = reinterpret_cast<int *>(new int[weights_len]);
@@ -30,6 +30,66 @@ Predictor::~Predictor()
     delete[] mySamples;
     delete[] myResiduals;
     delete[] myWeights;
+}
+
+u_short* Predictor::getResiduals()
+{
+
+    //============================================================================================================
+
+    unsigned int s_min = 0;
+    unsigned int s_max = (0x1 << DynamicRange) - 1;
+    unsigned int s_mid = 0x1 << (DynamicRange - 1);
+
+
+    // Now actually it goes over the various samples and it computes the prediction
+    // residual for each of them
+    // Note that, for each band, the element in position (0, 0) is not predicted
+    for (unsigned int z = 0; z < myZDimension; z++)
+    {
+        for (unsigned int y = 0; y < myYDimension; y++)
+        {
+            for (unsigned int x = 0; x < myXDimension; x++)
+            {
+                int predicted_sample = 0;
+                unsigned short int mapped_residual = 0;
+                int error = 0;
+
+                // prediction of the current sample and saving the residual
+                predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
+
+                //**********************************************************************************
+                //fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
+                //fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
+                //**********************************************************************************
+
+                mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
+
+                //**********************************************************************************
+                 //fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
+                //**********************************************************************************
+
+
+                MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
+                if (x == 0 && y == 0)
+                {
+                    //  weights initialization
+                    initializeWeights(z);
+                }
+                else
+                {
+                    // finally I can update the weights, preparing for the prediction of the next sample
+                    error = 2 * (MATRIX_BSQ_INDEX(mySamples, x, y, z)) - predicted_sample;
+                    updateWeights(x, y, z, error);
+                }
+
+            }
+        }
+    }
+
+
+
+	return myResiduals;
 }
 
 bool Predictor::readSamples(char* fileName)
@@ -81,11 +141,11 @@ bool Predictor::readSamples(char* fileName)
         sampleStream.read(reinterpret_cast<char*>(&buffer), 1);
         mySamples[readElements] = buffer;
 
-        cout << "TRACE #A" << endl;
+        //cout << "TRACE #A" << endl;
     }
 
     sampleStream.close();
-    cout << "TRACE #3" << endl;
+    //cout << "TRACE #3" << endl;
 
     //============================================================================================================
 
@@ -111,14 +171,14 @@ bool Predictor::readSamples(char* fileName)
                 predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
 
                 //**********************************************************************************
-                fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
-                fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
+                //fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
+                //fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
                 //**********************************************************************************
 
                 mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
 
                 //**********************************************************************************
-                 fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
+                //fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
                 //**********************************************************************************
 
 
@@ -141,7 +201,7 @@ bool Predictor::readSamples(char* fileName)
 
     sampleStream.close();
 
-    cout << "TRACE #5" << endl;
+    //cout << "TRACE #5" << endl;
 
     return 0;
 }
@@ -154,6 +214,12 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
     long long scaled_predicted = 0;
     long long diff_predicted = 0;
     int i = 0;
+
+    //*********************************************************
+    if(x==1016 && y==19 && z==5)
+    fprintf(stderr, "compute_predicted_sample=%d, %d, %d - pred_bands = %d, local_sum=%d\n", x, y, z, PredictionBands, local_sum(x, y, z));
+    //*********************************************************
+
 
     //--input Landsat_agriculture-u16be-6x1024x1024.raw
     //--output Landsat_agriculture-u16be-6x1024x1024.comp --rows 1024 --columns 1024 --bands 6
@@ -177,7 +243,15 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
                     fprintf(stderr, "Error in getting the central differences for band %d", z - i);
                 }
 
+                //*********************************************************
+                if(x==1016 && y==19 && z==5)
+                  fprintf(stderr, "diff_predicted=%d myWeights=%d central_difference=%d, local_sum=%d\n", diff_predicted, myWeights[i], central_difference, local_sum(x, y, z - i - 1));
+                //*********************************************************
+
                 diff_predicted += ((long long) myWeights[i]) * (long long) central_difference;
+
+
+
             }
         }
         if (PredictionFull != 0)
