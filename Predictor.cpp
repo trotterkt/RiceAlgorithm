@@ -58,17 +58,8 @@ u_short* Predictor::getResiduals()
                 // prediction of the current sample and saving the residual
                 predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
 
-                //**********************************************************************************
-                //fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
-                //fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
-                //**********************************************************************************
 
                 mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
-
-                //**********************************************************************************
-                 //fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
-                //**********************************************************************************
-
 
                 MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
                 if (x == 0 && y == 0)
@@ -170,17 +161,7 @@ bool Predictor::readSamples(char* fileName)
                 // prediction of the current sample and saving the residual
                 predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
 
-                //**********************************************************************************
-                //fprintf(stderr, "(%d, %d, %d) = predicted_sample=%d\n", x, y, z, predicted_sample);
-                //fprintf(stderr, "sample=%d\n", MATRIX_BSQ_INDEX(mySamples, x, y, z));
-                //**********************************************************************************
-
                 mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
-
-                //**********************************************************************************
-                //fprintf(stderr, "mapped_residual=%d\n", mapped_residual);
-                //**********************************************************************************
-
 
                 MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
                 if (x == 0 && y == 0)
@@ -215,11 +196,6 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
     long long diff_predicted = 0;
     int i = 0;
 
-    //*********************************************************
-    if(x==1016 && y==19 && z==5)
-    fprintf(stderr, "compute_predicted_sample=%d, %d, %d - pred_bands = %d, local_sum=%d\n", x, y, z, PredictionBands, local_sum(x, y, z));
-    //*********************************************************
-
 
     //--input Landsat_agriculture-u16be-6x1024x1024.raw
     //--output Landsat_agriculture-u16be-6x1024x1024.comp --rows 1024 --columns 1024 --bands 6
@@ -243,14 +219,8 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
                     fprintf(stderr, "Error in getting the central differences for band %d", z - i);
                 }
 
-                //*********************************************************
-                if(x==1016 && y==19 && z==5)
-                  fprintf(stderr, "diff_predicted=%d myWeights=%d central_difference=%d, local_sum=%d\n", diff_predicted, myWeights[i], central_difference, local_sum(x, y, z - i - 1));
-                //*********************************************************
 
                 diff_predicted += ((long long) myWeights[i]) * (long long) central_difference;
-
-
 
             }
         }
