@@ -5,6 +5,9 @@
  *      Author: trotterkt
  */
 
+#include <stddef.h>
+#include <sys/types.h>
+
 #ifndef PREDICTOR_H_
 #define PREDICTOR_H_
 
@@ -30,10 +33,16 @@ class Predictor
 
         bool readSamples(char* fileName);
 
+        u_short* getSamples() { return mySamples; }
+
+        u_short* getResiduals();
+
+        size_t getSizeOfSamples() { return ( sizeof(u_short) * (myXDimension * myYDimension * myZDimension)); }
+
     private:
-        unsigned short int * mySamples;
+        u_short* mySamples;
         int* myWeights;
-        unsigned short int * myResiduals;
+        u_short * myResiduals;
         unsigned int myXDimension;
         unsigned int myYDimension;
         unsigned int myZDimension;
