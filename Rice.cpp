@@ -18,7 +18,7 @@ Rice::~Rice()
 	// TODO Auto-generated destructor stub
 }
 
-void Rice::compress()
+void Rice::encode()
 {
 
 }

@@ -22,7 +22,7 @@ public:
 	Rice();
 	virtual ~Rice();
 
-	void compress();
+	void encode();
 	void decompress();
 
 private:

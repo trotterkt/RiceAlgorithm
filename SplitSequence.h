@@ -8,16 +8,19 @@
 #ifndef SPLITSEQUENCE_H_
 #define SPLITSEQUENCE_H_
 
-#include "FundamentalSequence.h"
+#include <AdaptiveEntropyEncoder.h>
 
 namespace RiceAlgorithm
 {
 
-class SplitSequence: public FundamentalSequence
+class SplitSequence : public AdaptiveEntropyEncoder
 {
-public:
-	SplitSequence();
-	virtual ~SplitSequence();
+	public:
+		//SplitSequence(size_t sampleBlockSize, CodingSelection selection);
+		SplitSequence(size_t sampleBlockSize);
+		virtual ~SplitSequence();
+
+		unsigned int encode(unsigned int* encodedBlock);
 };
 
 } /* namespace RiceAlgorithm */

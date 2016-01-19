@@ -5,20 +5,30 @@
  *      Author: trotterkt
  */
 
-#include "AdaptiveEntropyEncoder.h"
+#include <AdaptiveEntropyEncoder.h>
 
 namespace RiceAlgorithm
 {
 
-AdaptiveEntropyEncoder::AdaptiveEntropyEncoder()
+
+AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(size_t sampleBlockSize)
+	: myBlockSize(sampleBlockSize)
 {
-	// TODO Auto-generated constructor stub
+
+	myInputSamples = new ushort[sampleBlockSize];
 
 }
 
 AdaptiveEntropyEncoder::~AdaptiveEntropyEncoder()
 {
-	// TODO Auto-generated destructor stub
+	delete [] myInputSamples;
 }
+
+AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right)
+{
+	memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(u_short));
+    myBlockSize = right.myBlockSize;
+}
+
 
 } /* namespace RiceAlgorithm */

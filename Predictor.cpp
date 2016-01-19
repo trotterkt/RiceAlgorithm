@@ -5,10 +5,11 @@
  *      Author: trotterkt
  */
 
-#include "Predictor.h"
+#include <Predictor.h>
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <string.h>
 
 using namespace std;
 
@@ -83,62 +84,12 @@ u_short* Predictor::getResiduals()
 	return myResiduals;
 }
 
-bool Predictor::readSamples(char* fileName)
+bool Predictor::readSamples(ushort* samples)
 {
-    //:TODO: Need to read in samples from file
-    ifstream sampleStream;
-    sampleStream.open(fileName, ios::out | ios::binary);
+	//Sensor sensor(fileName, myXDimension, myYDimension, myZDimension);
+	memcpy(mySamples, samples, (myXDimension*myYDimension*myZDimension*sizeof(ushort)));
 
-    if (!sampleStream.is_open())
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    //============================================================================================================
-//    int availableBytes = 0;
-    unsigned short int buffer = 0;
-    unsigned long readElements = 0;
-
-    // get the length of the file
-    sampleStream.seekg(0, ios::end);
-    unsigned long length = sampleStream.tellg();
-    sampleStream.seekg(0, ios::beg);
-
-    cout << "TRACE #1" << endl;
-
-    streamsize sampleSize = sizeof(buffer);
-
-    //Now, instead, we are in the situation that only the exact D bits are specified for
-    //every sample.
-    //I read two bytes (16 bits) at a time, eventually eliminating the most
-    //signicant bits, in case the length of the residuals is smaller than 16 bits,
-    //keeping the remaining bits for the next residual
-    //I repeat until the input file is empty
-    while ((readElements * sampleSize) < length)
-    {
-        sampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
-
-        // This assumes the data is in BSQ format and we do not need to adjust the indexing
-        mySamples[readElements] = buffer;
-
-        //cout << "TRACE #2, mySamples[" << dec << readElements << "] = 0x" << hex << mySamples[readElements] << endl;
-
-        readElements++;
-    }
-
-    // Determine if uneven number (1) of bytes left
-    if ((length - sampleStream.tellg()) == 1)
-    {
-        sampleStream.read(reinterpret_cast<char*>(&buffer), 1);
-        mySamples[readElements] = buffer;
-
-        //cout << "TRACE #A" << endl;
-    }
-
-    sampleStream.close();
-    //cout << "TRACE #3" << endl;
-
-    //============================================================================================================
+	//============================================================================================================
 
     unsigned int s_min = 0;
     unsigned int s_max = (0x1 << DynamicRange) - 1;
@@ -180,7 +131,7 @@ bool Predictor::readSamples(char* fileName)
         }
     }
 
-    sampleStream.close();
+//    sampleStream.close();
 
     //cout << "TRACE #5" << endl;
 

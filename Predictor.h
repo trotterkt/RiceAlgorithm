@@ -7,6 +7,8 @@
 
 #include <stddef.h>
 #include <sys/types.h>
+#include <vector>
+#include <AdaptiveEntropyEncoder.h>
 
 #ifndef PREDICTOR_H_
 #define PREDICTOR_H_
@@ -27,17 +29,21 @@ const unsigned char DynamicRange(16);
 
 class Predictor
 {
+	private:
+
     public:
         Predictor(unsigned int x, unsigned int y, unsigned int z);
         virtual ~Predictor();
 
-        bool readSamples(char* fileName);
+        bool readSamples(ushort* samples);
 
         u_short* getSamples() { return mySamples; }
 
         u_short* getResiduals();
 
         size_t getSizeOfSamples() { return ( sizeof(u_short) * (myXDimension * myYDimension * myZDimension)); }
+
+
 
     private:
         u_short* mySamples;
