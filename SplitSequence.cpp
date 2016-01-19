@@ -23,7 +23,7 @@ SplitSequence::~SplitSequence()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SplitSequence::encode(unsigned int* encodedBlock)
+unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &selection)
 {
 
     unsigned int code_len = (unsigned int)-1;
@@ -41,7 +41,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock)
         if(code_len_temp < code_len)
         {
             code_len = code_len_temp;
-            //*k_split = k;
+            selection = RiceAlgorithm::CodingSelection(k);
         }
     }
 

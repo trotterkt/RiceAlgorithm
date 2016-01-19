@@ -135,7 +135,9 @@ void Sensor::process()
 	{
 		// 1 block at a time
 		(*iteration)->setSamples(myPreprocessor.getResiduals());
-	    (*iteration)->encode(encodedBlock);
+
+		CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
+	    (*iteration)->encode(encodedBlock, selection);
 	}
 
 	// Get the winner

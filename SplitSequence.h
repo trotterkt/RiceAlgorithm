@@ -20,7 +20,7 @@ class SplitSequence : public AdaptiveEntropyEncoder
 		SplitSequence(size_t sampleBlockSize);
 		virtual ~SplitSequence();
 
-		unsigned int encode(unsigned int* encodedBlock);
+		unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection);
 };
 
 } /* namespace RiceAlgorithm */

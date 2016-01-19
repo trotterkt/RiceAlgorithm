@@ -22,9 +22,9 @@ ZeroBlockOption::~ZeroBlockOption()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int ZeroBlockOption::encode(unsigned int* encodedBlock)
+unsigned int ZeroBlockOption::encode(unsigned int* encodedBlock, CodingSelection &selection)
 {
-
+	selection = ZeroBlockOpt;
 }
 
 } /* namespace RiceAlgorithm */

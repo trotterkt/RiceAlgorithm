@@ -22,8 +22,10 @@ SecondExtensionOption::~SecondExtensionOption()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SecondExtensionOption::encode(unsigned int* encodedBlock)
+unsigned int SecondExtensionOption::encode(unsigned int* encodedBlock, CodingSelection &selection)
 {
+	selection = SecondExtensionOpt;
+
     unsigned int code_len = 0;
     int i = 0;
     for(i = 0; i < 32; i+=2)

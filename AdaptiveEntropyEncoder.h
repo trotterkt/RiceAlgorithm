@@ -20,7 +20,7 @@ enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same
 					  K1, K2, K3, K4, K5,
 					  K6, K7, K8, K9, K10,
 					  K11, K12, K13, K14,
-					  SplitSeq, ZeroBlockOpt, SecondExtentionOpt, NoCompressionOpt};
+					  SplitSeq, ZeroBlockOpt, SecondExtensionOpt, NoCompressionOpt};
 
 //:TODO: will probably change this to be more in line with a Factory pattern
 
@@ -35,7 +35,7 @@ public:
 	void setSamples(u_short* samples) { memcpy(myInputSamples, samples, myBlockSize); }
 
 	//virtual void encode(u_short* encodedBlock) { /* encoding in the base class is basically nothing */ };
-	virtual unsigned int encode(unsigned int* encodedBlock) { /* encoding in the base class is basically nothing */ };
+	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) { /* encoding in the base class is basically nothing */ };
 
 protected:
 	u_short* myInputSamples; // use input for final encoding as well, with sync frame
