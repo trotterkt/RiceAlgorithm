@@ -47,20 +47,6 @@ class Sensor
 		RiceAlgorithm::SecondExtensionOption* secondExt;
 		RiceAlgorithm::ZeroBlockOption* zeroBlock;
 		RiceAlgorithm::SplitSequence* split;
-//		RiceAlgorithm::SplitSequence* split1;
-//		RiceAlgorithm::SplitSequence* split2;
-//		RiceAlgorithm::SplitSequence* split3;
-//		RiceAlgorithm::SplitSequence* split4;
-//		RiceAlgorithm::SplitSequence* split5;
-//		RiceAlgorithm::SplitSequence* split6 ;
-//		RiceAlgorithm::SplitSequence* split7;
-//		RiceAlgorithm::SplitSequence* split8 ;
-//		RiceAlgorithm::SplitSequence* split9;
-//		RiceAlgorithm::SplitSequence* split10;
-//		RiceAlgorithm::SplitSequence* split11;
-//		RiceAlgorithm::SplitSequence* split12;
-//		RiceAlgorithm::SplitSequence* split13;
-
 
 };
 
