@@ -1,0 +1,11 @@
+I-Logix-RPY-Archive version 8.5.2 Modeler * 1159120
+
+- filesTable = { IRPYRawContainer 
+	- size = 4;
+	- value = "C:\\Users\\trottke1\\Documents\\Rhapsody\\RiceAlgorithm\\Projects.rpl" ""
+	"Rice.rpy" ""
+	"Rice_rpy\\Default.sbs" "Default"
+	"Rice_rpy\\DefaultComponent.cmp" "DefaultComponent"
+	
+}
+

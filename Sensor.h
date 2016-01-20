@@ -43,6 +43,7 @@ class Sensor
 		//RiceAlgorithm::AdaptiveEntropyEncoder myEncoder;
 		std::vector<class RiceAlgorithm::AdaptiveEntropyEncoder*> myEncoderList;
 
+		//:TODO: These should instead be declared in the implementation file
 		RiceAlgorithm::AdaptiveEntropyEncoder* noComp;
 		RiceAlgorithm::SecondExtensionOption* secondExt;
 		RiceAlgorithm::ZeroBlockOption* zeroBlock;
