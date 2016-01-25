@@ -14,9 +14,19 @@ using namespace RiceAlgorithm;
 Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
 		mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z)
 {
-	mySampleStream.open(filename, ios::out | ios::binary);
+	// Filename ignores extension :TODO: will need to isolate persistence later
+	myFileStream << filename;
+
+	mySampleStream.open((myFileStream.str() + ".raw").c_str(), ios::in | ios::binary);
 
     if (!mySampleStream.is_open())
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::binary);
+
+    if (!myEncodedStream.is_open())
     {
         exit(EXIT_FAILURE);
     }
@@ -36,48 +46,18 @@ Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
     SecondExtensionOption* secondExt = new SecondExtensionOption(bufferSize);
     ZeroBlockOption* zeroBlock = new ZeroBlockOption(bufferSize);
     SplitSequence* split = new SplitSequence(bufferSize);
-//    SplitSequence* fundamentalSequence = new SplitSequence(bufferSize, K0); // FS is same as K=0
-//    SplitSequence* split1 = new SplitSequence(bufferSize, K1);
-//    SplitSequence* split2 = new SplitSequence(bufferSize, K2);
-//    SplitSequence* split3 = new SplitSequence(bufferSize, K3);
-//    SplitSequence* split4 = new SplitSequence(bufferSize, K4);
-//    SplitSequence* split5 = new SplitSequence(bufferSize, K5);
-//    SplitSequence* split6 = new SplitSequence(bufferSize, K6);
-//    SplitSequence* split7 = new SplitSequence(bufferSize, K7);
-//    SplitSequence* split8 = new SplitSequence(bufferSize, K8);
-//    SplitSequence* split9 = new SplitSequence(bufferSize, K9);
-//    SplitSequence* split10 = new SplitSequence(bufferSize, K10);
-//    SplitSequence* split11 = new SplitSequence(bufferSize, K11);
-//    SplitSequence* split12 = new SplitSequence(bufferSize, K12);
-//    SplitSequence* split13 = new SplitSequence(bufferSize, K13);
-//    SplitSequence* split14 = new SplitSequence(bufferSize, K14);
+
 
     myEncoderList.push_back(noComp);
     myEncoderList.push_back(secondExt);
     myEncoderList.push_back(zeroBlock);
     myEncoderList.push_back(split);
-
-//    myEncoderList.push_back(fundamentalSequence);
-//    myEncoderList.push_back(split1);
-//    myEncoderList.push_back(split2);
-//    myEncoderList.push_back(split3);
-//    myEncoderList.push_back(split4);
-//    myEncoderList.push_back(split5);
-//    myEncoderList.push_back(split6);
-//    myEncoderList.push_back(split7);
-//    myEncoderList.push_back(split8);
-//    myEncoderList.push_back(split9);
-//    myEncoderList.push_back(split10);
-//    myEncoderList.push_back(split11);
-//    myEncoderList.push_back(split12);
-//    myEncoderList.push_back(split13);
-//    myEncoderList.push_back(split14);
-
 }
 
 Sensor::~Sensor()
 {
     mySampleStream.close();
+    myEncodedStream.close();
     delete[] mySamples;
 }
 
@@ -128,7 +108,10 @@ void Sensor::process()
 
 	myPreprocessor.readSamples(mySamples);
 
+
 	unsigned int encodedBlock[BlockSize];
+
+	//:TODO: Nest this loop in another and iterate over the next residual block
 
 	for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
 		 iteration != myEncoderList.end(); ++iteration)
@@ -137,22 +120,36 @@ void Sensor::process()
 		(*iteration)->setSamples(myPreprocessor.getResiduals());
 
 		CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
-	    (*iteration)->encode(encodedBlock, selection);
+	    unsigned int length = (*iteration)->encode(encodedBlock, selection);
+
+	    getWinner(encodedBlock, length, selection, (iteration == myEncoderList.end()));
+
+	    cout << "Block" << endl;
 	}
-
-	// Get the winner
-
-//	myEncoder.setSamples(myPreprocessor.getResiduals());
-//	myEncoder.encode();
 
 }
 
-u_short* Sensor::getWinner()
+void Sensor::getWinner(unsigned int* encodedBlock,
+		               ushort codeLength,
+		               RiceAlgorithm::CodingSelection selection,
+		               bool lastType)
 {
-	for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
-		 iteration != myEncoderList.end(); ++iteration)
-	{
+    // determine winner for current encoded block
+	// use where we are in the iteration
 
-	}
+	//:TODO: if this or other methods include local static variables
+	// maybe that should be avoided in the architectural description for
+	// GPGPU
+
+	// copy the block if smaller to the stream for send, along with
+	// the code selection
+	memcpy(myEncodedStream, encodedBlock, (codeLength * sizeof(unsigned int)));
+
 }
 
+void Sensor::createHeader()
+{
+	// Write out the image dimensions - for my purposes these will
+	// be constants
+
+}

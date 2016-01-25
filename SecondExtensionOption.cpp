@@ -33,6 +33,8 @@ unsigned int SecondExtensionOption::encode(unsigned int* encodedBlock, CodingSel
     	encodedBlock[i/2] = (((unsigned int)myInputSamples[i] + myInputSamples[i + 1])*((unsigned int)myInputSamples[i] + myInputSamples[i + 1] + 1))/2 + myInputSamples[i + 1];
         code_len += encodedBlock[i/2] + 1;
     }
+
+    return code_len;
 }
 
 } /* namespace RiceAlgorithm */

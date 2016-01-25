@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <fstream>
 #include <vector>
+#include <sstream>
 #include <Predictor.h>
 #include <AdaptiveEntropyEncoder.h>
 #include <SplitSequence.h>
@@ -19,6 +20,8 @@
 
 const double LandsatDownlinkRate(384);
 
+const u_short MaximumEncodedBlockSize(RiceAlgorithm::BlockSize + sizeof(char));
+
 class Sensor
 {
 	public:
@@ -26,14 +29,23 @@ class Sensor
 		virtual ~Sensor();
 		u_short* getSamples(uint scanNumber=1);
 		void process();
-		//std::vector<class AdaptiveEntropyEncoder> getEncoders() { return myEncoderList; }
-		u_short* getWinner();
+		void getWinner(unsigned int* encodedBlock,
+					   ushort codeLength,
+				       RiceAlgorithm::CodingSelection selection,
+				       bool lastType);
 
 	private:
+		// prefix only :TODO: reassess for persistence
+		std::ostringstream myFileStream;
+
 	    u_short* mySamples;
+	    unsigned int myEncodedBlock[MaximumEncodedBlockSize];
+
 	    std::ifstream mySampleStream;
 	    unsigned long myLength;
 
+	    std::ofstream myEncodedStream;
+	    void createHeader();
 
         unsigned int myXDimension;
         unsigned int myYDimension;
