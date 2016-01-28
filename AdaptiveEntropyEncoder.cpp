@@ -16,20 +16,19 @@ AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(size_t sampleBlockSize)
 	: myBlockSize(sampleBlockSize)
 {
 
-    //myInputSamples = new ushort[sampleBlockSize];
-    //int* pInt = new int;
+    myInputSamples = new ushort[sampleBlockSize];
 
 }
 
 AdaptiveEntropyEncoder::~AdaptiveEntropyEncoder()
 {
-	//delete [] myInputSamples;
+	delete [] myInputSamples;
 }
 
 AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right)
 {
-	//memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(ushort));
-    //myBlockSize = right.myBlockSize;
+	memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(ushort));
+    myBlockSize = right.myBlockSize;
 }
 
 
