@@ -37,7 +37,7 @@ Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
 	mySampleStream.seekg(0, ios::beg);
 
 
-    mySamples = reinterpret_cast<u_short*>(new u_short[myXDimension * myYDimension * myZDimension]);
+    mySamples = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
     // Create the encoding types
     size_t bufferSize = myXDimension*myYDimension*myZDimension;
@@ -61,7 +61,7 @@ Sensor::~Sensor()
     delete[] mySamples;
 }
 
-u_short* Sensor::getSamples(uint scanNumber)
+ushort* Sensor::getSamples(uint scanNumber)
 {
     unsigned short int buffer(0);
     static unsigned long readElements(0);

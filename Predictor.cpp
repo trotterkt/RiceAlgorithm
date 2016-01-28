@@ -6,10 +6,13 @@
  */
 
 #include <Predictor.h>
-#include <iostream>
-#include <fstream>
 #include <stdlib.h>
 #include <string.h>
+
+#include <iostream>
+#include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -19,8 +22,8 @@ namespace RiceAlgorithm
 Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
         myXDimension(x), myYDimension(y), myZDimension(z)
 {
-    mySamples = reinterpret_cast<u_short*>(new u_short[myXDimension * myYDimension * myZDimension]);
-    myResiduals = reinterpret_cast<u_short*>(new u_short[myXDimension * myYDimension * myZDimension]);
+    mySamples = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
+    myResiduals = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
     int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
     myWeights = reinterpret_cast<int *>(new int[weights_len]);
@@ -33,7 +36,7 @@ Predictor::~Predictor()
     delete[] myWeights;
 }
 
-u_short* Predictor::getResiduals()
+ushort* Predictor::getResiduals()
 {
 
     //============================================================================================================

@@ -9,8 +9,16 @@
 #define ADAPTIVEENTROPYENCODER_H_
 
 #include <stddef.h>
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+
+// Allow for easier cross compile on Windows
+#ifdef __MINGW32__
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+#endif
 
 namespace RiceAlgorithm
 {
@@ -26,21 +34,23 @@ enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same
 
 class AdaptiveEntropyEncoder
 {
+
 public:
 	AdaptiveEntropyEncoder(size_t sampleBlockSize);
 	virtual ~AdaptiveEntropyEncoder();
 	AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right);
 
 	//:TODO: this shoud probabily be in constructor
-	void setSamples(u_short* samples) { memcpy(myInputSamples, samples, myBlockSize); }
+	void setSamples(ushort* samples) { memcpy(myInputSamples, samples, myBlockSize); }
 
-	//virtual void encode(u_short* encodedBlock) { /* encoding in the base class is basically nothing */ };
-	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) { /* encoding in the base class is basically nothing */ };
+    // encoding in the base class is basically nothing
+	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) {  };
 
 protected:
-	u_short* myInputSamples; // use input for final encoding as well, with sync frame
+	ushort* myInputSamples; // use input for final encoding as well, with sync frame
 	size_t myBlockSize;      // -- and this will be used for the encoded size too
 	static CodingSelection myCodingSelection;
+
 };
 
 } /* namespace RiceAlgorithm */

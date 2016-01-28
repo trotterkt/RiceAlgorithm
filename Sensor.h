@@ -20,14 +20,14 @@
 
 const double LandsatDownlinkRate(384);
 
-const u_short MaximumEncodedBlockSize(RiceAlgorithm::BlockSize + sizeof(char));
+const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize + sizeof(char));
 
 class Sensor
 {
 	public:
 		Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z);
 		virtual ~Sensor();
-		u_short* getSamples(uint scanNumber=1);
+		ushort* getSamples(uint scanNumber=1);
 		void process();
 		void getWinner(unsigned int* encodedBlock,
 					   ushort codeLength,
@@ -38,7 +38,7 @@ class Sensor
 		// prefix only :TODO: reassess for persistence
 		std::ostringstream myFileStream;
 
-	    u_short* mySamples;
+	    ushort* mySamples;
 	    unsigned int myEncodedBlock[MaximumEncodedBlockSize];
 
 	    std::ifstream mySampleStream;

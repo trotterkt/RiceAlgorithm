@@ -10,6 +10,7 @@
 #include <vector>
 #include <AdaptiveEntropyEncoder.h>
 
+
 #ifndef PREDICTOR_H_
 #define PREDICTOR_H_
 
@@ -37,18 +38,18 @@ class Predictor
 
         bool readSamples(ushort* samples);
 
-        u_short* getSamples() { return mySamples; }
+        ushort* getSamples() { return mySamples; }
 
-        u_short* getResiduals();
+        ushort* getResiduals();
 
-        size_t getSizeOfSamples() { return ( sizeof(u_short) * (myXDimension * myYDimension * myZDimension)); }
+        size_t getSizeOfSamples() { return ( sizeof(ushort) * (myXDimension * myYDimension * myZDimension)); }
 
 
 
     private:
-        u_short* mySamples;
+        ushort* mySamples;
         int* myWeights;
-        u_short * myResiduals;
+        ushort * myResiduals;
         unsigned int myXDimension;
         unsigned int myYDimension;
         unsigned int myZDimension;

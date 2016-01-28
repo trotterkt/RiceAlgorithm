@@ -7,6 +7,7 @@
 
 #include <AdaptiveEntropyEncoder.h>
 
+
 namespace RiceAlgorithm
 {
 
@@ -15,19 +16,20 @@ AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(size_t sampleBlockSize)
 	: myBlockSize(sampleBlockSize)
 {
 
-	myInputSamples = new ushort[sampleBlockSize];
+    //myInputSamples = new ushort[sampleBlockSize];
+    //int* pInt = new int;
 
 }
 
 AdaptiveEntropyEncoder::~AdaptiveEntropyEncoder()
 {
-	delete [] myInputSamples;
+	//delete [] myInputSamples;
 }
 
 AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right)
 {
-	memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(u_short));
-    myBlockSize = right.myBlockSize;
+	//memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(ushort));
+    //myBlockSize = right.myBlockSize;
 }
 
 
