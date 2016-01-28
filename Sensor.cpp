@@ -124,7 +124,7 @@ void Sensor::process()
 
 	    getWinner(encodedBlock, length, selection, (iteration == myEncoderList.end()));
 
-	    cout << "Block" << endl;
+	    cout << "Finished Encoder Iteration:" <<  (iteration-myEncoderList.begin()) << endl;
 	}
 
 }
@@ -143,7 +143,7 @@ void Sensor::getWinner(unsigned int* encodedBlock,
 
 	// copy the block if smaller to the stream for send, along with
 	// the code selection
-	memcpy(myEncodedStream, encodedBlock, (codeLength * sizeof(unsigned int)));
+	//memcpy(myEncodedStream, encodedBlock, (codeLength * sizeof(unsigned int)));
 
 }
 
