@@ -14,12 +14,6 @@
 #include <sys/types.h>
 #include <Predictor.h>
 
-// Allow for easier cross compile on Windows
-#ifdef __MINGW32__
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-#endif
 
 namespace RiceAlgorithm
 {

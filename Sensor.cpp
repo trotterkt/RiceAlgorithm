@@ -11,7 +11,6 @@
 #include <vector>
 #include <math.h>
 #include <limits.h>
-#include <boost/dynamic_bitset.hpp>
 
 
 using namespace std;
