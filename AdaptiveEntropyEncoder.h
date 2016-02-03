@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
+#include <Predictor.h>
 
 // Allow for easier cross compile on Windows
 #ifdef __MINGW32__
@@ -22,7 +23,7 @@ typedef unsigned long ulong;
 
 namespace RiceAlgorithm
 {
-const size_t BlockSize(32);
+const size_t BlockSize(32*DynamicRange);
 
 enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same as Split-Sequence, with K=0
 					  K1, K2, K3, K4, K5,
@@ -32,6 +33,11 @@ enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same
 
 //:TODO: will probably change this to be more in line with a Factory pattern
 
+
+const short CodeOptionBitFieldZeroOrSecEx(5);
+const short CodeOptionBitFieldFundamentalOrNoComp(4);
+
+
 class AdaptiveEntropyEncoder
 {
 
@@ -40,16 +46,38 @@ public:
 	virtual ~AdaptiveEntropyEncoder();
 	AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right);
 
-	//:TODO: this shoud probabily be in constructor
-	void setSamples(ushort* samples) { memcpy(myInputSamples, samples, myBlockSize); }
+	//:TODO: this should probably be in constructor
+	void setSamples(ushort* samples) { memcpy(myInputSamples, samples, myEncodedBlockSize * sizeof(ushort)); }
 
-    // encoding in the base class is basically nothing
-	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) {  };
+    // encoding in the base class is basically nothing, and this is also the same as no compression option
+	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) {
+																							memcpy(myEncodedBlock, myInputSamples, BlockSize * sizeof(ushort));
+																							memcpy(encodedBlock, myInputSamples, BlockSize * sizeof(ushort)); // :TODO: is this necessary any more?
+																						    myCodingSelection = NoCompressionOpt;
+																							selection = NoCompressionOpt; // :TODO: is this necessary any more?
+
+																						    return BlockSize;
+																						};
+
+	CodingSelection getSelection() { return myCodingSelection; }
+	ushort* getEncodedBlock() { return myEncodedBlock; }
+	size_t getEncodedBlockSize() { return myEncodedBlockSize; }
+
+	 bool operator<(unsigned int encodedSize){
+		 	 	 	 	 	 	 	 	 	  	  if(myEncodedBlockSize < encodedSize)
+		 	 	 	 	 	 	 	 	 	  	  {
+		 	 	 	 	 	 	 	 	 	 	 	 return true;
+		 	 	 	 	 	 	 	 	 	  	  }
+
+		 	 	 	 	 	 	 	 	 	  	  return false;
+	 	 	 	 	 	 	 	 	 	 	   }
 
 protected:
 	ushort* myInputSamples; // use input for final encoding as well, with sync frame
-	size_t myBlockSize;      // -- and this will be used for the encoded size too
-	static CodingSelection myCodingSelection;
+	size_t myBlockSize;
+    CodingSelection myCodingSelection;
+    ushort* myEncodedBlock;
+    size_t myEncodedBlockSize;
 
 };
 

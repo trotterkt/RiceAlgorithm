@@ -9,6 +9,7 @@
 #define SENSOR_H_
 
 #include <stdlib.h>
+#include <stdint.h>
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -20,7 +21,38 @@
 
 const double LandsatDownlinkRate(384);
 
-const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize + sizeof(char));
+const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize);
+
+
+inline static bool isSystemBigEndian()
+{
+	int endianCheck = 1;
+
+	return ((*(reinterpret_cast<char*>(&endianCheck)) == 0));
+}
+
+template <typename T>
+inline void bigEndianVersusLittleEndian(T &numberToTranslate)
+{
+	const size_t bytes = sizeof(T);
+
+	if(!isSystemBigEndian())
+	{
+		uint8_t buffer[bytes];
+		memcpy(buffer, &numberToTranslate, bytes);
+
+		int i = 0;
+		int j = bytes -1;
+
+		while(i<j)
+		{
+			std::swap(buffer[i], buffer[j]);
+			i++;
+			j--;
+		}
+		memcpy(&numberToTranslate, buffer, bytes);
+	}
+}
 
 class Sensor
 {
@@ -29,10 +61,12 @@ class Sensor
 		virtual ~Sensor();
 		ushort* getSamples(uint scanNumber=1);
 		void process();
-		void getWinner(unsigned int* encodedBlock,
-					   ushort codeLength,
-				       RiceAlgorithm::CodingSelection selection,
-				       bool lastType);
+
+		 void operator=(RiceAlgorithm::AdaptiveEntropyEncoder& right){
+			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 memcpy(myEncodedBlock, right.getEncodedBlock(), right.getEncodedBlockSize());
+			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 myWinningEncodedLength = right.getEncodedBlockSize();
+		 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 }
+		 bool operator>(RiceAlgorithm::AdaptiveEntropyEncoder& right){  return false; }
 
 	private:
 		// prefix only :TODO: reassess for persistence
@@ -55,11 +89,15 @@ class Sensor
 		//RiceAlgorithm::AdaptiveEntropyEncoder myEncoder;
 		std::vector<class RiceAlgorithm::AdaptiveEntropyEncoder*> myEncoderList;
 
+		unsigned int myWinningEncodedLength;
+
 		//:TODO: These should instead be declared in the implementation file
 		RiceAlgorithm::AdaptiveEntropyEncoder* noComp;
 		RiceAlgorithm::SecondExtensionOption* secondExt;
 		RiceAlgorithm::ZeroBlockOption* zeroBlock;
-		RiceAlgorithm::SplitSequence* split;
+		RiceAlgorithm::SplitSequence* split; // this will become more specific
+
+		void createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder);
 
 };
 

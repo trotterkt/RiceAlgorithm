@@ -13,22 +13,29 @@ namespace RiceAlgorithm
 
 
 AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(size_t sampleBlockSize)
-	: myBlockSize(sampleBlockSize)
+	: myBlockSize(sampleBlockSize), myEncodedBlockSize(BlockSize)
 {
 
     myInputSamples = new ushort[sampleBlockSize];
+    myEncodedBlock = new ushort[myEncodedBlockSize];
 
 }
 
 AdaptiveEntropyEncoder::~AdaptiveEntropyEncoder()
 {
 	delete [] myInputSamples;
+	delete [] myEncodedBlock;
 }
 
 AdaptiveEntropyEncoder::AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right)
 {
-	memcpy(myInputSamples, right.myInputSamples, myBlockSize*sizeof(ushort));
+    myInputSamples = new ushort[right.myBlockSize];
+	memcpy(myInputSamples, right.myInputSamples, right.myBlockSize*sizeof(ushort));
     myBlockSize = right.myBlockSize;
+
+    myEncodedBlockSize = right.myEncodedBlockSize;
+    myEncodedBlock = new ushort[myEncodedBlockSize];
+	memcpy(myEncodedBlock, right.myEncodedBlock, myEncodedBlockSize);
 }
 
 
