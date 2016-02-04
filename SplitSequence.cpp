@@ -33,7 +33,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &
     for(k = 0; k < k_limit; k++)
     {
         unsigned int code_len_temp = 0;
-        for(i = 0; i < BlockSize; i++)
+        for(i = 0; i < 32; i++)
         {
             code_len_temp += (myInputSamples[i] >> k) + 1 + k;
         }
@@ -45,6 +45,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &
         }
     }
 
+    myEncodedBlockSize = code_len;
     return code_len;
 }
 

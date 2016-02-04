@@ -17,7 +17,7 @@ using namespace std;
 using namespace RiceAlgorithm;
 
 Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
-		mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z), myWinningEncodedLength(MaximumEncodedBlockSize)
+		mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z), myWinningEncodedLength((unsigned int)-1)
 {
 	// Filename ignores extension :TODO: will need to isolate persistence later
 	myFileStream << filename;
@@ -91,6 +91,7 @@ ushort* Sensor::getSamples(uint scanNumber)
         mySampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
 
         // This assumes the data is in BSQ format and we do not need to adjust the indexing
+        buffer;
         mySamples[readElements] = buffer;
 
         readElements++;
@@ -131,6 +132,9 @@ void Sensor::process()
 	//:TODO: Nest this loop in another and iterate over the next residual block
 	std::vector<AdaptiveEntropyEncoder*>::iterator winningIteration;
 
+    CodingSelection winningSelection;
+
+
 	for(std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
 		 iteration != myEncoderList.end(); ++iteration)
 	{
@@ -139,25 +143,26 @@ void Sensor::process()
 
 		memset(encodedBlock, 0, BlockSize*sizeof(unsigned int));
 
+	    CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-		CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 	    unsigned int encodedLength = (*iteration)->encode(encodedBlock, selection);
 
 		AdaptiveEntropyEncoder currentEncoder(*(*iteration));
 
 		// This basically determines the winner
-		if(currentEncoder < myWinningEncodedLength)
+		if(encodedLength < myWinningEncodedLength)
 		{
 			*this = currentEncoder;
-			winningIteration = iteration;
+			myWinningEncodedLength = encodedLength;
+			winningSelection = selection;
 		}
 
 
 	    cout << "Finished Encoder Iteration:" <<  (iteration-myEncoderList.begin()) << endl;
 	}
 
-	CodingSelection selection = (*winningIteration)->getSelection();
-	cout << "And the Winner is: " << int(selection) << endl;
+	//CodingSelection selection = (*winningIteration)->getSelection();
+	cout << "And the Winner is: " << int(winningSelection) << endl;
 
 	createEncodingCodes(*(*winningIteration));
 
