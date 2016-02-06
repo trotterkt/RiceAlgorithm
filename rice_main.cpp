@@ -28,5 +28,5 @@ int main(int argc, char *argv[])
 	// at a certain rate: maybe a timed loop and a message when available.
 	//predictSatellite.readSamples("Landsat_agriculture-u16be-6x1024x1024.raw");
 
-
+    return 0;
 }

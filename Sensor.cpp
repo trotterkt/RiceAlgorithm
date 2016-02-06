@@ -134,38 +134,48 @@ void Sensor::process()
 
     CodingSelection winningSelection;
 
+    // Should only need to get the residuals once for a given raw image set
+    ushort* residualsPtr = myPreprocessor.getResiduals();
+    
+    int blockIndex(0);
 
-	for(std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
-		 iteration != myEncoderList.end(); ++iteration)
-	{
-		// 1 block at a time
-		(*iteration)->setSamples(myPreprocessor.getResiduals());
+    for(blockIndex = 0; blockIndex<(myXDimension*myYDimension*myZDimension); blockIndex+=32)
+    {
+        // Reset for each capture of the winning length
+        myWinningEncodedLength = (unsigned int) -1;
+        
+        // Loop through each one of the possible encoders
+        for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
+                iteration != myEncoderList.end(); ++iteration)
+        {
+            // 1 block at a time
+            (*iteration)->setSamples(&residualsPtr[blockIndex]);
 
-		memset(encodedBlock, 0, BlockSize*sizeof(unsigned int));
+            memset(encodedBlock, 0, BlockSize * sizeof(unsigned int));  // is this right?
 
-	    CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
+            CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-	    unsigned int encodedLength = (*iteration)->encode(encodedBlock, selection);
+            unsigned int encodedLength = (*iteration)->encode(encodedBlock, selection);
 
-		AdaptiveEntropyEncoder currentEncoder(*(*iteration));
+            AdaptiveEntropyEncoder currentEncoder(*(*iteration));
 
-		// This basically determines the winner
-		if(encodedLength < myWinningEncodedLength)
-		{
-			*this = currentEncoder;
-			myWinningEncodedLength = encodedLength;
-			winningSelection = selection;
-		}
+            // This basically determines the winner
+            if (encodedLength < myWinningEncodedLength)
+            {
+                *this = currentEncoder;
+                myWinningEncodedLength = encodedLength;
+                winningSelection = selection;
+            }
 
+            //cout << "Finished Encoder Iteration:" << (iteration - myEncoderList.begin()) << endl;
+        }
 
-	    cout << "Finished Encoder Iteration:" <<  (iteration-myEncoderList.begin()) << endl;
-	}
+        //CodingSelection selection = (*winningIteration)->getSelection();
+        cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
+    }
 
-	//CodingSelection selection = (*winningIteration)->getSelection();
-	cout << "And the Winner is: " << int(winningSelection) << endl;
-
-	createEncodingCodes(*(*winningIteration));
-
+    //:TODO: Figure this out
+	//createEncodingCodes(*(*winningIteration));
 }
 
 
@@ -187,7 +197,7 @@ void Sensor::createHeader()
 
 void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
 {
-
+/*
 	// see Lossless Data Compression, Blue Book, sec 5.1.2
 	short codeOptionBits(0);
 	switch(encoder.getSelection())
@@ -267,6 +277,6 @@ void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
     	std::bitset<516> code3(mySamples[i]);
     	code3 <<= (516 - codeOptionBits - ((i+1)*sizeof(ushort)*8));
     }
-
+*/
 }
 
