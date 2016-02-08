@@ -139,11 +139,13 @@ void Sensor::process()
     
     int blockIndex(0);
 
-    for(blockIndex = 0; blockIndex<(myXDimension*myYDimension*myZDimension); blockIndex+=32)
+    long totalSamples = myXDimension*myYDimension*myZDimension;
+
+    for(blockIndex = 0; blockIndex<totalSamples; blockIndex+=32)
     {
         // Reset for each capture of the winning length
         myWinningEncodedLength = (unsigned int) -1;
-        
+
         // Loop through each one of the possible encoders
         for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
                 iteration != myEncoderList.end(); ++iteration)
@@ -157,16 +159,14 @@ void Sensor::process()
 
             unsigned int encodedLength = (*iteration)->encode(encodedBlock, selection);
 
-            AdaptiveEntropyEncoder currentEncoder(*(*iteration));
-
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
             {
-                *this = currentEncoder;
+                *this = *(*iteration);
                 myWinningEncodedLength = encodedLength;
                 winningSelection = selection;
             }
-
+//
             //cout << "Finished Encoder Iteration:" << (iteration - myEncoderList.begin()) << endl;
         }
 
