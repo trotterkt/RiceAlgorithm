@@ -180,6 +180,10 @@ void Sensor::process()
 
 void Sensor::createHeader()
 {
+	//:TODO: What I might also do is create a templated method, whose
+	// purpose is to shift non-boundary byte bits before sending to
+	// compressed file.
+
     // Alternate approch to the same thing as below -- but how do I extract
     // one byte at a time?
     //==================================================================
