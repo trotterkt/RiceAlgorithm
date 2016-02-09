@@ -201,8 +201,8 @@ void Sensor::createHeader()
     //header2 |= yDimension; header2 <<= DimensionSize;
     //header2 |= zDimension;
     
-    size_t buffer = header2.to_ulong();
-    size_t buffer2 = header2.num_blocks();
+    size_t buffer = header2.to_ulong(); // this seems to work on linux
+    size_t buffer2 = header2.num_blocks(); // this seems to work on linux
 
     
     //==================================================================
