@@ -18,6 +18,7 @@
 #include <SplitSequence.h>
 #include <SecondExtensionOption.h>
 #include <ZeroBlockOption.h>
+#include <boost/dynamic_bitset.hpp>
 
 const double LandsatDownlinkRate(384);
 
@@ -53,6 +54,30 @@ inline void bigEndianVersusLittleEndian(T &numberToTranslate)
 		memcpy(&numberToTranslate, buffer, bytes);
 	}
 }
+
+// Note that if member types are not defined as being of similar size
+// there can be an alignment problem. See Annotated  C++ Ref Manual,
+// Sec 5.3.2
+struct CompressedHeader
+{
+    char userData;
+    char xDimension[2];
+    char yDimension[2];
+    char zDimension[2];
+
+    char combinedField1[3]; // sample type, reserved, dyn range, bsq(1)
+    char bsq[2];
+    char combinedField2[4]; // reserved, out word size, encoding method,
+                            // reserved, user input predictor band,
+                            // predictor full, reserved, neighbor sum,
+                            //reserve, register size
+    char combinedField3[3]; // weight resolution, weight interval, initial weight,
+                            // final weight, reserved, initial weight table,
+                            // weight init resolution
+    char combinedField[2];  // reserved, block size flag, restricted, ref interval
+
+};
+
 
 class Sensor
 {

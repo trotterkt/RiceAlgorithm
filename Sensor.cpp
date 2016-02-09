@@ -91,7 +91,6 @@ ushort* Sensor::getSamples(uint scanNumber)
         mySampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
 
         // This assumes the data is in BSQ format and we do not need to adjust the indexing
-        buffer;
         mySamples[readElements] = buffer;
 
         readElements++;
@@ -181,18 +180,62 @@ void Sensor::process()
 
 void Sensor::createHeader()
 {
+    // Alternate approch to the same thing as below -- but how do I extract
+    // one byte at a time?
+    //==================================================================
+    //const size_t HeaderSize(156);
+    const size_t HeaderSize(64);
+    
+    const size_t UserDataSize(8);
+    const size_t DimensionSize(16);
+    
+    boost::dynamic_bitset<> header2(HeaderSize); // 19 bytes, 4 bits
+
+    boost::dynamic_bitset<> userData(HeaderSize);
+    boost::dynamic_bitset<> xDimension(HeaderSize, myXDimension);
+    boost::dynamic_bitset<> yDimension(HeaderSize, myYDimension);
+    boost::dynamic_bitset<> zDimension(HeaderSize, myZDimension);
+    
+    header2 |= userData; header2 <<= DimensionSize;
+    header2 |= xDimension; header2 <<= DimensionSize;
+    //header2 |= yDimension; header2 <<= DimensionSize;
+    //header2 |= zDimension;
+    
+    size_t buffer = header2.to_ulong();
+    size_t buffer2 = header2.num_blocks();
+
+    
+    //==================================================================
+
+    CompressedHeader header = {0};
+
+    *reinterpret_cast<short*>(&header.xDimension) = myXDimension;
+    *reinterpret_cast<short*>(&header.yDimension) = myYDimension;
+    *reinterpret_cast<short*>(&header.zDimension) = myZDimension;
+    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.xDimension));
+    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.yDimension));
+    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.zDimension));
+
+    header.combinedField1[2] = DynamicRange;
+
+
 	// Write out the image dimensions - for my purposes these will
 	// be constants
 
-	// 1st write out 1 blank byte
+	// 1st write out 1 blank byte for user data
+    //myEncodedStream.write(reinterpret_cast<char*>(&userData), sizeof(userData));
 
 	// Then 2 bytes each for the x, y, and z dimensions
 	//:TODO: For now, will just assume the header is 19 bytes -- will
 	// define contents later
-	char primaryHeader[19];
-	memset(primaryHeader, 0, 19);
-	myEncodedStream.write(primaryHeader, 19);
+	//char primaryHeader[19];
+	//memset(primaryHeader, 0, 19);
 
+
+	myEncodedStream.write(reinterpret_cast<char*>(&header), sizeof(header));
+	
+
+	myEncodedStream.close(); // :TODO: temporary test
 }
 
 void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)

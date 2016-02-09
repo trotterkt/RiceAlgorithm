@@ -7,6 +7,7 @@
 
 #include <SplitSequence.h>
 #include <iostream>
+#include <vector>
 #include <boost/dynamic_bitset.hpp>
 
 using namespace std;
@@ -73,57 +74,52 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &
         	ushort encodedSample = myInputSamples[i] >> k;
             code_len_temp += (encodedSample) + 1 + k;
 
-//            //:TODO: Not working as expected.
-//            //===========================================================================
-//            boost::dynamic_bitset<> nextSample(((myInputSamples[i] >> k) + 1), 1ul);
-//
-//            // don't bother if the current size is >= BlockSize
-//            if(code_len_temp < BlockSize)
-//            {
-//				//:TODO: do I need header info before?
-//				append(nextSample, completeBitStream);
-//				completeBitStream = nextSample;
-//				cout << completeBitStream << endl;
-//            }
-//            //===========================================================================
 
         }
-
 
         if(code_len_temp < code_len)
         {
             code_len = code_len_temp;
             selection = RiceAlgorithm::CodingSelection(k);
-
-//            //=======================================================
-//
-//            ulong value = completeBitStream.to_ulong();
-//            cout << "size=" << completeBitStream.size() << "  value=" << value << " bits=" << completeBitStream << endl;
-//            //=======================================================
         }
     }
 
-    // Just calculate the encoded sample for the winner
-    // this is used to assemble the encoded block, one sample at a time
-    boost::dynamic_bitset<> completeBitStream(((myInputSamples[31] >> selection)+1), 1ul);
 
-    cout << completeBitStream << endl;
+    vector< size_t > encodedSizeList;
+    size_t totalEncodedSize(0);
 
-    for(i = 30; i >= 0; i--)
+    // Get the total encoded size first
+    for(int index = 0; index < 32; index++)
     {
-    	// determine the new size
-    	size_t newSize = completeBitStream.size() + ((myInputSamples[i] >> selection)+1);
-    	completeBitStream.resize(newSize);
-
-    	completeBitStream.set(completeBitStream.size()-1, true);
-
-    	completeBitStream >> ((myInputSamples[i] >> selection) + 1);
-    	//completeBitStream[0] |= 1;
-
-        cout << completeBitStream << endl;
+        size_t encodedSize = (myInputSamples[index] >> selection) + 1;
+        encodedSizeList.push_back(encodedSize);
+        totalEncodedSize += encodedSize;
     }
 
+    boost::dynamic_bitset<> encodedStream(totalEncodedSize, 1ul);
 
+    // assign each encoded sample and shift by the next one
+    // at the end of the loop, we will assign the last one
+    for(int index = 1; index < 32; index++)
+    {
+        encodedStream[0] |= 1;
+        encodedStream <<= encodedSizeList[index];        
+    }
+    encodedStream[0] |= 1;
+    cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+
+    size_t numberEncodedBytes;
+    
+    if(totalEncodedSize % 2)
+    {
+        numberEncodedBytes = totalEncodedSize/8 + 1; // capture partial byte
+    }
+    else
+    {
+        numberEncodedBytes = totalEncodedSize/8; 
+    }
+    
+    
     myEncodedBlockSize = code_len;
     return code_len;
 }
