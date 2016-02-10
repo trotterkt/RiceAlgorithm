@@ -239,6 +239,12 @@ void Sensor::createHeader()
     header.combinedField6 |= (PredictionWeightFinal + 6);
     //----------------------------------------------------------------------------
 
+    //----------------------------------------------------------------------------
+    header.combinedField8 |= (0x40);
+
+    header.combinedField8 |= (0x80);
+    //----------------------------------------------------------------------------
+
     boost::dynamic_bitset<unsigned char> filter;
 
     // Since the data is of uneven types, all are read in as single bytes
@@ -258,6 +264,8 @@ void Sensor::createHeader()
     filter.append(*reinterpret_cast<char*>(&header.combinedField4));
     filter.append(*reinterpret_cast<char*>(&header.combinedField5));
     filter.append(*reinterpret_cast<char*>(&header.combinedField6));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField7));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField8));
 
     size_t bitsPerBlock = filter.bits_per_block;
     size_t numBlocks = filter.num_blocks();
