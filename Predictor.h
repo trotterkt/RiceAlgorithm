@@ -18,6 +18,7 @@ namespace RiceAlgorithm
 {
 
 const unsigned int PredictionBands(5);
+const unsigned int UserInputPredictionBands(15);
 const unsigned int PredictionWeightResolution(14);
 const unsigned int PredictionWeightInitResolution(0);
 const int PredictionWeightInitial(-6);

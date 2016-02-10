@@ -16,6 +16,10 @@
 using namespace std;
 using namespace RiceAlgorithm;
 
+ulong Sensor::bytesWritten(0);
+ulong Sensor::bitsWritten(0);
+
+
 Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
 		mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z), myWinningEncodedLength((unsigned int)-1)
 {
@@ -29,7 +33,7 @@ Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
         exit(EXIT_FAILURE);
     }
 
-    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::binary);
+    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::in | ios::binary);
 
     if (!myEncodedStream.is_open())
     {
@@ -180,64 +184,99 @@ void Sensor::process()
 
 void Sensor::createHeader()
 {
-	//:TODO: What I might also do is create a templated method, whose
-	// purpose is to shift non-boundary byte bits before sending to
-	// compressed file.
-
-    // Alternate approch to the same thing as below -- but how do I extract
-    // one byte at a time?
-    //==================================================================
-    //const size_t HeaderSize(156);
-    const size_t HeaderSize(64);
-    
-    const size_t UserDataSize(8);
-    const size_t DimensionSize(16);
-    
-    boost::dynamic_bitset<> header2(HeaderSize); // 19 bytes, 4 bits
-
-    boost::dynamic_bitset<> userData(HeaderSize);
-    boost::dynamic_bitset<> xDimension(HeaderSize, myXDimension);
-    boost::dynamic_bitset<> yDimension(HeaderSize, myYDimension);
-    boost::dynamic_bitset<> zDimension(HeaderSize, myZDimension);
-    
-    header2 |= userData; header2 <<= DimensionSize;
-    header2 |= xDimension; header2 <<= DimensionSize;
-    //header2 |= yDimension; header2 <<= DimensionSize;
-    //header2 |= zDimension;
-    
-    size_t buffer = header2.to_ulong(); // this seems to work on linux
-    size_t buffer2 = header2.num_blocks(); // this seems to work on linux
-
-    
-    //==================================================================
+    // Note: Header is not completely populated for all defined parameters.
+    // Only what is applicable to the selected test raw data to
+    // identify identical information. Also, probably not the most
+    // clean way to fill in fields.
 
     CompressedHeader header = {0};
 
+    // Collect the structure data
     *reinterpret_cast<short*>(&header.xDimension) = myXDimension;
     *reinterpret_cast<short*>(&header.yDimension) = myYDimension;
     *reinterpret_cast<short*>(&header.zDimension) = myZDimension;
-    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.xDimension));
-    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.yDimension));
-    bigEndianVersusLittleEndian(*reinterpret_cast<short*>(&header.zDimension));
+    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.xDimension));
+    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.yDimension));
+    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.zDimension));
 
-    header.combinedField1[2] = DynamicRange;
+    //----------------------------------------------------------------------------
+    bool signedSamples(false);
+    bool bsq(true);
+    header.combinedField1 |= signedSamples;         header.combinedField1 <<= 2; // reserved
+                                                    header.combinedField1 <<= 4;
+    header.combinedField1 |= (DynamicRange & 0xf);  header.combinedField1 <<= 1;
+    header.combinedField1 |= bsq;
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    bool blockType(true);
+
+    header.combinedField2[0] |= blockType;  header.combinedField2[0] <<= 2;
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+
+    header.combinedField3 |= UserInputPredictionBands;  header.combinedField3 <<= 2;
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    bool neighborSum(true);
+
+    header.combinedField4 |= neighborSum;  header.combinedField4 <<= 7;
+    header.combinedField4 |= RegisterSize;
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    header.combinedField5 |= (PredictionWeightResolution - 4);  header.combinedField5 <<= 4;
+
+    unsigned int scaledWeight = log2(PredictionWeightInterval);
+    header.combinedField5 |= (scaledWeight - 4);
+    //----------------------------------------------------------------------------
+
+    //----------------------------------------------------------------------------
+    header.combinedField6 |= (PredictionWeightInitial + 6);  header.combinedField6 <<= 4;
+
+    header.combinedField6 |= (PredictionWeightFinal + 6);
+    //----------------------------------------------------------------------------
+
+    boost::dynamic_bitset<unsigned char> filter;
+
+    // Since the data is of uneven types, all are read in as single bytes
+    filter.append(*reinterpret_cast<char*>(&header.userData));
+    filter.append(*reinterpret_cast<char*>(&header.xDimension[0]));
+    filter.append(*reinterpret_cast<char*>(&header.xDimension[1]));
+    filter.append(*reinterpret_cast<char*>(&header.yDimension[0]));
+    filter.append(*reinterpret_cast<char*>(&header.yDimension[1]));
+    filter.append(*reinterpret_cast<char*>(&header.zDimension[0]));
+    filter.append(*reinterpret_cast<char*>(&header.zDimension[1]));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField1));
+    filter.append(*reinterpret_cast<char*>(&header.bsq[0]));
+    filter.append(*reinterpret_cast<char*>(&header.bsq[1]));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField2[0]));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField2[1]));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField3));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField4));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField5));
+    filter.append(*reinterpret_cast<char*>(&header.combinedField6));
+
+    size_t bitsPerBlock = filter.bits_per_block;
+    size_t numBlocks = filter.num_blocks();
+
+    vector<unsigned char> filterBlocks(filter.num_blocks());
+
+    //populate vector blocks
+    boost::to_block_range(filter, filterBlocks.begin());
+
+    //write out each block
+    for (vector<unsigned char>::iterator it =
+            filterBlocks.begin(); it != filterBlocks.end(); ++it)
+    {
+        //retrieves block and converts it to a char*
+        myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
+    }
 
 
-	// Write out the image dimensions - for my purposes these will
-	// be constants
 
-	// 1st write out 1 blank byte for user data
-    //myEncodedStream.write(reinterpret_cast<char*>(&userData), sizeof(userData));
-
-	// Then 2 bytes each for the x, y, and z dimensions
-	//:TODO: For now, will just assume the header is 19 bytes -- will
-	// define contents later
-	//char primaryHeader[19];
-	//memset(primaryHeader, 0, 19);
-
-
-	myEncodedStream.write(reinterpret_cast<char*>(&header), sizeof(header));
-	
 
 	myEncodedStream.close(); // :TODO: temporary test
 }
