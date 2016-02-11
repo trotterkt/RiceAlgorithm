@@ -249,21 +249,19 @@ void Sensor::createHeader()
     //----------------------------------------------------------------------------
 
     boost::dynamic_bitset<unsigned char> filter;
-    packCompressedData(header.userData, filter);   // 0
-    packCompressedData(header.xDimension, filter); //1,2
-    packCompressedData(header.yDimension, filter); //3,4
-    packCompressedData(header.zDimension, filter); //5,6
-
-    packCompressedData(header.signSampDynRangeBsq1, filter); //7
-    packCompressedData(header.bsq, filter); //8,9
-
-    packCompressedData(header.wordSizEncodeMethod, filter); //10,11
-    packCompressedData(header.predictBandMode, filter); //12
-    packCompressedData(header.neighborRegSize, filter); //13
-    packCompressedData(header.predictWeightResInit, filter); //14
-    packCompressedData(header.predictWeightInitFinal, filter); //15
-    packCompressedData(header.predictWeightTable, filter); //16
-    packCompressedData(header.blockSizeRefInterval, filter); //17,18
+    packCompressedData(header.userData, filter);                // byte 0
+    packCompressedData(header.xDimension, filter);              // bytes 1,2
+    packCompressedData(header.yDimension, filter);              // bytes 3,4
+    packCompressedData(header.zDimension, filter);              // bytes 5,6
+    packCompressedData(header.signSampDynRangeBsq1, filter);    // byte 7
+    packCompressedData(header.bsq, filter);                     // bytes 8,9
+    packCompressedData(header.wordSizEncodeMethod, filter);     // bytes 10,11
+    packCompressedData(header.predictBandMode, filter);         // byte 12
+    packCompressedData(header.neighborRegSize, filter);         // byte 13
+    packCompressedData(header.predictWeightResInit, filter);    // byte 14
+    packCompressedData(header.predictWeightInitFinal, filter);  // byte 15
+    packCompressedData(header.predictWeightTable, filter);      // byte 16
+    packCompressedData(header.blockSizeRefInterval, filter);    // bytes 17,18
 
 
     size_t bitsPerBlock = filter.bits_per_block;
@@ -272,6 +270,29 @@ void Sensor::createHeader()
 
     writeCompressedData(filter);
 
+    //:TODO: test this out for the encoded data
+    //*******************************************************
+    boost::dynamic_bitset<unsigned char> filter2;
+
+    //char method(0xB);
+    //ulong method(0xB);
+    boost::dynamic_bitset<> method(26, 0xB);
+    //packCompressedData(method, filter2, 4);
+
+    //ulong encodedData(0x1);
+    boost::dynamic_bitset<> encodedData(26, 0x1);
+
+    encodedData |= (method <<= 22);
+
+    //packCompressedData(encodedData, filter2, 22);
+    ulong data = encodedData.to_ulong();
+    bigEndianVersusLittleEndian(data);
+    packCompressedData(data, filter2, 26);
+
+
+    writeCompressedData(filter2);
+
+    //*******************************************************
 
 	myEncodedStream.close(); // :TODO: temporary test
 }

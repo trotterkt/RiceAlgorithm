@@ -164,11 +164,16 @@ class Sensor
 		    // whatever type it is, see it as a collection of bytes
 		    char* ptrData = reinterpret_cast<char*>(&data);
 
+		    size_t currentSize = filter.size();
+
 		    // Since the data is of uneven types, all are read in as single bytes
 		    for(int index=0; index<numberOfBytes; index++)
 		    {
 		        filter.append(ptrData[index]);
 		    }
+
+		    //filter >>= bitSize;
+		    filter.resize(currentSize+bitSize);
 
 //            boost::dynamic_bitset<> testBitset(128, 0xffff);
 //            boost::dynamic_bitset<> testBitset2(128, 0xffff);
