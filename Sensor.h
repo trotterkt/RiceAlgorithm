@@ -58,16 +58,39 @@ inline void bigEndianVersusLittleEndian(T &numberToTranslate)
 // Note that if member types are not defined as being of similar size
 // there can be an alignment problem. See Annotated  C++ Ref Manual,
 // Sec 5.3.2
+//struct CompressedHeader
+//{
+//    char userData;
+//    char xDimension[2];
+//    char yDimension[2];
+//    char zDimension[2];
+//
+//    char signSampDynRangeBsq1;   // sample type, reserved, dyn range, bsq(1)
+//    char bsq[2];
+//    char wordSizEncodeMethod[2]; // reserved, out word size, encoding method,
+//                                 // reserved
+//    char predictBandMode;        // user input predictor band,
+//                                 // predictor full, reserved,
+//    char neighborRegSize;        // neighbor sum,
+//                                 //reserve, register size
+//    char predictWeightResInit;   // weight resolution, weight interval, initial weight,
+//                                 // final weight, reserved, initial weight table,
+//                                  // weight init resolution
+//    char predictWeightInitFinal;    // reserved, block size flag, restricted, ref interval
+//    char predictWeightTable;
+//    char blockSizeRefInterval[2];
+//};
+
 struct CompressedHeader
 {
     char userData;
-    char xDimension[2];
-    char yDimension[2];
-    char zDimension[2];
+    short xDimension;
+    short yDimension;
+    short zDimension;
 
     char signSampDynRangeBsq1;   // sample type, reserved, dyn range, bsq(1)
-    char bsq[2];
-    char wordSizEncodeMethod[2]; // reserved, out word size, encoding method,
+    short bsq;
+    short wordSizEncodeMethod; // reserved, out word size, encoding method,
                                  // reserved
     char predictBandMode;        // user input predictor band,
                                  // predictor full, reserved,
@@ -78,9 +101,8 @@ struct CompressedHeader
                                   // weight init resolution
     char predictWeightInitFinal;    // reserved, block size flag, restricted, ref interval
     char predictWeightTable;
-    char blockSizeRefInterval[2];
+    short blockSizeRefInterval;
 };
-
 
 class Sensor
 {
@@ -134,43 +156,54 @@ class Sensor
         static ulong bytesWritten; // new file pointer should be at this location
         static ulong bitsWritten;
 
-		template<typename T> void writeCompressedData(T data, ulong bitSize=sizeof(T)*BitsPerByte)
+		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &filter, ulong bitSize=sizeof(T)*BitsPerByte)
         {
 
-            boost::dynamic_bitset<> testBitset(128, 0xffff);
-            boost::dynamic_bitset<> testBitset2(128, 0xffff);
-            testBitset << sizeof(ulong)*BitsPerByte;
-            testBitset |= testBitset2;
+		    size_t numberOfBytes = sizeof(data);
 
-            size_t blocks = testBitset.num_blocks();
+		    // whatever type it is, see it as a collection of bytes
+		    char* ptrData = reinterpret_cast<char*>(&data);
 
-		    size_t dataSize = sizeof(T)*BitsPerByte;
-
-		    // Tack the next piece of data at the end of the list bit
-		    // so I need to Or it
-		    char currentData(0);
-		    long currentPosition = myEncodedStream.tellp();
-
-		    if(currentPosition > 0)
+		    // Since the data is of uneven types, all are read in as single bytes
+		    for(int index=0; index<numberOfBytes; index++)
 		    {
-		        myEncodedStream.seekp(currentPosition - 1);
-		        myEncodedStream.read(&currentData, 1);
+		        filter.append(ptrData[index]);
 		    }
 
-
-		    // combine the existing data with the new
-            boost::dynamic_bitset<> pendingData(dataSize+BitsPerByte, currentData);
-            boost::dynamic_bitset<> newData(dataSize+BitsPerByte, data);
-            //ulong pendingData(currentData);
-            //ulong newData(data);
-		    pendingData <<= dataSize;
-		    pendingData |= newData;
-
-		    ulong newValue = pendingData.to_ulong();
-
-            myEncodedStream.write(reinterpret_cast<char*>(&newData), dataSize/BitsPerByte);
-            //myEncodedStream.write(reinterpret_cast<char*>(&pendingData), dataSize/BitsPerByte);
-
+//            boost::dynamic_bitset<> testBitset(128, 0xffff);
+//            boost::dynamic_bitset<> testBitset2(128, 0xffff);
+//            testBitset << sizeof(ulong)*BitsPerByte;
+//            testBitset |= testBitset2;
+//
+//            size_t blocks = testBitset.num_blocks();
+//
+//		    size_t dataSize = sizeof(T)*BitsPerByte;
+//
+//		    // Tack the next piece of data at the end of the list bit
+//		    // so I need to Or it
+//		    char currentData(0);
+//		    long currentPosition = myEncodedStream.tellp();
+//
+//		    if(currentPosition > 0)
+//		    {
+//		        myEncodedStream.seekp(currentPosition - 1);
+//		        myEncodedStream.read(&currentData, 1);
+//		    }
+//
+//
+//		    // combine the existing data with the new
+//            boost::dynamic_bitset<> pendingData(dataSize+BitsPerByte, currentData);
+//            boost::dynamic_bitset<> newData(dataSize+BitsPerByte, data);
+//            //ulong pendingData(currentData);
+//            //ulong newData(data);
+//		    pendingData <<= dataSize;
+//		    pendingData |= newData;
+//
+//		    ulong newValue = pendingData.to_ulong();
+//
+//            myEncodedStream.write(reinterpret_cast<char*>(&newData), dataSize/BitsPerByte);
+//            //myEncodedStream.write(reinterpret_cast<char*>(&pendingData), dataSize/BitsPerByte);
+//
 		    // figure out the impending written size
 		    bitsWritten += bitSize;
 		    if(bitsWritten >= BitsPerByte)
@@ -179,11 +212,12 @@ class Sensor
 		        bytesWritten += numberEquivBytes;
 		        bitsWritten -= (numberEquivBytes*BitsPerByte);
 		    }
-
-
-
+//
+//
+//
         }
 
+        void writeCompressedData(boost::dynamic_bitset<unsigned char> &filter);
 };
 
 #endif /* SENSOR_H_ */

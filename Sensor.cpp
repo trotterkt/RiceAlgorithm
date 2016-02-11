@@ -192,12 +192,12 @@ void Sensor::createHeader()
     CompressedHeader header = {0};
 
     // Collect the structure data
-    *reinterpret_cast<short*>(&header.xDimension) = myXDimension;
-    *reinterpret_cast<short*>(&header.yDimension) = myYDimension;
-    *reinterpret_cast<short*>(&header.zDimension) = myZDimension;
-    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.xDimension));
-    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.yDimension));
-    bigEndianVersusLittleEndian(*reinterpret_cast<ushort*>(&header.zDimension));
+    header.xDimension = myXDimension;
+    header.yDimension = myYDimension;
+    header.zDimension = myZDimension;
+    bigEndianVersusLittleEndian(header.xDimension);
+    bigEndianVersusLittleEndian(header.yDimension);
+    bigEndianVersusLittleEndian(header.zDimension);
 
     //----------------------------------------------------------------------------
     bool signedSamples(false);
@@ -211,7 +211,7 @@ void Sensor::createHeader()
     //----------------------------------------------------------------------------
     bool blockType(true);
 
-    header.wordSizEncodeMethod[0] |= blockType;  header.wordSizEncodeMethod[0] <<= 2;
+    header.wordSizEncodeMethod |= blockType;  header.wordSizEncodeMethod <<= 2;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
@@ -240,58 +240,37 @@ void Sensor::createHeader()
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    header.blockSizeRefInterval[0] |= (0x40);
+    header.blockSizeRefInterval |= (0x40);  // Block size 32 flag
 
     ushort refInterval(ReferenceInterval);
     bigEndianVersusLittleEndian(refInterval);
 
-    ushort msbRefInterval = (refInterval & 0xfff0) >> 8;
-    header.blockSizeRefInterval[0] |= (refInterval & 0xf);
-
-    header.blockSizeRefInterval[1] = msbRefInterval;
+    header.blockSizeRefInterval |= refInterval;
     //----------------------------------------------------------------------------
 
     boost::dynamic_bitset<unsigned char> filter;
+    packCompressedData(header.userData, filter);   // 0
+    packCompressedData(header.xDimension, filter); //1,2
+    packCompressedData(header.yDimension, filter); //3,4
+    packCompressedData(header.zDimension, filter); //5,6
 
-    // Since the data is of uneven types, all are read in as single bytes
-    filter.append(*reinterpret_cast<char*>(&header.userData));
-    filter.append(*reinterpret_cast<char*>(&header.xDimension[0]));
-    filter.append(*reinterpret_cast<char*>(&header.xDimension[1]));
-    filter.append(*reinterpret_cast<char*>(&header.yDimension[0]));
-    filter.append(*reinterpret_cast<char*>(&header.yDimension[1]));
-    filter.append(*reinterpret_cast<char*>(&header.zDimension[0]));
-    filter.append(*reinterpret_cast<char*>(&header.zDimension[1]));
-    filter.append(*reinterpret_cast<char*>(&header.signSampDynRangeBsq1));
-    filter.append(*reinterpret_cast<char*>(&header.bsq[0]));
-    filter.append(*reinterpret_cast<char*>(&header.bsq[1]));
-    filter.append(*reinterpret_cast<char*>(&header.wordSizEncodeMethod[0]));
-    filter.append(*reinterpret_cast<char*>(&header.wordSizEncodeMethod[1]));
-    filter.append(*reinterpret_cast<char*>(&header.predictBandMode));
-    filter.append(*reinterpret_cast<char*>(&header.neighborRegSize));
-    filter.append(*reinterpret_cast<char*>(&header.predictWeightResInit));
-    filter.append(*reinterpret_cast<char*>(&header.predictWeightTable));
-    filter.append(*reinterpret_cast<char*>(&header.predictWeightInitFinal));
-    filter.append(*reinterpret_cast<char*>(&header.predictWeightTable));
-    filter.append(*reinterpret_cast<char*>(&header.blockSizeRefInterval[0]));
-    filter.append(*reinterpret_cast<char*>(&header.blockSizeRefInterval[1]));
+    packCompressedData(header.signSampDynRangeBsq1, filter); //7
+    packCompressedData(header.bsq, filter); //8,9
+
+    packCompressedData(header.wordSizEncodeMethod, filter); //10,11
+    packCompressedData(header.predictBandMode, filter); //12
+    packCompressedData(header.neighborRegSize, filter); //13
+    packCompressedData(header.predictWeightResInit, filter); //14
+    packCompressedData(header.predictWeightInitFinal, filter); //15
+    packCompressedData(header.predictWeightTable, filter); //16
+    packCompressedData(header.blockSizeRefInterval, filter); //17,18
+
 
     size_t bitsPerBlock = filter.bits_per_block;
     size_t numBlocks = filter.num_blocks();
 
-    vector<unsigned char> filterBlocks(filter.num_blocks());
 
-    //populate vector blocks
-    boost::to_block_range(filter, filterBlocks.begin());
-
-    //write out each block
-    for (vector<unsigned char>::iterator it =
-            filterBlocks.begin(); it != filterBlocks.end(); ++it)
-    {
-        //retrieves block and converts it to a char*
-        myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
-    }
-
-
+    writeCompressedData(filter);
 
 
 	myEncodedStream.close(); // :TODO: temporary test
@@ -382,3 +361,19 @@ void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
 */
 }
 
+void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &filter)
+{
+    vector<unsigned char> filterBlocks(filter.num_blocks());
+
+    //populate vector blocks
+    boost::to_block_range(filter, filterBlocks.begin());
+
+    //write out each block
+    for (vector<unsigned char>::iterator it =
+            filterBlocks.begin(); it != filterBlocks.end(); ++it)
+    {
+        //retrieves block and converts it to a char*
+        myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
+    }
+
+}
