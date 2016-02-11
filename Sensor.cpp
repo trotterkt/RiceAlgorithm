@@ -33,7 +33,7 @@ Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
         exit(EXIT_FAILURE);
     }
 
-    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::in | ios::binary);
+    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::in | ios::binary | ios::trunc);
 
     if (!myEncodedStream.is_open())
     {
@@ -202,47 +202,53 @@ void Sensor::createHeader()
     //----------------------------------------------------------------------------
     bool signedSamples(false);
     bool bsq(true);
-    header.combinedField1 |= signedSamples;         header.combinedField1 <<= 2; // reserved
-                                                    header.combinedField1 <<= 4;
-    header.combinedField1 |= (DynamicRange & 0xf);  header.combinedField1 <<= 1;
-    header.combinedField1 |= bsq;
+    header.signSampDynRangeBsq1 |= signedSamples;         header.signSampDynRangeBsq1 <<= 2; // reserved
+                                                          header.signSampDynRangeBsq1 <<= 4;
+    header.signSampDynRangeBsq1 |= (DynamicRange & 0xf);  header.signSampDynRangeBsq1 <<= 1;
+    header.signSampDynRangeBsq1 |= bsq;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     bool blockType(true);
 
-    header.combinedField2[0] |= blockType;  header.combinedField2[0] <<= 2;
+    header.wordSizEncodeMethod[0] |= blockType;  header.wordSizEncodeMethod[0] <<= 2;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
 
-    header.combinedField3 |= UserInputPredictionBands;  header.combinedField3 <<= 2;
+    header.predictBandMode |= UserInputPredictionBands;  header.predictBandMode <<= 2;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
     bool neighborSum(true);
 
-    header.combinedField4 |= neighborSum;  header.combinedField4 <<= 7;
-    header.combinedField4 |= RegisterSize;
+    header.neighborRegSize |= neighborSum;  header.neighborRegSize <<= 7;
+    header.neighborRegSize |= RegisterSize;
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    header.combinedField5 |= (PredictionWeightResolution - 4);  header.combinedField5 <<= 4;
+    header.predictWeightResInit |= (PredictionWeightResolution - 4);  header.predictWeightResInit <<= 4;
 
     unsigned int scaledWeight = log2(PredictionWeightInterval);
-    header.combinedField5 |= (scaledWeight - 4);
+    header.predictWeightResInit |= (scaledWeight - 4);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    header.combinedField6 |= (PredictionWeightInitial + 6);  header.combinedField6 <<= 4;
+    header.predictWeightInitFinal |= (PredictionWeightInitial + 6);  header.predictWeightInitFinal <<= 4;
 
-    header.combinedField6 |= (PredictionWeightFinal + 6);
+    header.predictWeightInitFinal |= (PredictionWeightFinal + 6);
     //----------------------------------------------------------------------------
 
     //----------------------------------------------------------------------------
-    header.combinedField8 |= (0x40);
+    header.blockSizeRefInterval[0] |= (0x40);
 
-    header.combinedField8 |= (0x80);
+    ushort refInterval(ReferenceInterval);
+    bigEndianVersusLittleEndian(refInterval);
+
+    ushort msbRefInterval = (refInterval & 0xfff0) >> 8;
+    header.blockSizeRefInterval[0] |= (refInterval & 0xf);
+
+    header.blockSizeRefInterval[1] = msbRefInterval;
     //----------------------------------------------------------------------------
 
     boost::dynamic_bitset<unsigned char> filter;
@@ -255,17 +261,19 @@ void Sensor::createHeader()
     filter.append(*reinterpret_cast<char*>(&header.yDimension[1]));
     filter.append(*reinterpret_cast<char*>(&header.zDimension[0]));
     filter.append(*reinterpret_cast<char*>(&header.zDimension[1]));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField1));
+    filter.append(*reinterpret_cast<char*>(&header.signSampDynRangeBsq1));
     filter.append(*reinterpret_cast<char*>(&header.bsq[0]));
     filter.append(*reinterpret_cast<char*>(&header.bsq[1]));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField2[0]));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField2[1]));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField3));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField4));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField5));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField6));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField7));
-    filter.append(*reinterpret_cast<char*>(&header.combinedField8));
+    filter.append(*reinterpret_cast<char*>(&header.wordSizEncodeMethod[0]));
+    filter.append(*reinterpret_cast<char*>(&header.wordSizEncodeMethod[1]));
+    filter.append(*reinterpret_cast<char*>(&header.predictBandMode));
+    filter.append(*reinterpret_cast<char*>(&header.neighborRegSize));
+    filter.append(*reinterpret_cast<char*>(&header.predictWeightResInit));
+    filter.append(*reinterpret_cast<char*>(&header.predictWeightTable));
+    filter.append(*reinterpret_cast<char*>(&header.predictWeightInitFinal));
+    filter.append(*reinterpret_cast<char*>(&header.predictWeightTable));
+    filter.append(*reinterpret_cast<char*>(&header.blockSizeRefInterval[0]));
+    filter.append(*reinterpret_cast<char*>(&header.blockSizeRefInterval[1]));
 
     size_t bitsPerBlock = filter.bits_per_block;
     size_t numBlocks = filter.num_blocks();

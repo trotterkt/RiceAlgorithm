@@ -65,21 +65,20 @@ struct CompressedHeader
     char yDimension[2];
     char zDimension[2];
 
-    char combinedField1;    // sample type, reserved, dyn range, bsq(1)
+    char signSampDynRangeBsq1;   // sample type, reserved, dyn range, bsq(1)
     char bsq[2];
-    char combinedField2[2]; // reserved, out word size, encoding method,
-                            // reserved
-    char combinedField3;    // user input predictor band,
-                            // predictor full, reserved,
-    char combinedField4;    // neighbor sum,
-                            //reserve, register size
-    char combinedField5;    // weight resolution, weight interval, initial weight,
-                            // final weight, reserved, initial weight table,
-                            // weight init resolution
-    char combinedField6;    // reserved, block size flag, restricted, ref interval
-    char combinedField7;
-    char combinedField8;
-    char combinedField9;
+    char wordSizEncodeMethod[2]; // reserved, out word size, encoding method,
+                                 // reserved
+    char predictBandMode;        // user input predictor band,
+                                 // predictor full, reserved,
+    char neighborRegSize;        // neighbor sum,
+                                 //reserve, register size
+    char predictWeightResInit;   // weight resolution, weight interval, initial weight,
+                                 // final weight, reserved, initial weight table,
+                                  // weight init resolution
+    char predictWeightInitFinal;    // reserved, block size flag, restricted, ref interval
+    char predictWeightTable;
+    char blockSizeRefInterval[2];
 };
 
 

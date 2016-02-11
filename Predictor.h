@@ -28,6 +28,7 @@ const unsigned int PredictionNeighborSum(0);
 const unsigned int PredictionFull(1);
 const unsigned int RegisterSize(32);
 const unsigned char DynamicRange(16);
+const unsigned int ReferenceInterval(1000);
 
 class Predictor
 {
