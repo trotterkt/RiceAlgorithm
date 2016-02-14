@@ -130,7 +130,7 @@ class Sensor
 
 	    // will need to both write to and read from this stream
 	    std::fstream myEncodedStream;
-	    void createHeader();
+	    void sendHeader();
 
         unsigned int myXDimension;
         unsigned int myYDimension;
@@ -148,7 +148,8 @@ class Sensor
 		RiceAlgorithm::ZeroBlockOption* zeroBlock;
 		RiceAlgorithm::SplitSequence* split; // this will become more specific
 
-		void createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder);
+//		void sendEncodedSamples(RiceAlgorithm::AdaptiveEntropyEncoder& encoder);
+		void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream);
 
 		// Templated method to write out information to compressed file. This is
 		// necessary in writing information which is likely not to exist on a
@@ -156,7 +157,7 @@ class Sensor
         static ulong bytesWritten; // new file pointer should be at this location
         static ulong bitsWritten;
 
-		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &filter, ulong bitSize=sizeof(T)*BitsPerByte)
+		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &packedData, ulong bitSize=sizeof(T)*BitsPerByte)
         {
 
 		    size_t numberOfBytes = sizeof(data);
@@ -164,16 +165,16 @@ class Sensor
 		    // whatever type it is, see it as a collection of bytes
 		    char* ptrData = reinterpret_cast<char*>(&data);
 
-		    size_t currentSize = filter.size();
+		    size_t currentSize = packedData.size();
 
 		    // Since the data is of uneven types, all are read in as single bytes
 		    for(int index=0; index<numberOfBytes; index++)
 		    {
-		        filter.append(ptrData[index]);
+		        packedData.append(ptrData[index]);
 		    }
 
-		    //filter >>= bitSize;
-		    filter.resize(currentSize+bitSize);
+		    //packedData >>= bitSize;
+		    packedData.resize(currentSize+bitSize);
 
 //            boost::dynamic_bitset<> testBitset(128, 0xffff);
 //            boost::dynamic_bitset<> testBitset2(128, 0xffff);
@@ -222,7 +223,7 @@ class Sensor
 //
         }
 
-        void writeCompressedData(boost::dynamic_bitset<unsigned char> &filter);
+        void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0);
 };
 
 #endif /* SENSOR_H_ */

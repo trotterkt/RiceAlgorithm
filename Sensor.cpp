@@ -113,9 +113,9 @@ ushort* Sensor::getSamples(uint scanNumber)
 
 void Sensor::process()
 {
-	createHeader();
-
 	// The goal hear is to form the telemetry of the data
+
+	sendHeader();
 
 	myPreprocessor.readSamples(mySamples);
 
@@ -136,6 +136,7 @@ void Sensor::process()
 	std::vector<AdaptiveEntropyEncoder*>::iterator winningIteration;
 
     CodingSelection winningSelection;
+    boost::dynamic_bitset<> encodedStream;
 
     // Should only need to get the residuals once for a given raw image set
     ushort* residualsPtr = myPreprocessor.getResiduals();
@@ -160,7 +161,7 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            unsigned int encodedLength = (*iteration)->encode(encodedBlock, selection);
+            unsigned int encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
 
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
@@ -175,14 +176,18 @@ void Sensor::process()
 
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
+
+        //:TODO: Figure this out
+        //sendEncodedSamples(*(*winningIteration));
+        sendEncodedSamples(encodedStream);
+
+
     }
 
-    //:TODO: Figure this out
-	//createEncodingCodes(*(*winningIteration));
 }
 
 
-void Sensor::createHeader()
+void Sensor::sendHeader()
 {
     // Note: Header is not completely populated for all defined parameters.
     // Only what is applicable to the selected test raw data to
@@ -248,56 +253,51 @@ void Sensor::createHeader()
     header.blockSizeRefInterval |= refInterval;
     //----------------------------------------------------------------------------
 
-    boost::dynamic_bitset<unsigned char> filter;
-    packCompressedData(header.userData, filter);                // byte 0
-    packCompressedData(header.xDimension, filter);              // bytes 1,2
-    packCompressedData(header.yDimension, filter);              // bytes 3,4
-    packCompressedData(header.zDimension, filter);              // bytes 5,6
-    packCompressedData(header.signSampDynRangeBsq1, filter);    // byte 7
-    packCompressedData(header.bsq, filter);                     // bytes 8,9
-    packCompressedData(header.wordSizEncodeMethod, filter);     // bytes 10,11
-    packCompressedData(header.predictBandMode, filter);         // byte 12
-    packCompressedData(header.neighborRegSize, filter);         // byte 13
-    packCompressedData(header.predictWeightResInit, filter);    // byte 14
-    packCompressedData(header.predictWeightInitFinal, filter);  // byte 15
-    packCompressedData(header.predictWeightTable, filter);      // byte 16
-    packCompressedData(header.blockSizeRefInterval, filter);    // bytes 17,18
+    boost::dynamic_bitset<unsigned char> packedData;
+    packCompressedData(header.userData, packedData);                // byte 0
+    packCompressedData(header.xDimension, packedData);              // bytes 1,2
+    packCompressedData(header.yDimension, packedData);              // bytes 3,4
+    packCompressedData(header.zDimension, packedData);              // bytes 5,6
+    packCompressedData(header.signSampDynRangeBsq1, packedData);    // byte 7
+    packCompressedData(header.bsq, packedData);                     // bytes 8,9
+    packCompressedData(header.wordSizEncodeMethod, packedData);     // bytes 10,11
+    packCompressedData(header.predictBandMode, packedData);         // byte 12
+    packCompressedData(header.neighborRegSize, packedData);         // byte 13
+    packCompressedData(header.predictWeightResInit, packedData);    // byte 14
+    packCompressedData(header.predictWeightInitFinal, packedData);  // byte 15
+    packCompressedData(header.predictWeightTable, packedData);      // byte 16
+    packCompressedData(header.blockSizeRefInterval, packedData);    // bytes 17,18
 
 
-    size_t bitsPerBlock = filter.bits_per_block;
-    size_t numBlocks = filter.num_blocks();
+    size_t bitsPerBlock = packedData.bits_per_block;
+    size_t numBlocks = packedData.num_blocks();
 
 
-    writeCompressedData(filter);
+    writeCompressedData(packedData);
 
-    //:TODO: test this out for the encoded data
-    //*******************************************************
-    boost::dynamic_bitset<unsigned char> filter2;
-
-    //char method(0xB);
-    //ulong method(0xB);
-    boost::dynamic_bitset<> method(26, 0xB);
-    //packCompressedData(method, filter2, 4);
-
-    //ulong encodedData(0x1);
-    boost::dynamic_bitset<> encodedData(26, 0x1);
-
-    encodedData |= (method <<= 22);
-
-    //packCompressedData(encodedData, filter2, 22);
-    ulong data = encodedData.to_ulong();
-    bigEndianVersusLittleEndian(data);
-    packCompressedData(data, filter2, 26);
-
-
-    writeCompressedData(filter2);
-
-    //*******************************************************
-
-	myEncodedStream.close(); // :TODO: temporary test
+//    //:TODO: test this out for the encoded data
+//    //*******************************************************
+//    boost::dynamic_bitset<unsigned char> packedData2;
+//
+//
+//    boost::dynamic_bitset<ulong> method(sizeof(ulong)*8, 0xB);
+//    method <<= 22;
+//    boost::dynamic_bitset<ulong> encodedData(sizeof(ulong)*8, 0x01);
+//    encodedData |= method;
+//    encodedData <<= ((sizeof(ulong)*8) - 26);
+//
+//    ulong data4 = encodedData.to_ulong();
+//    bigEndianVersusLittleEndian(data4);
+//
+//    packCompressedData(data4, packedData2);
+//    writeCompressedData(packedData2, 26);
+//
+//    //*******************************************************
+//
+//	myEncodedStream.close(); // :TODO: temporary test
 }
 
-void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
+void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream)
 {
 /*
 	// see Lossless Data Compression, Blue Book, sec 5.1.2
@@ -316,7 +316,120 @@ void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
 
 
     int numberOfBits = (32 * sizeof(ushort) * 8) + codeOptionBits;
+*/
+/*
+    //:TODO: test this out for the encoded data
+    //*******************************************************
+    boost::dynamic_bitset<unsigned char> packedData2;
 
+
+    boost::dynamic_bitset<ulong> method(sizeof(ulong)*8, 0xB);
+    method <<= 22;
+    boost::dynamic_bitset<ulong> encodedData(sizeof(ulong)*8, 0x01);
+    encodedData |= method;
+    encodedData <<= ((sizeof(ulong)*8) - 26);
+
+    ulong data4 = encodedData.to_ulong();
+    bigEndianVersusLittleEndian(data4);
+
+    packCompressedData(data4, packedData2);
+    writeCompressedData(packedData2, 26);
+*/
+    //*******************************************************
+	//boost::dynamic_bitset<unsigned char> encodedStream2(encodedStream);
+	//encodedStream2 = encodedStream;
+
+
+
+        size_t bytes = encodedStream.size()/BitsPerByte;
+        if(encodedStream.size() % BitsPerByte)
+        {
+        	bytes++;
+        }
+
+        // this does three things - (1) changes the block size from ulong to
+        // unsigned char (2) reverses the byte order, (3) any fill bits
+        // are placed at the end, and (4) exits early for filled bits
+        // Note that this algorithm was largely arrived at empirically. Looking
+        // at the data to see what is correct. Keep this in mind when defining
+        // architectural decisions, and when there may exist reluctance
+        // after prototyping activities.
+        size_t offset = (bytes*BitsPerByte)-encodedStream.size();
+
+	    boost::dynamic_bitset<unsigned char> convertedStream(encodedStream.size());
+	    for(int byteIndex=0; byteIndex<bytes; byteIndex++)
+	    {
+	    	int targetByte = bytes - byteIndex - 1;
+	    	int sourceByte = byteIndex;
+
+	    	for(int bitIndex=0; bitIndex<BitsPerByte; bitIndex++)
+	    	{
+	    		int targetBit = (targetByte*BitsPerByte) + bitIndex;
+	    		int sourceBit = (sourceByte*BitsPerByte) + bitIndex;
+
+		    	convertedStream[targetBit] =  encodedStream[sourceBit];
+		    	//cout << convertedStream[targetBit + offset];
+		    	cout << targetBit << ", ";
+
+//		    	if(targetBit == offset)
+//		    	{
+//		    		break;
+//		    	}
+	    	}
+
+	    }
+        cout << endl;
+	    // it appears shifting does not work as expected hear
+	    //convertedStream >>= ((bytes*BitsPerByte)-convertedStream.size());
+
+
+/*
+	    vector<unsigned char> convertedDataBlocks(convertedStream.num_blocks());
+
+	    //populate vector blocks
+	    boost::to_block_range(convertedStream, convertedDataBlocks.begin());
+
+	    uint8_t buffer[bytes];
+        int index(0);
+	    //write out each block
+	    for (vector<unsigned char>::iterator it =
+	    		convertedDataBlocks.begin(); it != convertedDataBlocks.end(); ++it)
+	    {
+
+	    	buffer[index] = *it;
+	    	index++;
+	    }
+
+	    // Essentially need an endian conversion
+//		memcpy(buffer, &numberToTranslate, bytes);
+//
+		int i = 0;
+		int j = bytes - 1;
+
+		while(i<j)
+		{
+			std::swap(buffer[i], buffer[j]);
+			i++;
+			j--;
+		}
+//		memcpy(&numberToTranslate, buffer, bytes);
+
+*/
+
+    writeCompressedData(convertedStream);
+
+
+
+
+
+
+
+
+
+
+	myEncodedStream.close(); // :TODO: temporary test
+
+/*
     // create on byte boundaries
     double remainder(0), integer(0);
     remainder = modf((numberOfBits/8), &integer);
@@ -382,19 +495,40 @@ void Sensor::createEncodingCodes(RiceAlgorithm::AdaptiveEntropyEncoder& encoder)
 */
 }
 
-void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &filter)
+void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize)
 {
-    vector<unsigned char> filterBlocks(filter.num_blocks());
+	// A non-default bit size might be specified, but this must be adjusted to the nearest
+	// full bit
+	if (!bitSize)
+	{
+		bitSize=packedData.size();
+	}
+
+    size_t numberOfBytes = bitSize/BitsPerByte;
+    if(bitSize % BitsPerByte)
+    {
+    	numberOfBytes++;
+    }
+
+    vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 
     //populate vector blocks
-    boost::to_block_range(filter, filterBlocks.begin());
+    boost::to_block_range(packedData, packedDataBlocks.begin());
 
     //write out each block
     for (vector<unsigned char>::iterator it =
-            filterBlocks.begin(); it != filterBlocks.end(); ++it)
+            packedDataBlocks.begin(); it != packedDataBlocks.end(); ++it)
     {
         //retrieves block and converts it to a char*
         myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
+
+        // if we've written the targeted number of bytes
+        // return
+        numberOfBytes--;
+        if(!numberOfBytes)
+        {
+        	break;
+        }
     }
 
 }

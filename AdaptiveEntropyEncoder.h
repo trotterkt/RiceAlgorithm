@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <Predictor.h>
+#include <boost/dynamic_bitset.hpp>
 
 
 namespace RiceAlgorithm
@@ -44,7 +45,7 @@ public:
 	void setSamples(ushort* samples) { memcpy(myInputSamples, samples, myEncodedBlockSize * sizeof(ushort)); }
 
     // encoding in the base class is basically nothing, and this is also the same as no compression option
-	virtual unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection) {
+	virtual unsigned int encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection) {
 																							memcpy(myEncodedBlock, myInputSamples, BlockSize * sizeof(ushort));
 																							memcpy(encodedBlock, myInputSamples, BlockSize * sizeof(ushort)); // :TODO: is this necessary any more?
 																						    myCodingSelection = NoCompressionOpt;

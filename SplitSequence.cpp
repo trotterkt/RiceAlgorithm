@@ -55,7 +55,7 @@ SplitSequence::~SplitSequence()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &selection)
+unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
 {
 
     unsigned int code_len = (unsigned int)-1;
@@ -96,7 +96,13 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &
         totalEncodedSize += encodedSize;
     }
 
-    boost::dynamic_bitset<> encodedStream(totalEncodedSize, 1ul);
+    // include space for the  code option
+    totalEncodedSize += CodeOptionBitFieldFundamentalOrNoComp;
+
+    //boost::dynamic_bitset<> encodedStream(totalEncodedSize, 1ul);
+    encodedStream.resize(totalEncodedSize);
+    encodedStream.reset();
+    encodedStream[0] = 1;
 
     // assign each encoded sample and shift by the next one
     // at the end of the loop, we will assign the last one
@@ -119,7 +125,12 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, CodingSelection &
         numberEncodedBytes = totalEncodedSize/8; 
     }
     
-    
+    // place the code encoding selection
+    boost::dynamic_bitset<> encodedSelectionStream(totalEncodedSize, (selection + 1));
+    encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
+    encodedStream |= encodedSelectionStream;
+    cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+
     myEncodedBlockSize = code_len;
     return code_len;
 }
