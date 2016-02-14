@@ -170,18 +170,12 @@ void Sensor::process()
                 myWinningEncodedLength = encodedLength;
                 winningSelection = selection;
             }
-//
-            //cout << "Finished Encoder Iteration:" << (iteration - myEncoderList.begin()) << endl;
         }
 
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
-        //:TODO: Figure this out
-        //sendEncodedSamples(*(*winningIteration));
         sendEncodedSamples(encodedStream);
-
-
     }
 
 }
@@ -275,227 +269,46 @@ void Sensor::sendHeader()
 
     writeCompressedData(packedData);
 
-//    //:TODO: test this out for the encoded data
-//    //*******************************************************
-//    boost::dynamic_bitset<unsigned char> packedData2;
-//
-//
-//    boost::dynamic_bitset<ulong> method(sizeof(ulong)*8, 0xB);
-//    method <<= 22;
-//    boost::dynamic_bitset<ulong> encodedData(sizeof(ulong)*8, 0x01);
-//    encodedData |= method;
-//    encodedData <<= ((sizeof(ulong)*8) - 26);
-//
-//    ulong data4 = encodedData.to_ulong();
-//    bigEndianVersusLittleEndian(data4);
-//
-//    packCompressedData(data4, packedData2);
-//    writeCompressedData(packedData2, 26);
-//
-//    //*******************************************************
-//
-//	myEncodedStream.close(); // :TODO: temporary test
 }
 
 void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream)
 {
-/*
-	// see Lossless Data Compression, Blue Book, sec 5.1.2
-	short codeOptionBits(0);
-	switch(encoder.getSelection())
-	{
-		case ZeroBlockOpt:
-		case SecondExtensionOpt:
-			codeOptionBits = CodeOptionBitFieldZeroOrSecEx;
-			break;
 
-		default:
-			codeOptionBits = CodeOptionBitFieldFundamentalOrNoComp;
-			break;
+	size_t bytes = encodedStream.size() / BitsPerByte;
+	if (encodedStream.size() % BitsPerByte)
+	{
+		bytes++;
 	}
 
+	// this does two things - (1) changes the block size from ulong to
+	// unsigned char and (2) reverses the byte order
+	// Note that this algorithm was largely arrived at empirically. Looking
+	// at the data to see what is correct. Keep this in mind when defining
+	// architectural decisions, and when there may exist reluctance
+	// after prototyping activities.
 
-    int numberOfBits = (32 * sizeof(ushort) * 8) + codeOptionBits;
-*/
-/*
-    //:TODO: test this out for the encoded data
-    //*******************************************************
-    boost::dynamic_bitset<unsigned char> packedData2;
+	boost::dynamic_bitset<unsigned char> convertedStream(encodedStream.size());
+	for (int byteIndex = 0; byteIndex < bytes; byteIndex++)
+	{
+		int targetByte = bytes - byteIndex - 1;
+		int sourceByte = byteIndex;
 
-
-    boost::dynamic_bitset<ulong> method(sizeof(ulong)*8, 0xB);
-    method <<= 22;
-    boost::dynamic_bitset<ulong> encodedData(sizeof(ulong)*8, 0x01);
-    encodedData |= method;
-    encodedData <<= ((sizeof(ulong)*8) - 26);
-
-    ulong data4 = encodedData.to_ulong();
-    bigEndianVersusLittleEndian(data4);
-
-    packCompressedData(data4, packedData2);
-    writeCompressedData(packedData2, 26);
-*/
-    //*******************************************************
-	//boost::dynamic_bitset<unsigned char> encodedStream2(encodedStream);
-	//encodedStream2 = encodedStream;
-
-
-
-        size_t bytes = encodedStream.size()/BitsPerByte;
-        if(encodedStream.size() % BitsPerByte)
-        {
-        	bytes++;
-        }
-
-        // this does three things - (1) changes the block size from ulong to
-        // unsigned char (2) reverses the byte order, (3) any fill bits
-        // are placed at the end, and (4) exits early for filled bits
-        // Note that this algorithm was largely arrived at empirically. Looking
-        // at the data to see what is correct. Keep this in mind when defining
-        // architectural decisions, and when there may exist reluctance
-        // after prototyping activities.
-        size_t offset = (bytes*BitsPerByte)-encodedStream.size();
-
-	    boost::dynamic_bitset<unsigned char> convertedStream(encodedStream.size());
-	    for(int byteIndex=0; byteIndex<bytes; byteIndex++)
-	    {
-	    	int targetByte = bytes - byteIndex - 1;
-	    	int sourceByte = byteIndex;
-
-	    	for(int bitIndex=0; bitIndex<BitsPerByte; bitIndex++)
-	    	{
-	    		int targetBit = (targetByte*BitsPerByte) + bitIndex;
-	    		int sourceBit = (sourceByte*BitsPerByte) + bitIndex;
-
-		    	convertedStream[targetBit] =  encodedStream[sourceBit];
-		    	//cout << convertedStream[targetBit + offset];
-		    	cout << targetBit << ", ";
-
-//		    	if(targetBit == offset)
-//		    	{
-//		    		break;
-//		    	}
-	    	}
-
-	    }
-        cout << endl;
-	    // it appears shifting does not work as expected hear
-	    //convertedStream >>= ((bytes*BitsPerByte)-convertedStream.size());
-
-
-/*
-	    vector<unsigned char> convertedDataBlocks(convertedStream.num_blocks());
-
-	    //populate vector blocks
-	    boost::to_block_range(convertedStream, convertedDataBlocks.begin());
-
-	    uint8_t buffer[bytes];
-        int index(0);
-	    //write out each block
-	    for (vector<unsigned char>::iterator it =
-	    		convertedDataBlocks.begin(); it != convertedDataBlocks.end(); ++it)
-	    {
-
-	    	buffer[index] = *it;
-	    	index++;
-	    }
-
-	    // Essentially need an endian conversion
-//		memcpy(buffer, &numberToTranslate, bytes);
-//
-		int i = 0;
-		int j = bytes - 1;
-
-		while(i<j)
+		for (int bitIndex = 0; bitIndex < BitsPerByte; bitIndex++)
 		{
-			std::swap(buffer[i], buffer[j]);
-			i++;
-			j--;
+			int targetBit = (targetByte * BitsPerByte) + bitIndex;
+			int sourceBit = (sourceByte * BitsPerByte) + bitIndex;
+
+			convertedStream[targetBit] = encodedStream[sourceBit];
 		}
-//		memcpy(&numberToTranslate, buffer, bytes);
 
-*/
+	}
 
-    writeCompressedData(convertedStream);
+	writeCompressedData(convertedStream, 81, true);
 
-
-
-
-
-
-
-
-
-
-	myEncodedStream.close(); // :TODO: temporary test
-
-/*
-    // create on byte boundaries
-    double remainder(0), integer(0);
-    remainder = modf((numberOfBits/8), &integer);
-
-    int additionalBits = remainder * 8;
-    numberOfBits += additionalBits;
-
-    int currentBitLocation(0);
-
-    currentBitLocation = currentBitLocation - codeOptionBits;
-
-    currentBitLocation = currentBitLocation + codeOptionBits;
-
-    ushort* residualsPtr = myPreprocessor.getResiduals();
-
-	int length[32];
-
-	// decide how many zeros are appropriate for split sequence
-	// apply this in reverse order
-    for(int i = 0; i < 32; i++)
-    {
-    	int shiftOne = (residualsPtr)[i] >>
-    			       int(encoder.getSelection()); // this is the number of zeros before a one
-    	length[31-i] = shiftOne+1;
-    }
-
-    unsigned long lsbWord(0xb);
-    unsigned long msbWord(0);
-
-    int totalBitShift(0);
-
-    // construct k-split sequence
-    for(int i = 31; i >= 0; i--)
-    {
-        // whatever length[i] is in the msb bits, on the ksbWord,
-    	// copy it to the first of the high-order word 4 --> 15 (2^4)-1
-    	double shiftBits = length[i];
-    	unsigned long mask = (exp2(shiftBits) - 1);
-    	mask <<= ((sizeof(unsigned long)*8) - length[i]);
-    	unsigned long tempMsbWord = lsbWord & mask;
-    	tempMsbWord >>= ((sizeof(unsigned long)*8) - length[i]);
-        msbWord <<= length[i];
-        msbWord |= tempMsbWord;
-
-        lsbWord = lsbWord << length[i];
-        lsbWord = lsbWord | 0x1;
-        totalBitShift += length[i];
-    }
-
-    // :KLUDGE: need to address endian for non-standard
-    // data type
-    bigEndianVersusLittleEndian(lsbWord);
-    bigEndianVersusLittleEndian(msbWord);
-
-
-    for(int i = 0; i < 32; i++)
-    {
-    	ushort code = mySamples[i] >> int(encoder.getSelection());
-
-    	std::bitset<516> code3(mySamples[i]);
-    	code3 <<= (516 - codeOptionBits - ((i+1)*sizeof(ushort)*8));
-    }
-*/
+	//myEncodedStream.close(); // :TODO: temporary test
 }
 
-void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize)
+void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize, bool flag)
 {
 	// A non-default bit size might be specified, but this must be adjusted to the nearest
 	// full bit
@@ -509,6 +322,9 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     {
     	numberOfBytes++;
     }
+
+    //if(flag)
+    //packedData >>= 7;
 
     vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 

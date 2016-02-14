@@ -19,6 +19,7 @@
 namespace RiceAlgorithm
 {
 const size_t BlockSize(32*DynamicRange);
+const ushort BitsPerByte(8);
 
 enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same as Split-Sequence, with K=0
 					  K1, K2, K3, K4, K5,
@@ -73,6 +74,16 @@ protected:
     CodingSelection myCodingSelection;
     ushort* myEncodedBlock;
     size_t myEncodedBlockSize;
+
+    inline void appendLsb(boost::dynamic_bitset<> &data, boost::dynamic_bitset<> &appendData)
+    {
+    	size_t sizeAppend = appendData.size();
+
+    	data.resize(data.size() + sizeAppend);
+    	data <<= sizeAppend;
+    	data |= appendData;
+    }
+
 
 };
 

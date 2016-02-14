@@ -23,7 +23,6 @@
 const double LandsatDownlinkRate(384);
 
 const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize);
-const ushort BitsPerByte(8);
 
 inline static bool isSystemBigEndian()
 {
@@ -157,7 +156,8 @@ class Sensor
         static ulong bytesWritten; // new file pointer should be at this location
         static ulong bitsWritten;
 
-		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &packedData, ulong bitSize=sizeof(T)*BitsPerByte)
+
+		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &packedData, ulong bitSize=sizeof(T)*RiceAlgorithm::BitsPerByte)
         {
 
 		    size_t numberOfBytes = sizeof(data);
@@ -212,18 +212,18 @@ class Sensor
 //
 		    // figure out the impending written size
 		    bitsWritten += bitSize;
-		    if(bitsWritten >= BitsPerByte)
+		    if(bitsWritten >= RiceAlgorithm::BitsPerByte)
 		    {
-		        size_t numberEquivBytes = bitsWritten/BitsPerByte;
+		        size_t numberEquivBytes = bitsWritten/RiceAlgorithm::BitsPerByte;
 		        bytesWritten += numberEquivBytes;
-		        bitsWritten -= (numberEquivBytes*BitsPerByte);
+		        bitsWritten -= (numberEquivBytes*RiceAlgorithm::BitsPerByte);
 		    }
 //
 //
 //
         }
 
-        void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0);
+        void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0, bool flag=false);
 };
 
 #endif /* SENSOR_H_ */

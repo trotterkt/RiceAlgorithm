@@ -69,7 +69,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         unsigned int code_len_temp = 0;
         for(i = 0; i < 32; i++)
         {
-        	cout << "myInputSamples[i] >> k = " << (myInputSamples[i] >> k) << ", k=" << k << endl;
+        	//cout << "myInputSamples[i] >> k = " << (myInputSamples[i] >> k) << ", k=" << k << endl;
 
         	ushort encodedSample = myInputSamples[i] >> k;
             code_len_temp += (encodedSample) + 1 + k;
@@ -125,10 +125,18 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         numberEncodedBytes = totalEncodedSize/8; 
     }
     
+	// see Lossless Data Compression, Blue Book, sec 5.1.2
     // place the code encoding selection
     boost::dynamic_bitset<> encodedSelectionStream(totalEncodedSize, (selection + 1));
     encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
     encodedStream |= encodedSelectionStream;
+
+    // Determine the shift amount if we are not on a full byte, as is probably normally
+    // the case. There would otherwise often be leading zero bits
+    size_t shiftBits = totalEncodedSize*BitsPerByte - encodedStream.size();
+    encodedStream.resize(encodedStream.size() + shiftBits);
+    encodedStream <<= shiftBits;
+
     cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     myEncodedBlockSize = code_len;
