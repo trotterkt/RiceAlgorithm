@@ -142,11 +142,14 @@ void Sensor::process()
     ushort* residualsPtr = myPreprocessor.getResiduals();
     
     int blockIndex(0);
+    unsigned int encodedLength(0);
 
     long totalSamples = myXDimension*myYDimension*myZDimension;
 
     for(blockIndex = 0; blockIndex<totalSamples; blockIndex+=32)
     {
+        size_t encodedSize(0);
+
         // Reset for each capture of the winning length
         myWinningEncodedLength = (unsigned int) -1;
 
@@ -161,7 +164,7 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            unsigned int encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
+            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
 
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
@@ -169,13 +172,15 @@ void Sensor::process()
                 *this = *(*iteration);
                 myWinningEncodedLength = encodedLength;
                 winningSelection = selection;
+
+                encodedSize = (*iteration)->getEncodedBlockSize();
             }
         }
 
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
-        sendEncodedSamples(encodedStream);
+        sendEncodedSamples(encodedStream, encodedSize);
     }
 
 }
@@ -271,8 +276,18 @@ void Sensor::sendHeader()
 
 }
 
-void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream)
+void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength)
 {
+	bool endFlag(false);
+
+	//appendLsb(myFullEncodedStream, encodedStream);
+
+	// if 0, then whatever is there can be appended and sent
+	if(encodedLength == 0)
+	{
+		endFlag = true;
+	}
+
 
 	size_t bytes = encodedStream.size() / BitsPerByte;
 	if (encodedStream.size() % BitsPerByte)
@@ -303,9 +318,19 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream)
 
 	}
 
-	writeCompressedData(convertedStream, 81, true);
+	writeCompressedData(convertedStream, encodedStream.size(), true);
 
-	//myEncodedStream.close(); // :TODO: temporary test
+	//*****************************************************
+	static int debugCount(0);
+	if(debugCount >=3)
+	{
+	   myEncodedStream.close(); // :TODO: temporary test
+	   exit(0);
+	}
+	debugCount++;
+    //*****************************************************
+
+
 }
 
 void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize, bool flag)

@@ -133,13 +133,26 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
 
     // Determine the shift amount if we are not on a full byte, as is probably normally
     // the case. There would otherwise often be leading zero bits
-    size_t shiftBits = totalEncodedSize*BitsPerByte - encodedStream.size();
+    size_t shiftBits = numberEncodedBytes*BitsPerByte - encodedStream.size();
+    myEncodedBlockSize = encodedStream.size();
+
     encodedStream.resize(encodedStream.size() + shiftBits);
     encodedStream <<= shiftBits;
 
+    // combine all encoded blocks -- I don't think this will work. Maybe too large
+    // for available memory
+    //**************************************************************************
+//    appendLsb(myFullEncodedStream, encodedStream);
+//
+//    size_t currentEncodedSize = myFullEncodedStream.size();
+//    myFullEncodedStream.resize(currentEncodedSize + encodedStream.size());
+//    myFullEncodedStream <<= currentEncodedSize;
+//    myFullEncodedStream |= encodedStream;
+    //**************************************************************************
+
     cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
-    myEncodedBlockSize = code_len;
+    //myEncodedBlockSize = code_len;
     return code_len;
 }
 

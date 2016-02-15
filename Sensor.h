@@ -124,6 +124,10 @@ class Sensor
 	    ushort* mySamples;
 	    unsigned int myEncodedBlock[MaximumEncodedBlockSize];
 
+	    // append all encoded blocks before sending at once
+	    boost::dynamic_bitset<> myFullEncodedStream;
+
+
 	    std::ifstream mySampleStream;
 	    unsigned long myLength;
 
@@ -148,7 +152,7 @@ class Sensor
 		RiceAlgorithm::SplitSequence* split; // this will become more specific
 
 //		void sendEncodedSamples(RiceAlgorithm::AdaptiveEntropyEncoder& encoder);
-		void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream);
+		void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength=0);
 
 		// Templated method to write out information to compressed file. This is
 		// necessary in writing information which is likely not to exist on a

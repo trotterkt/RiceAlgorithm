@@ -75,6 +75,9 @@ protected:
     ushort* myEncodedBlock;
     size_t myEncodedBlockSize;
 
+    // append all encoded blocks before sending at once
+    boost::dynamic_bitset<> myFullEncodedStream;
+
     inline void appendLsb(boost::dynamic_bitset<> &data, boost::dynamic_bitset<> &appendData)
     {
     	size_t sizeAppend = appendData.size();
