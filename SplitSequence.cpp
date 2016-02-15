@@ -112,17 +112,35 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         encodedStream <<= encodedSizeList[index];        
     }
     encodedStream[0] |= 1;
-    cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+    cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+
+    // after the zero sequence number that was split off, then we add that value to the stream
+    // for each of the samples
+    boost::dynamic_bitset<> maskBits(selection, 0xffff);
+    ulong mask = maskBits.to_ulong();
+
+    for(int index = 0; index < 32; index++)
+    {
+        ushort  maskedSample = myInputSamples[index] & mask;
+        boost::dynamic_bitset<> encodedSample(selection, maskedSample);
+        
+        encodedStream.resize(totalEncodedSize + selection);
+        encodedStream <<= selection;
+        encodedSample.resize(totalEncodedSize + selection);
+        encodedStream |= encodedSample;
+        
+        totalEncodedSize = encodedStream.size();
+    }
 
     size_t numberEncodedBytes;
     
-    if(totalEncodedSize % 2)
+    if(totalEncodedSize % BitsPerByte)
     {
-        numberEncodedBytes = totalEncodedSize/8 + 1; // capture partial byte
+        numberEncodedBytes = totalEncodedSize/BitsPerByte + 1; // capture partial byte
     }
     else
     {
-        numberEncodedBytes = totalEncodedSize/8; 
+        numberEncodedBytes = totalEncodedSize/BitsPerByte; 
     }
     
 	// see Lossless Data Compression, Blue Book, sec 5.1.2
@@ -150,7 +168,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
 //    myFullEncodedStream |= encodedStream;
     //**************************************************************************
 
-    cout << "encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+    cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     //myEncodedBlockSize = code_len;
     return code_len;

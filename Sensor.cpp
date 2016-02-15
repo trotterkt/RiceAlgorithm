@@ -157,6 +157,8 @@ void Sensor::process()
         for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
                 iteration != myEncoderList.end(); ++iteration)
         {
+            encodedStream.clear();
+
             // 1 block at a time
             (*iteration)->setSamples(&residualsPtr[blockIndex]);
 
