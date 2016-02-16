@@ -118,7 +118,8 @@ void Sensor::process()
 
 	sendHeader();
 
-    myEncodedBitCount = 0;
+    //myEncodedBitCount = 0;
+    myEncodedBitCount = 19*BitsPerByte;
 
 	myPreprocessor.readSamples(mySamples);
 
@@ -188,10 +189,11 @@ void Sensor::process()
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
+
         ushort partialBits = myEncodedBitCount % BitsPerByte;
         unsigned char lastByte(0);
 
-        if (partialBits)
+        if (getLastByte(lastByte))
 		{
         	cout << "Before partial appendage: " << encodedStream << endl;
         	unsigned int appendedSize = encodedStream.size()+partialBits;
@@ -203,9 +205,9 @@ void Sensor::process()
 			encodedStream |= lastByteStream;
         	cout << "After partial appendage : " << encodedStream << endl;
 
-        	getLastByte();
+        //	getLastByte();
 
-			lastByte = 0;
+		//	lastByte = 0;
 		}
 
         myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
@@ -215,7 +217,7 @@ void Sensor::process()
 
         sendEncodedSamples(encodedStream, encodedSize);
 
-        lastByte = getLastByte();
+        getLastByte(lastByte);
 
 
         lastWinningEncodedLength = encodedStream.size();
@@ -426,23 +428,29 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     myEncodedStream.seekg(0, ios::end);
 }
 
-unsigned char Sensor::getLastByte()
+bool Sensor::getLastByte(unsigned char &lastByte)
 {
     // Get the last byte written, and in some cases, reset the file pointer to the one previous
-    char lastByte(0);
+    //char lastByte(0);
+    bool partialByteFlag(false);
 
+    if(myEncodedBitCount % BitsPerByte)
+    {
+        //myEncodedStream.seekg (0, ios::end);
+        //int length = myEncodedStream.tellg();
 
-    myEncodedStream.seekg (0, ios::end);
-    int length = myEncodedStream.tellg();
+        myEncodedStream.seekg ((myEncodedBitCount % BitsPerByte), ios::beg);
+        myEncodedStream.get(*reinterpret_cast<char *>(&lastByte));
 
-    myEncodedStream.seekg (length-1, ios::beg);
-    myEncodedStream.get(lastByte);
+        partialByteFlag = true;
+    }
 
     // since the stream is bidirectional, we must reposition the file pointer
     // after every read to write, or visa versa
-    myEncodedStream.seekp (length-1, ios::beg);
+    unsigned int putByte = myEncodedBitCount / BitsPerByte;
+    myEncodedStream.seekp (putByte, ios::beg);
     //myEncodedStream.seekp (0, ios::end);
 
-    return lastByte;
+    return partialByteFlag;
 
 }
