@@ -42,7 +42,6 @@ void append(boost::dynamic_bitset<> &setLSB, boost::dynamic_bitset<> &setMSB)
 namespace RiceAlgorithm
 {
 
-//SplitSequence::SplitSequence(size_t sampleBlockSize, CodingSelection selection)
 SplitSequence::SplitSequence(size_t sampleBlockSize)
 : AdaptiveEntropyEncoder(sampleBlockSize)
 {
@@ -55,7 +54,7 @@ SplitSequence::~SplitSequence()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection, char lastByte)
+unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
 {
 
     unsigned int code_len = (unsigned int)-1;
@@ -69,12 +68,8 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         unsigned int code_len_temp = 0;
         for(i = 0; i < 32; i++)
         {
-        	//cout << "myInputSamples[i] >> k = " << (myInputSamples[i] >> k) << ", k=" << k << endl;
-
         	ushort encodedSample = myInputSamples[i] >> k;
             code_len_temp += (encodedSample) + 1 + k;
-
-
         }
 
         if(code_len_temp < code_len)
@@ -112,7 +107,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         encodedStream <<= encodedSizeList[index];        
     }
     encodedStream[0] |= 1;
-    cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     // after the zero sequence number that was split off, then we add that value to the stream
     // for each of the samples
@@ -157,20 +152,8 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
     encodedStream.resize(encodedStream.size() + shiftBits);
     encodedStream <<= shiftBits;
 
-    // combine all encoded blocks -- I don't think this will work. Maybe too large
-    // for available memory
-    //**************************************************************************
-//    appendLsb(myFullEncodedStream, encodedStream);
-//
-//    size_t currentEncodedSize = myFullEncodedStream.size();
-//    myFullEncodedStream.resize(currentEncodedSize + encodedStream.size());
-//    myFullEncodedStream <<= currentEncodedSize;
-//    myFullEncodedStream |= encodedStream;
-    //**************************************************************************
+     //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
-    cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
-
-    //myEncodedBlockSize = code_len;
     return code_len;
 }
 

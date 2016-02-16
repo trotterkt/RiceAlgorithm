@@ -11,13 +11,11 @@
 #include <vector>
 #include <math.h>
 #include <limits.h>
+#include "Timing.h"
 
 
 using namespace std;
 using namespace RiceAlgorithm;
-
-ulong Sensor::bytesWritten(0);
-ulong Sensor::bitsWritten(0);
 
 
 Sensor::Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z) :
@@ -142,9 +140,20 @@ void Sensor::process()
     CodingSelection winningSelection;
     boost::dynamic_bitset<> encodedStream;
 
+    timestamp_t t0 = getTimestamp();
+
     // Should only need to get the residuals once for a given raw image set
     ushort* residualsPtr = myPreprocessor.getResiduals();
     
+    timestamp_t t1 = getTimestamp();
+
+    double seconds = (t1 - t0) / MicroSecondsPerSecond;
+
+    cout << "Prediction processing time ==> " << fixed << seconds << " seconds"<< endl;
+
+
+    timestamp_t t2 = getTimestamp();
+
     int blockIndex(0);
     unsigned int encodedLength(0);
 
@@ -170,10 +179,7 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            //char lastByte = getLastByte();
-            char lastByte;
-
-            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection, lastByte);
+            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
 
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
@@ -186,28 +192,26 @@ void Sensor::process()
             }
         }
 
-        //CodingSelection selection = (*winningIteration)->getSelection();
-        cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
+        //cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
 
         ushort partialBits = myEncodedBitCount % BitsPerByte;
         unsigned char lastByte(0);
 
+        // When the last byte written is partial, as compared with the
+        // total bits written, capture it so that it can be merged with
+        // the next piece of encoded data
         if (getLastByte(lastByte))
 		{
-        	cout << "Before partial appendage: " << encodedStream << endl;
+        	//cout << "Before partial appendage: " << encodedStream << endl;
         	unsigned int appendedSize = encodedStream.size()+partialBits;
 			encodedStream.resize(appendedSize);
-        	cout << "Again  partial appendage: " << encodedStream << endl;
+        	//cout << "Again  partial appendage: " << encodedStream << endl;
 
 			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), lastByte);
 			lastByteStream <<= (encodedStream.size() - partialBits);
 			encodedStream |= lastByteStream;
-        	cout << "After partial appendage : " << encodedStream << endl;
-
-        //	getLastByte();
-
-		//	lastByte = 0;
+        	//cout << "After partial appendage : " << encodedStream << endl;
 		}
 
         myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
@@ -221,13 +225,13 @@ void Sensor::process()
 
 
         lastWinningEncodedLength = encodedStream.size();
-//
-//        lastByte = getLastByte();
-//        cout << "lastByte" << lastByte << endl; // believe at the end of the first block, the last byte is 0, with 3 extra bits (49 bytes, 5 bits)
-//                                                // so, starting with the last byte, shift the next block to the right by 5, then OR to last byte.
-//                                                // When writing back out, change put file position by 1 byte from end.
-
     }
+
+    timestamp_t t3 = getTimestamp();
+
+    seconds = (t3 - t2) / MicroSecondsPerSecond;
+
+    cout << "Encoding processing time ==> " << fixed << seconds << " seconds"<< endl;
 
 }
 
@@ -326,8 +330,6 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 {
 	bool endFlag(false);
 
-	//appendLsb(myFullEncodedStream, encodedStream);
-
 	// if 0, then whatever is there can be appended and sent
 	if(encodedLength == 0)
 	{
@@ -371,13 +373,13 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 	writeCompressedData(convertedStream, encodedStream.size(), true);
 
 	//*****************************************************
-	static int debugCount(0);
-	if(debugCount >=3)
-	{
-	   myEncodedStream.close(); // :TODO: temporary test
-	   exit(0);
-	}
-	debugCount++;
+//	static int debugCount(0);
+//	if(debugCount >=3)
+//	{
+//	   myEncodedStream.close(); // :TODO: temporary test
+//	   exit(0);
+//	}
+//	debugCount++;
     //*****************************************************
 
 
@@ -431,14 +433,11 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 bool Sensor::getLastByte(unsigned char &lastByte)
 {
     // Get the last byte written, and in some cases, reset the file pointer to the one previous
-    //char lastByte(0);
+
     bool partialByteFlag(false);
 
     if(myEncodedBitCount % BitsPerByte)
     {
-        //myEncodedStream.seekg (0, ios::end);
-        //int length = myEncodedStream.tellg();
-
         myEncodedStream.seekg ((myEncodedBitCount % BitsPerByte), ios::beg);
         myEncodedStream.get(*reinterpret_cast<char *>(&lastByte));
 
@@ -449,7 +448,6 @@ bool Sensor::getLastByte(unsigned char &lastByte)
     // after every read to write, or visa versa
     unsigned int putByte = myEncodedBitCount / BitsPerByte;
     myEncodedStream.seekp (putByte, ios::beg);
-    //myEncodedStream.seekp (0, ios::end);
 
     return partialByteFlag;
 

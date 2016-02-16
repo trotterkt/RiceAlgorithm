@@ -22,7 +22,7 @@ ZeroBlockOption::~ZeroBlockOption()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int ZeroBlockOption::encode(unsigned int* encodedBlock, CodingSelection &selection, char lastByte)
+unsigned int ZeroBlockOption::encode(unsigned int* encodedBlock, CodingSelection &selection)
 {
 	selection = ZeroBlockOpt;
     unsigned int code_len = (unsigned int)-1;

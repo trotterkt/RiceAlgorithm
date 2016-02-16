@@ -54,31 +54,12 @@ inline void bigEndianVersusLittleEndian(T &numberToTranslate)
 	}
 }
 
+
+
 // Note that if member types are not defined as being of similar size
 // there can be an alignment problem. See Annotated  C++ Ref Manual,
-// Sec 5.3.2
-//struct CompressedHeader
-//{
-//    char userData;
-//    char xDimension[2];
-//    char yDimension[2];
-//    char zDimension[2];
-//
-//    char signSampDynRangeBsq1;   // sample type, reserved, dyn range, bsq(1)
-//    char bsq[2];
-//    char wordSizEncodeMethod[2]; // reserved, out word size, encoding method,
-//                                 // reserved
-//    char predictBandMode;        // user input predictor band,
-//                                 // predictor full, reserved,
-//    char neighborRegSize;        // neighbor sum,
-//                                 //reserve, register size
-//    char predictWeightResInit;   // weight resolution, weight interval, initial weight,
-//                                 // final weight, reserved, initial weight table,
-//                                  // weight init resolution
-//    char predictWeightInitFinal;    // reserved, block size flag, restricted, ref interval
-//    char predictWeightTable;
-//    char blockSizeRefInterval[2];
-//};
+// Sec 5.3.2. This will not be an issue for this structure, since
+// I will not be writing in out directly as a whole.
 
 struct CompressedHeader
 {
@@ -112,7 +93,9 @@ class Sensor
 		void process();
 
 		 void operator=(RiceAlgorithm::AdaptiveEntropyEncoder& right){
-			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 memcpy(myEncodedBlock, right.getEncodedBlock(), right.getEncodedBlockSize());
+			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 memcpy(myEncodedBlock,
+			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	        right.getEncodedBlock(),
+			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	        right.getEncodedBlockSize());
 			 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 myWinningEncodedLength = right.getEncodedBlockSize();
 		 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 }
 		 bool operator>(RiceAlgorithm::AdaptiveEntropyEncoder& right){  return false; }
@@ -140,7 +123,6 @@ class Sensor
         unsigned int myZDimension;
 
         RiceAlgorithm::Predictor myPreprocessor;
-		//RiceAlgorithm::AdaptiveEntropyEncoder myEncoder;
 		std::vector<class RiceAlgorithm::AdaptiveEntropyEncoder*> myEncoderList;
 
 		unsigned int myWinningEncodedLength;
@@ -151,14 +133,7 @@ class Sensor
 		RiceAlgorithm::ZeroBlockOption* zeroBlock;
 		RiceAlgorithm::SplitSequence* split; // this will become more specific
 
-//		void sendEncodedSamples(RiceAlgorithm::AdaptiveEntropyEncoder& encoder);
 		void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength=0);
-
-		// Templated method to write out information to compressed file. This is
-		// necessary in writing information which is likely not to exist on a
-		// byte boundary.
-        static ulong bytesWritten; // new file pointer should be at this location
-        static ulong bitsWritten;
 
 
 		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &packedData, ulong bitSize=sizeof(T)*RiceAlgorithm::BitsPerByte)
@@ -180,51 +155,6 @@ class Sensor
 		    //packedData >>= bitSize;
 		    packedData.resize(currentSize+bitSize);
 
-//            boost::dynamic_bitset<> testBitset(128, 0xffff);
-//            boost::dynamic_bitset<> testBitset2(128, 0xffff);
-//            testBitset << sizeof(ulong)*BitsPerByte;
-//            testBitset |= testBitset2;
-//
-//            size_t blocks = testBitset.num_blocks();
-//
-//		    size_t dataSize = sizeof(T)*BitsPerByte;
-//
-//		    // Tack the next piece of data at the end of the list bit
-//		    // so I need to Or it
-//		    char currentData(0);
-//		    long currentPosition = myEncodedStream.tellp();
-//
-//		    if(currentPosition > 0)
-//		    {
-//		        myEncodedStream.seekp(currentPosition - 1);
-//		        myEncodedStream.read(&currentData, 1);
-//		    }
-//
-//
-//		    // combine the existing data with the new
-//            boost::dynamic_bitset<> pendingData(dataSize+BitsPerByte, currentData);
-//            boost::dynamic_bitset<> newData(dataSize+BitsPerByte, data);
-//            //ulong pendingData(currentData);
-//            //ulong newData(data);
-//		    pendingData <<= dataSize;
-//		    pendingData |= newData;
-//
-//		    ulong newValue = pendingData.to_ulong();
-//
-//            myEncodedStream.write(reinterpret_cast<char*>(&newData), dataSize/BitsPerByte);
-//            //myEncodedStream.write(reinterpret_cast<char*>(&pendingData), dataSize/BitsPerByte);
-//
-		    // figure out the impending written size
-		    bitsWritten += bitSize;
-		    if(bitsWritten >= RiceAlgorithm::BitsPerByte)
-		    {
-		        size_t numberEquivBytes = bitsWritten/RiceAlgorithm::BitsPerByte;
-		        bytesWritten += numberEquivBytes;
-		        bitsWritten -= (numberEquivBytes*RiceAlgorithm::BitsPerByte);
-		    }
-//
-//
-//
         }
 
         void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0, bool flag=false);

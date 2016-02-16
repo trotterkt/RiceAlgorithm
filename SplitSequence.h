@@ -16,11 +16,10 @@ namespace RiceAlgorithm
 class SplitSequence : public AdaptiveEntropyEncoder
 {
 	public:
-		//SplitSequence(size_t sampleBlockSize, CodingSelection selection);
 		SplitSequence(size_t sampleBlockSize);
 		virtual ~SplitSequence();
 
-		unsigned int encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection, char lastByte);
+		unsigned int encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection);
 };
 
 } /* namespace RiceAlgorithm */
