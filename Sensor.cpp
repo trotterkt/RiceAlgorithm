@@ -67,6 +67,7 @@ Sensor::~Sensor()
 {
     mySampleStream.close();
     myEncodedStream.close();
+
     delete[] mySamples;
 }
 
@@ -166,7 +167,9 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
+            char lastByte = getLastByte();
+
+            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection, lastByte);
 
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
@@ -182,7 +185,27 @@ void Sensor::process()
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
+//        unsigned char lastByte = getLastByte();
+//
+//        static unsigned int lastWinningEncodedLength(0);
+//
+//        ushort partialBits = lastWinningEncodedLength % BitsPerByte;
+//        encodedStream.resize(myWinningEncodedLength + partialBits);
+//        encodedStream >>= partialBits;
+//        boost::dynamic_bitset<> lastByteStream(partialBits, lastByte);
+//        lastByteStream.resize(encodedStream.size());
+//        lastByteStream <<= (encodedStream.size() - partialBits);
+//        encodedStream |= lastByteStream;
+
         sendEncodedSamples(encodedStream, encodedSize);
+
+//        lastWinningEncodedLength = myWinningEncodedLength;
+//
+//        lastByte = getLastByte();
+//        cout << "lastByte" << lastByte << endl; // believe at the end of the first block, the last byte is 0, with 3 extra bits (49 bytes, 5 bits)
+//                                                // so, starting with the last byte, shift the next block to the right by 5, then OR to last byte.
+//                                                // When writing back out, change put file position by 1 byte from end.
+
     }
 
 }
@@ -337,6 +360,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize, bool flag)
 {
+    
 	// A non-default bit size might be specified, but this must be adjusted to the nearest
 	// full bit
 	if (!bitSize)
@@ -350,8 +374,6 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     	numberOfBytes++;
     }
 
-    //if(flag)
-    //packedData >>= 7;
 
     vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 
@@ -362,8 +384,10 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     for (vector<unsigned char>::iterator it =
             packedDataBlocks.begin(); it != packedDataBlocks.end(); ++it)
     {
+
         //retrieves block and converts it to a char*
         myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
+
 
         // if we've written the targeted number of bytes
         // return
@@ -373,5 +397,28 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
         	break;
         }
     }
+
+    // since the stream is bidirectional, we must reposition the file pointer
+    // after every read to write, or visa versa
+    myEncodedStream.seekg(0, ios::end);
+}
+
+unsigned char Sensor::getLastByte()
+{
+    // Get the last byte written, and in some cases, reset the file pointer to the one previous
+    char lastByte(0);
+
+
+    myEncodedStream.seekg (0, ios::end);
+    int length = myEncodedStream.tellg();
+
+    myEncodedStream.seekg (length-1, ios::beg);
+    myEncodedStream.get(lastByte);
+
+    // since the stream is bidirectional, we must reposition the file pointer
+    // after every read to write, or visa versa
+    myEncodedStream.seekp (0, ios::end);
+
+    return lastByte;
 
 }

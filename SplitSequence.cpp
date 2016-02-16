@@ -55,7 +55,7 @@ SplitSequence::~SplitSequence()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
+unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection, char lastByte)
 {
 
     unsigned int code_len = (unsigned int)-1;

@@ -19,7 +19,7 @@ class ZeroBlockOption : public AdaptiveEntropyEncoder
 		ZeroBlockOption(size_t sampleBlockSize);
 		virtual ~ZeroBlockOption();
 
-	    unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection);
+	    unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection, char lastByte);
 
 };
 

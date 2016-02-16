@@ -132,7 +132,7 @@ class Sensor
 	    unsigned long myLength;
 
 	    // will need to both write to and read from this stream
-	    std::fstream myEncodedStream;
+        std::fstream myEncodedStream;
 	    void sendHeader();
 
         unsigned int myXDimension;
@@ -228,6 +228,9 @@ class Sensor
         }
 
         void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0, bool flag=false);
+
+        unsigned char getLastByte();
+
 };
 
 #endif /* SENSOR_H_ */
