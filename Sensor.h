@@ -231,6 +231,8 @@ class Sensor
 
         unsigned char getLastByte();
 
+        unsigned int myEncodedBitCount;
+
 };
 
 #endif /* SENSOR_H_ */

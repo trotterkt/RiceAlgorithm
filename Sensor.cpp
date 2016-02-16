@@ -118,6 +118,8 @@ void Sensor::process()
 
 	sendHeader();
 
+    myEncodedBitCount = 0;
+
 	myPreprocessor.readSamples(mySamples);
 
 
@@ -167,7 +169,8 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            char lastByte = getLastByte();
+            //char lastByte = getLastByte();
+            char lastByte;
 
             encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection, lastByte);
 
@@ -185,21 +188,37 @@ void Sensor::process()
         //CodingSelection selection = (*winningIteration)->getSelection();
         cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
-//        unsigned char lastByte = getLastByte();
+        ushort partialBits = myEncodedBitCount % BitsPerByte;
+        unsigned char lastByte(0);
+
+        if (partialBits)
+		{
+//        	cout << "Before partial appendage: " << encodedStream << endl;
+//        	unsigned int appendedSize = encodedStream.size()+partialBits;
+//			encodedStream.resize(appendedSize);
+//        	cout << "Again  partial appendage: " << encodedStream << endl;
 //
-//        static unsigned int lastWinningEncodedLength(0);
+//			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), lastByte);
+//			lastByteStream <<= (encodedStream.size() - partialBits);
+//			encodedStream |= lastByteStream;
+//        	cout << "After partial appendage : " << encodedStream << endl;
 //
-//        ushort partialBits = lastWinningEncodedLength % BitsPerByte;
-//        encodedStream.resize(myWinningEncodedLength + partialBits);
-//        encodedStream >>= partialBits;
-//        boost::dynamic_bitset<> lastByteStream(partialBits, lastByte);
-//        lastByteStream.resize(encodedStream.size());
-//        lastByteStream <<= (encodedStream.size() - partialBits);
-//        encodedStream |= lastByteStream;
+//        	//getLastByte();
+//
+//			lastByte = 0;
+		}
+
+        myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
+
+
+        static unsigned int lastWinningEncodedLength(0);
 
         sendEncodedSamples(encodedStream, encodedSize);
 
-//        lastWinningEncodedLength = myWinningEncodedLength;
+        lastByte = getLastByte();
+
+
+        lastWinningEncodedLength = encodedStream.size();
 //
 //        lastByte = getLastByte();
 //        cout << "lastByte" << lastByte << endl; // believe at the end of the first block, the last byte is 0, with 3 extra bits (49 bytes, 5 bits)
@@ -417,6 +436,7 @@ unsigned char Sensor::getLastByte()
 
     // since the stream is bidirectional, we must reposition the file pointer
     // after every read to write, or visa versa
+    //myEncodedStream.seekp (length-1, ios::beg);
     myEncodedStream.seekp (0, ios::end);
 
     return lastByte;
