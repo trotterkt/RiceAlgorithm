@@ -193,19 +193,19 @@ void Sensor::process()
 
         if (partialBits)
 		{
-//        	cout << "Before partial appendage: " << encodedStream << endl;
-//        	unsigned int appendedSize = encodedStream.size()+partialBits;
-//			encodedStream.resize(appendedSize);
-//        	cout << "Again  partial appendage: " << encodedStream << endl;
-//
-//			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), lastByte);
-//			lastByteStream <<= (encodedStream.size() - partialBits);
-//			encodedStream |= lastByteStream;
-//        	cout << "After partial appendage : " << encodedStream << endl;
-//
-//        	//getLastByte();
-//
-//			lastByte = 0;
+        	cout << "Before partial appendage: " << encodedStream << endl;
+        	unsigned int appendedSize = encodedStream.size()+partialBits;
+			encodedStream.resize(appendedSize);
+        	cout << "Again  partial appendage: " << encodedStream << endl;
+
+			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), lastByte);
+			lastByteStream <<= (encodedStream.size() - partialBits);
+			encodedStream |= lastByteStream;
+        	cout << "After partial appendage : " << encodedStream << endl;
+
+        	getLastByte();
+
+			lastByte = 0;
 		}
 
         myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
@@ -336,7 +336,11 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 	size_t bytes = encodedStream.size() / BitsPerByte;
 	if (encodedStream.size() % BitsPerByte)
 	{
+		unsigned int previousSize = encodedStream.size();
 		bytes++;
+		unsigned int newSize = bytes * BitsPerByte;
+		encodedStream.resize(newSize);
+		encodedStream <<= (newSize - previousSize);
 	}
 
 	// this does two things - (1) changes the block size from ulong to
@@ -436,8 +440,8 @@ unsigned char Sensor::getLastByte()
 
     // since the stream is bidirectional, we must reposition the file pointer
     // after every read to write, or visa versa
-    //myEncodedStream.seekp (length-1, ios::beg);
-    myEncodedStream.seekp (0, ios::end);
+    myEncodedStream.seekp (length-1, ios::beg);
+    //myEncodedStream.seekp (0, ios::end);
 
     return lastByte;
 
