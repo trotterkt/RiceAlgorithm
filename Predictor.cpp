@@ -1,9 +1,13 @@
 /*
  * Predictor.cpp
  *
- *  Created on: Aug 14, 2015
- *      Author: trotterkt
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #include <Predictor.h>
 #include <stdlib.h>

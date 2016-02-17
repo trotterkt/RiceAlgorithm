@@ -1,15 +1,18 @@
 /*
  * rice_main.cpp
  *
- *  Created on: Aug 16, 2015
- *      Author: trotterkt
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
 
 
 #include <iostream>
-#include "Sensor.h"
-#include "Predictor.h"
-#include "Timing.h"
+#include <Sensor.h>
+#include <Predictor.h>
+#include <Timing.h>
 
 
     
@@ -18,6 +21,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+    // These parameters are what is utilized for LandSat
     const int Rows(1024);
     const int Columns(1024);
     const int Bands(6);
@@ -26,22 +30,21 @@ int main(int argc, char *argv[])
 
     cout << "Compressing Landsat_agriculture-u16be-6x1024x1024..." << endl;
    
+    // Construct my LandSat sensor, which performs the compression of the supplied
+    // raw image data per the Rice algorithm
 	Sensor landsat("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+
+	// The raw data may include numerous image sets. Here, I will address only one.
 	landsat.getSamples(1);
 	
     timestamp_t t0 = getTimestamp();
 
+    // Initiate the Rice algorithm compression
 	landsat.process();
 
     timestamp_t t1 = getTimestamp();
 
     cout << "Compression processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
-
-	Predictor predictSatellite(Rows, Columns, Bands);
-
-	//:TODO: This should be Virtual TLM - packets in the file should only be available
-	// at a certain rate: maybe a timed loop and a message when available.
-	//predictSatellite.readSamples("Landsat_agriculture-u16be-6x1024x1024.raw");
 
     return 0;
 }

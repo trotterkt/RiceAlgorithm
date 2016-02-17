@@ -1,9 +1,13 @@
 /*
  * Timing.h
  *
- *  Created on: Feb 16, 2016
- *      Author: trottke1
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #ifndef TIMING_H_
 #define TIMING_H_

@@ -1,9 +1,13 @@
 /*
  * windows_compat.h
  *
- *  Created on: Feb 3, 2016
- *      Author: trottke1
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #ifndef WINDOWS_COMPAT_H_
 #define WINDOWS_COMPAT_H_

@@ -1,9 +1,13 @@
 /*
  * SplitSequence.h
  *
- *  Created on: Aug 14, 2015
- *      Author: trotterkt
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #ifndef SPLITSEQUENCE_H_
 #define SPLITSEQUENCE_H_

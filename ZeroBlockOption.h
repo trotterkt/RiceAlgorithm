@@ -1,9 +1,13 @@
 /*
  * ZeroBlockOption.h
  *
- *  Created on: Jan 15, 2016
- *      Author: trotterkt
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #ifndef ZEROBLOCKOPTION_H_
 #define ZEROBLOCKOPTION_H_

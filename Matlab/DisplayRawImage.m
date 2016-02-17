@@ -1,5 +1,5 @@
 % Purpose:
-% This MatLab routine is display an image representation for a
+% This MatLab routine is to display an image representation for a
 % raw data file prior to compression or subsequent to decompression.
 % It assumes that the matrixes are 1024x1024x6, of uint16 samples,
 % where the '1024X1024' are the X/Y matrix size, and the '6' represents
@@ -9,6 +9,8 @@
 % California State University, Fullerton
 % MSE, CPSC 597, Graduate Project
 % 
+% Copyright 2016 Keir Trotter
+%
 function DisplayRawImage(rawFilePath)
 
 % define the matrix dimensions

@@ -1,9 +1,13 @@
 /*
  * Sensor.cpp
  *
- *  Created on: Jan 15, 2016
- *      Author: trotterkt
+ *  Created by: Keir Trotter
+ *  California State University, Fullerton
+ *  MSE, CPSC 597, Graduate Project
+ *
+ *  Copyright 2016 Keir Trotter
  */
+
 
 #include <Sensor.h>
 #include <iostream>
@@ -11,7 +15,7 @@
 #include <vector>
 #include <math.h>
 #include <limits.h>
-#include "Timing.h"
+#include <Timing.h>
 
 
 using namespace std;
