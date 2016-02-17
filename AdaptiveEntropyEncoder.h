@@ -46,7 +46,6 @@ public:
 	AdaptiveEntropyEncoder(const AdaptiveEntropyEncoder &right);
 
 	//:TODO: this should probably be in constructor
-    //void setSamples(ushort* samples) { memcpy(myInputSamples, samples, myEncodedBlockSize * sizeof(ushort)); }
     void setSamples(ushort* samples) { myInputSamples = samples; }
 
     // encoding in the base class is basically nothing, and this is also the same as no compression option
@@ -90,7 +89,6 @@ protected:
     	data <<= sizeAppend;
     	data |= appendData;
     }
-
 
 };
 
