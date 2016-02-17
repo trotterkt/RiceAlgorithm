@@ -123,9 +123,6 @@ void Sensor::process()
     //myEncodedBitCount = 0;
     myEncodedBitCount = 19*BitsPerByte;
 
-	myPreprocessor.readSamples(mySamples);
-
-
 	unsigned int encodedBlock[BlockSize];
 
 
@@ -149,7 +146,7 @@ void Sensor::process()
     timestamp_t t0 = getTimestamp();
 
     // Should only need to get the residuals once for a given raw image set
-    ushort* residualsPtr = myPreprocessor.getResiduals();
+    ushort* residualsPtr = myPreprocessor.getResiduals(mySamples);
     
     timestamp_t t1 = getTimestamp();
 

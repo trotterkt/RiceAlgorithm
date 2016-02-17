@@ -26,7 +26,6 @@ namespace RiceAlgorithm
 Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
         myXDimension(x), myYDimension(y), myZDimension(z)
 {
-    mySamples = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
     myResiduals = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
     int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
@@ -35,13 +34,13 @@ Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
 
 Predictor::~Predictor()
 {
-    delete[] mySamples;
     delete[] myResiduals;
     delete[] myWeights;
 }
 
-ushort* Predictor::getResiduals()
+ushort* Predictor::getResiduals(ushort* samples)
 {
+    mySamples = samples;
 
     //============================================================================================================
 
@@ -64,12 +63,12 @@ ushort* Predictor::getResiduals()
                 int error = 0;
 
                 // prediction of the current sample and saving the residual
-                predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
+                predicted_sample = calculatePredictedSample(x, y, z, s_min, s_mid, s_max);
 
 
                 mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
 
-                MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
+                matrixBsqIndex(myResiduals, x, y, z) = mapped_residual;
                 if (x == 0 && y == 0)
                 {
                     //  weights initialization
@@ -78,7 +77,7 @@ ushort* Predictor::getResiduals()
                 else
                 {
                     // finally I can update the weights, preparing for the prediction of the next sample
-                    error = 2 * (MATRIX_BSQ_INDEX(mySamples, x, y, z)) - predicted_sample;
+                    error = 2 * (matrixBsqIndex(mySamples, x, y, z)) - predicted_sample;
                     updateWeights(x, y, z, error);
                 }
 
@@ -91,63 +90,8 @@ ushort* Predictor::getResiduals()
 	return myResiduals;
 }
 
-bool Predictor::readSamples(ushort* samples)
-{
-	//Sensor sensor(fileName, myXDimension, myYDimension, myZDimension);
-	memcpy(mySamples, samples, (myXDimension*myYDimension*myZDimension*sizeof(ushort)));
 
-	//============================================================================================================
-
-    unsigned int s_min = 0;
-    unsigned int s_max = (0x1 << DynamicRange) - 1;
-    unsigned int s_mid = 0x1 << (DynamicRange - 1);
-
-
-    // Now actually it goes over the various samples and it computes the prediction
-    // residual for each of them
-    // Note that, for each band, the element in position (0, 0) is not predicted
-    for (unsigned int z = 0; z < myZDimension; z++)
-    {
-        for (unsigned int y = 0; y < myYDimension; y++)
-        {
-            for (unsigned int x = 0; x < myXDimension; x++)
-            {
-                int predicted_sample = 0;
-                unsigned short int mapped_residual = 0;
-                int error = 0;
-
-                // prediction of the current sample and saving the residual
-                predicted_sample = compute_predicted_sample(x, y, z, s_min, s_mid, s_max);
-
-                mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
-
-                MATRIX_BSQ_INDEX(myResiduals, x, y, z) = mapped_residual;
-                if (x == 0 && y == 0)
-                {
-                    //  weights initialization
-                    initializeWeights(z);
-                }
-                else
-                {
-                    // finally I can update the weights, preparing for the prediction of the next sample
-                    error = 2 * (MATRIX_BSQ_INDEX(mySamples, x, y, z)) - predicted_sample;
-                    updateWeights(x, y, z, error);
-                }
-
-            }
-        }
-    }
-
-//    sampleStream.close();
-
-    //cout << "TRACE #5" << endl;
-
-    return 0;
-}
-
-/// given the local differences and the samples, it computes the scaled predicted
-/// sample value
-int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
+int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
                                         unsigned int s_mid, unsigned int s_max)
 {
     long long scaled_predicted = 0;
@@ -172,7 +116,7 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
             for (i = 0; i < cur_pred_bands; i++)
             {
                 int central_difference = 0;
-                if (get_central_difference(&central_difference, x, y, z - i - 1) < 0)
+                if (getCentralDifference(&central_difference, x, y, z - i - 1) < 0)
                 {
                     fprintf(stderr, "Error in getting the central differences for band %d", z - i);
                 }
@@ -185,7 +129,7 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
         if (PredictionFull != 0)
         {
             int directional_difference[3];
-            if (get_directional_difference(directional_difference, x, y, z) < 0)
+            if (getDirectionalDifference(directional_difference, x, y, z) < 0)
             {
                 fprintf(stderr, "Error in getting the directional differences");
             }
@@ -197,9 +141,8 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
         }
 
         // scaled predicted sample
-        local_sum_temp = local_sum(x, y, z);
-        scaled_predicted = mod_star(diff_predicted + ((local_sum_temp - 4 * s_mid) << PredictionWeightResolution),
-                RegisterSize);
+        local_sum_temp = getLocalSum(x, y, z);
+        scaled_predicted = mod_star(diff_predicted + ((local_sum_temp - 4 * s_mid) << PredictionWeightResolution), RegisterSize);
         scaled_predicted = scaled_predicted >> (PredictionWeightResolution + 1);
         scaled_predicted = scaled_predicted + 1 + 2 * s_mid;
         if (scaled_predicted < 2 * s_min) scaled_predicted = 2 * s_min;
@@ -213,15 +156,14 @@ int Predictor::compute_predicted_sample(unsigned int x, unsigned int y, unsigned
         }
         else
         {
-            scaled_predicted = 2 * (MATRIX_BSQ_INDEX(mySamples, 0, 0, z - 1));
+            scaled_predicted = 2 * (matrixBsqIndex(mySamples, 0, 0, z - 1));
         }
     }
 
     return (int) scaled_predicted;
 }
 
-/// Computes the local sum for the given sample index
-int Predictor::local_sum(unsigned int x, unsigned int y, unsigned int z)
+int Predictor::getLocalSum(unsigned int x, unsigned int y, unsigned int z)
 {
     unsigned int sum = 0;
 
@@ -233,31 +175,28 @@ int Predictor::local_sum(unsigned int x, unsigned int y, unsigned int z)
     }
 #endif
 
-    if (y > 0) sum = 4 * MATRIX_BSQ_INDEX(mySamples, x, y - 1, z);
+    if (y > 0) sum = 4 * matrixBsqIndex(mySamples, x, y - 1, z);
     else
-        sum = 4 * MATRIX_BSQ_INDEX(mySamples, x - 1, y, z);
+        sum = 4 * matrixBsqIndex(mySamples, x - 1, y, z);
 
     return sum;
 }
 
-/// Computes the mod*R of a number according to the definition of the
-/// blue book
 long long Predictor::mod_star(long long arg, long long op)
 {
     long long power2 = ((long long) 0x1) << (op - 1);
-    // I have to use the trick of shifting not of the op quantity altogether as
+    // trick of shifting not of the op quantity altogether as
     // when op == 64 no shift is actually performed by the system
     return ((arg + power2) - (((((arg + power2) >> (op - 1) >> 1)) << (op - 1)) << 1)) - power2;
 }
 
-/// Given the scaled predicted sample value it maps it to an unsigned value
-/// enabling it to be represented with D bits
+
 unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
                                                       unsigned int s_min, unsigned int s_mid, unsigned int s_max,
                                                       int scaled_predicted)
 {
     unsigned short int mapped = 0;
-    int delta = ((int) MATRIX_BSQ_INDEX(mySamples, x, y, z)) - scaled_predicted / 2;
+    int delta = ((int) matrixBsqIndex(mySamples, x, y, z)) - scaled_predicted / 2;
     unsigned int omega = scaled_predicted / 2 - s_min;
     unsigned int abs_delta = delta < 0 ? (-1 * delta) : delta;
     int sign_scaled = (scaled_predicted & 0x1) != 0 ? -1 : 1;
@@ -326,7 +265,7 @@ void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, in
         for (i = 0; i < cur_pred_bands; i++)
         {
             int central_difference = 0;
-            if (get_central_difference(&central_difference, x, y, z - i - 1) < 0)
+            if (getCentralDifference(&central_difference, x, y, z - i - 1) < 0)
             {
                 fprintf(stderr, "Error in getting the central differences for band %d", z - i);
             }
@@ -354,7 +293,7 @@ void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, in
     if (PredictionFull != 0)
     {
         int directional_difference[3];
-        if (get_directional_difference(directional_difference, x, y, z) < 0)
+        if (getDirectionalDifference(directional_difference, x, y, z) < 0)
         {
             cerr << "Error in getting the directional differences";
         }
@@ -385,7 +324,7 @@ void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, in
     }
 }
 
-int Predictor::get_central_difference(int * central_difference, unsigned int x, unsigned int y, unsigned int z)
+int Predictor::getCentralDifference(int * central_difference, unsigned int x, unsigned int y, unsigned int z)
 {
 
     // Central difference computed: it is common both to reduced and
@@ -396,22 +335,22 @@ int Predictor::get_central_difference(int * central_difference, unsigned int x, 
     }
     else
     {
-        int local_sum_temp = local_sum(x, y, z);
+        int local_sum_temp = getLocalSum(x, y, z);
 #ifndef NDEBUG
         if (local_sum_temp == 0x80000000)
         {
             return -1;
         }
 #endif
-        *central_difference = 4 * MATRIX_BSQ_INDEX(mySamples, x, y, z) - local_sum_temp;
+        *central_difference = 4 * matrixBsqIndex(mySamples, x, y, z) - local_sum_temp;
     }
 
     return 0;
 }
 
-int Predictor::get_directional_difference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z)
+int Predictor::getDirectionalDifference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z)
 {
-    int local_sum_temp = local_sum(x, y, z);
+    int local_sum_temp = getLocalSum(x, y, z);
 
 #ifndef NDEBUG
     if (local_sum_temp == 0x80000000)
@@ -429,11 +368,11 @@ int Predictor::get_directional_difference(int directional_difference[3], unsigne
     //in this order: central, north, west, north-west
     if (y > 0)
     {
-        directional_difference[0] = 4 * MATRIX_BSQ_INDEX(mySamples, x, y - 1, z) - local_sum_temp;
+        directional_difference[0] = 4 * matrixBsqIndex(mySamples, x, y - 1, z) - local_sum_temp;
         if (x > 0)
         {
-            directional_difference[1] = 4 * MATRIX_BSQ_INDEX(mySamples, x - 1, y, z) - local_sum_temp;
-            directional_difference[2] = 4 * MATRIX_BSQ_INDEX(mySamples, x - 1, y - 1, z) - local_sum_temp;
+            directional_difference[1] = 4 * matrixBsqIndex(mySamples, x - 1, y, z) - local_sum_temp;
+            directional_difference[2] = 4 * matrixBsqIndex(mySamples, x - 1, y - 1, z) - local_sum_temp;
         }
         else
         {

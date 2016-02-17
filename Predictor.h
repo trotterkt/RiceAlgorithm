@@ -42,11 +42,9 @@ class Predictor
         Predictor(unsigned int x, unsigned int y, unsigned int z);
         virtual ~Predictor();
 
-        bool readSamples(ushort* samples);
-
         ushort* getSamples() { return mySamples; }
 
-        ushort* getResiduals();
+        ushort* getResiduals(ushort* samples);
 
         size_t getSizeOfSamples() { return ( sizeof(ushort) * (myXDimension * myYDimension * myZDimension)); }
 
@@ -60,24 +58,30 @@ class Predictor
         unsigned int myYDimension;
         unsigned int myZDimension;
 
-        /// given the local differences and the samples, it computes the scaled predicted
-        /// sample value
-        int compute_predicted_sample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
+        // based on the local differences and the samples, determine the scaled predicted
+        // sample value
+        int calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
                                      unsigned int s_mid, unsigned int s_max);
 
-        int local_sum(unsigned int x, unsigned int y, unsigned int z);
+        // Find the local sum for the sample index
+        int getLocalSum(unsigned int x, unsigned int y, unsigned int z);
+
+        // Computes the mod*R of a number according to the definition of the
+        // blue book
         long long mod_star(long long arg, long long op);
 
+        // Given the scaled predicted sample value, map it to an unsigned value
+        // enabling it to be represented with D bits
         unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
                                                    unsigned int s_mid, unsigned int s_max, int scaled_predicted);
         void initializeWeights(unsigned int z);
         void updateWeights(unsigned int x, unsigned int y, unsigned int z, int error);
 
-        int get_central_difference(int * central_difference, unsigned int x, unsigned int y, unsigned int z);
+        int getCentralDifference(int * central_difference, unsigned int x, unsigned int y, unsigned int z);
 
-        int get_directional_difference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z);
+        int getDirectionalDifference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z);
 
-		#define MATRIX_BSQ_INDEX(matrix, x, y, z) matrix[myXDimension*((z)*myYDimension + (y)) + (x)]
+		#define matrixBsqIndex(matrix, x, y, z) matrix[myXDimension*((z)*myYDimension + (y)) + (x)]
 
 };
 
