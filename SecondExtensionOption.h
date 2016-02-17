@@ -19,7 +19,7 @@ class SecondExtensionOption : public AdaptiveEntropyEncoder
 		SecondExtensionOption(size_t sampleBlockSize);
 		virtual ~SecondExtensionOption();
 
-		unsigned int encode(unsigned int* encodedBlock, CodingSelection &selection);
+		unsigned int encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection);
 
 };
 

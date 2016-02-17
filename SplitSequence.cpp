@@ -9,6 +9,7 @@
 #include <iostream>
 #include <vector>
 #include <boost/dynamic_bitset.hpp>
+#include "Timing.h"
 
 using namespace std;
 
@@ -54,9 +55,8 @@ SplitSequence::~SplitSequence()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
+unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
 {
-
     unsigned int code_len = (unsigned int)-1;
     int i = 0, k = 0;
     int k_limit = 14;
@@ -91,10 +91,10 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         totalEncodedSize += encodedSize;
     }
 
+
     // include space for the  code option
     totalEncodedSize += CodeOptionBitFieldFundamentalOrNoComp;
 
-    //boost::dynamic_bitset<> encodedStream(totalEncodedSize, 1ul);
     encodedStream.resize(totalEncodedSize);
     encodedStream.reset();
     encodedStream[0] = 1;
@@ -126,6 +126,7 @@ unsigned int SplitSequence::encode(unsigned int* encodedBlock, boost::dynamic_bi
         
         totalEncodedSize = encodedStream.size();
     }
+
 
     size_t numberEncodedBytes;
     

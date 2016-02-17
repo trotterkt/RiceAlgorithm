@@ -22,19 +22,24 @@ SecondExtensionOption::~SecondExtensionOption()
 	// TODO Auto-generated destructor stub
 }
 
-unsigned int SecondExtensionOption::encode(unsigned int* encodedBlock, CodingSelection &selection)
+unsigned int SecondExtensionOption::encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
 {
 	selection = SecondExtensionOpt;
+
+	encodedStream.resize(32);
 
     unsigned int code_len = 0;
     int i = 0;
     for(i = 0; i < 32; i+=2)
     {
-    	encodedBlock[i/2] = (((unsigned int)myInputSamples[i] + myInputSamples[i + 1])*((unsigned int)myInputSamples[i] + myInputSamples[i + 1] + 1))/2 + myInputSamples[i + 1];
-        code_len += encodedBlock[i/2] + 1;
+    	encodedStream[i/2] = (((unsigned int)myInputSamples[i] + myInputSamples[i + 1])*((unsigned int)myInputSamples[i] + myInputSamples[i + 1] + 1))/2 + myInputSamples[i + 1];
+        code_len += encodedStream[i/2] + 1;
     }
 
-    return code_len;
+    //:TODO: This encoding is incorrect - fix
+    // return code_len;
+    return BlockSize;
+
 }
 
 } /* namespace RiceAlgorithm */

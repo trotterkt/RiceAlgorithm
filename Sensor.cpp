@@ -140,6 +140,8 @@ void Sensor::process()
     CodingSelection winningSelection;
     boost::dynamic_bitset<> encodedStream;
 
+    timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
+
     timestamp_t t0 = getTimestamp();
 
     // Should only need to get the residuals once for a given raw image set
@@ -147,9 +149,7 @@ void Sensor::process()
     
     timestamp_t t1 = getTimestamp();
 
-    double seconds = (t1 - t0) / MicroSecondsPerSecond;
-
-    cout << "Prediction processing time ==> " << fixed << seconds << " seconds"<< endl;
+    cout << "Prediction processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
 
 
     timestamp_t t2 = getTimestamp();
@@ -166,6 +166,8 @@ void Sensor::process()
         // Reset for each capture of the winning length
         myWinningEncodedLength = (unsigned int) -1;
 
+        t0_intermediate = getTimestamp();
+
         // Loop through each one of the possible encoders
         for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
                 iteration != myEncoderList.end(); ++iteration)
@@ -179,7 +181,8 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
+            //encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
+            encodedLength = (*iteration)->encode(encodedStream, selection);
 
             // This basically determines the winner
             if (encodedLength < myWinningEncodedLength)
@@ -191,6 +194,8 @@ void Sensor::process()
                 encodedSize = (*iteration)->getEncodedBlockSize();
             }
         }
+
+        t1_intermediate = getTimestamp();
 
         //cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
 
@@ -216,6 +221,7 @@ void Sensor::process()
 
         myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
 
+        t2_intermediate = getTimestamp();
 
         static unsigned int lastWinningEncodedLength(0);
 
@@ -223,16 +229,22 @@ void Sensor::process()
 
         getLastByte(lastByte);
 
+        t3_intermediate = getTimestamp();
 
         lastWinningEncodedLength = encodedStream.size();
+
     }
 
     timestamp_t t3 = getTimestamp();
 
-    seconds = (t3 - t2) / MicroSecondsPerSecond;
 
-    cout << "Encoding processing time ==> " << fixed << seconds << " seconds"<< endl;
+    cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
+            << "\n(intermediate t0-t1): " << fixed << getSecondsDiff(t0_intermediate, t1_intermediate) << " seconds"
+            << "\n(intermediate t1-t2): " << fixed << getSecondsDiff(t1_intermediate, t2_intermediate) << " seconds"
+            << "\n(intermediate t2-t3): " << fixed << getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
 
+    cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"<< endl;
+//exit(0);
 }
 
 

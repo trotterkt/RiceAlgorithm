@@ -34,10 +34,8 @@ int main(int argc, char *argv[])
 	landsat.process();
 
     timestamp_t t1 = getTimestamp();
-    
-    double seconds = (t1 - t0) / MicroSecondsPerSecond;
-    
-    cout << "Compression processing time ==> " << fixed << seconds << " seconds"<< endl;
+
+    cout << "Compression processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
 
 	Predictor predictSatellite(Rows, Columns, Bands);
 

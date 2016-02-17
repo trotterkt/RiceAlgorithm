@@ -22,6 +22,8 @@ static timestamp_t getTimestamp()
     return currentTime.tv_usec + (timestamp_t) currentTime.tv_sec * MicroSecondsPerSecond;
 }
 
+static double getSecondsDiff(timestamp_t t0, timestamp_t t1)
+{ return (double(t1 - t0) / double(MicroSecondsPerSecond)); }
 
 
 #endif /* TIMING_H_ */
