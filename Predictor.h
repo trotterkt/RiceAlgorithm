@@ -34,6 +34,12 @@ const unsigned int RegisterSize(32);
 const unsigned char DynamicRange(16);
 const unsigned int ReferenceInterval(1000);
 
+// For details on the predictor, refer to Sec 4 of CCSDS 123.0-R-1,
+// Lossless Multispectral & Hyperspectral Image Compression
+
+// Note that there need not be one particular type of Predictor used,
+// so depending on the application, we might want to swap this out
+
 class Predictor
 {
 	private:
@@ -60,26 +66,26 @@ class Predictor
 
         // based on the local differences and the samples, determine the scaled predicted
         // sample value
-        int calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
-                                     unsigned int s_mid, unsigned int s_max);
+        int calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
+                                     unsigned int signalMidway, unsigned int signalMaximum);
 
         // Find the local sum for the sample index
         int getLocalSum(unsigned int x, unsigned int y, unsigned int z);
 
         // Computes the mod*R of a number according to the definition of the
-        // blue book
-        long long mod_star(long long arg, long long op);
+        // red book ==> mod*R[x] = ((x + 2^R-1) mod 2^R)-2^(R-1)
+        long long modRstar(long long arg, long long op);
 
         // Given the scaled predicted sample value, map it to an unsigned value
         // enabling it to be represented with D bits
-        unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
-                                                   unsigned int s_mid, unsigned int s_max, int scaled_predicted);
+        unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
+                                                   unsigned int signalMidway, unsigned int signalMaximum, int scaledPredicted);
         void initializeWeights(unsigned int z);
         void updateWeights(unsigned int x, unsigned int y, unsigned int z, int error);
 
-        int getCentralDifference(int * central_difference, unsigned int x, unsigned int y, unsigned int z);
+        int getCentralDifference(int * centralDifference, unsigned int x, unsigned int y, unsigned int z);
 
-        int getDirectionalDifference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z);
+        int getDirectionalDifference(int directionalDifferenceVector[3], unsigned int x, unsigned int y, unsigned int z);
 
 		#define matrixBsqIndex(matrix, x, y, z) matrix[myXDimension*((z)*myYDimension + (y)) + (x)]
 

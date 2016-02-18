@@ -24,12 +24,12 @@ namespace RiceAlgorithm
 {
 
 Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
-        myXDimension(x), myYDimension(y), myZDimension(z)
+        myXDimension(x), myYDimension(y), myZDimension(z), mySamples(0)
 {
     myResiduals = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
-    int weights_len = PredictionBands + (PredictionFull != 0 ? 3 : 0);
-    myWeights = reinterpret_cast<int *>(new int[weights_len]);
+    int weightLength = PredictionBands + (PredictionFull != 0 ? 3 : 0);
+    myWeights = reinterpret_cast<int *>(new int[weightLength]);
 }
 
 Predictor::~Predictor()
@@ -40,13 +40,16 @@ Predictor::~Predictor()
 
 ushort* Predictor::getResiduals(ushort* samples)
 {
+
     mySamples = samples;
 
     //============================================================================================================
 
-    unsigned int s_min = 0;
-    unsigned int s_max = (0x1 << DynamicRange) - 1;
-    unsigned int s_mid = 0x1 << (DynamicRange - 1);
+    // This defines the range of the signal value as described in the Blue Book
+    // for 16-bit samples
+    unsigned int signalMinimum = 0;
+    unsigned int signalMaximum = (0x1 << DynamicRange) - 1;
+    unsigned int signalMidway = 0x1 << (DynamicRange - 1);
 
 
     // Now actually it goes over the various samples and it computes the prediction
@@ -58,17 +61,17 @@ ushort* Predictor::getResiduals(ushort* samples)
         {
             for (unsigned int x = 0; x < myXDimension; x++)
             {
-                int predicted_sample = 0;
-                unsigned short int mapped_residual = 0;
+                int predictedSample = 0;
+                unsigned short int mappedResidual = 0;
                 int error = 0;
 
                 // prediction of the current sample and saving the residual
-                predicted_sample = calculatePredictedSample(x, y, z, s_min, s_mid, s_max);
+                predictedSample = calculatePredictedSample(x, y, z, signalMinimum, signalMidway, signalMaximum);
 
 
-                mapped_residual = computeMappedResidual(x, y, z, s_min, s_mid, s_max, predicted_sample);
+                mappedResidual = computeMappedResidual(x, y, z, signalMinimum, signalMidway, signalMaximum, predictedSample);
 
-                matrixBsqIndex(myResiduals, x, y, z) = mapped_residual;
+                matrixBsqIndex(myResiduals, x, y, z) = mappedResidual;
                 if (x == 0 && y == 0)
                 {
                     //  weights initialization
@@ -76,8 +79,8 @@ ushort* Predictor::getResiduals(ushort* samples)
                 }
                 else
                 {
-                    // finally I can update the weights, preparing for the prediction of the next sample
-                    error = 2 * (matrixBsqIndex(mySamples, x, y, z)) - predicted_sample;
+                    // Update the weights and prepare next sample prediction
+                    error = 2 * (matrixBsqIndex(mySamples, x, y, z)) - predictedSample;
                     updateWeights(x, y, z, error);
                 }
 
@@ -85,95 +88,84 @@ ushort* Predictor::getResiduals(ushort* samples)
         }
     }
 
-
-
 	return myResiduals;
 }
 
 
-int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int s_min,
-                                        unsigned int s_mid, unsigned int s_max)
+int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
+                                        unsigned int signalMidway, unsigned int signalMaximum)
 {
-    long long scaled_predicted = 0;
-    long long diff_predicted = 0;
+    long long scaledPredicted = 0;
+    long long diffPredicted = 0;
     int i = 0;
-
-
-    //--input Landsat_agriculture-u16be-6x1024x1024.raw
-    //--output Landsat_agriculture-u16be-6x1024x1024.comp --rows 1024 --columns 1024 --bands 6
-    //--in_format BSQ  --dyn_range 16  --word_len 1 --out_format BSQ  --sample_adaptive
-    //--u_max 18 --y_star 6 --y_0 1  --k 7 --pred_bands 15 --full --reg_size 32
-    //--w_resolution 14 --w_interval 32 --w_initial -6 --w_final -6
 
     if (x > 0 || y > 0)
     {
-        long long local_sum_temp = 0;
+        long long localSum = 0;
 
         // predicted local difference
         if (z > 0)
         {
-            int cur_pred_bands = z < PredictionBands ? z : PredictionBands;
-            for (i = 0; i < cur_pred_bands; i++)
+            int currentPredictionBands = z < PredictionBands ? z : PredictionBands;
+            for (i = 0; i < currentPredictionBands; i++)
             {
-                int central_difference = 0;
-                if (getCentralDifference(&central_difference, x, y, z - i - 1) < 0)
+                int centralDifference = 0;
+                if (getCentralDifference(&centralDifference, x, y, z - i - 1) < 0)
                 {
-                    fprintf(stderr, "Error in getting the central differences for band %d", z - i);
+                    cerr << "Error in getting the central differences for band " << (z - i) << endl;
                 }
 
 
-                diff_predicted += ((long long) myWeights[i]) * (long long) central_difference;
+                diffPredicted += ((long long) myWeights[i]) * (long long) centralDifference;
 
             }
         }
         if (PredictionFull != 0)
         {
-            int directional_difference[3];
-            if (getDirectionalDifference(directional_difference, x, y, z) < 0)
+            int directionalDifferenceVector[3];
+            if (getDirectionalDifference(directionalDifferenceVector, x, y, z) < 0)
             {
-                fprintf(stderr, "Error in getting the directional differences");
+                cerr << "Error in getting the directional differences" << endl;
             }
 
             for (i = 0; i < 3; i++)
             {
-                diff_predicted += ((long long) myWeights[PredictionBands + i]) * (long long) directional_difference[i];
+                diffPredicted += ((long long) myWeights[PredictionBands + i]) * (long long) directionalDifferenceVector[i];
             }
         }
 
         // scaled predicted sample
-        local_sum_temp = getLocalSum(x, y, z);
-        scaled_predicted = mod_star(diff_predicted + ((local_sum_temp - 4 * s_mid) << PredictionWeightResolution), RegisterSize);
-        scaled_predicted = scaled_predicted >> (PredictionWeightResolution + 1);
-        scaled_predicted = scaled_predicted + 1 + 2 * s_mid;
-        if (scaled_predicted < 2 * s_min) scaled_predicted = 2 * s_min;
-        if (scaled_predicted > (2 * s_max + 1)) scaled_predicted = (2 * s_max + 1);
+        localSum = getLocalSum(x, y, z);
+        scaledPredicted = modRstar(diffPredicted + ((localSum - 4 * signalMidway) << PredictionWeightResolution), RegisterSize);
+        scaledPredicted = scaledPredicted >> (PredictionWeightResolution + 1);
+        scaledPredicted = scaledPredicted + 1 + 2 * signalMidway;
+        if (scaledPredicted < 2 * signalMinimum) scaledPredicted = 2 * signalMinimum;
+        if (scaledPredicted > (2 * signalMaximum + 1)) scaledPredicted = (2 * signalMaximum + 1);
     }
     else
     {
         if (z == 0 || PredictionBands == 0)
         {
-            scaled_predicted = 2 * s_mid;
+            scaledPredicted = 2 * signalMidway;
         }
         else
         {
-            scaled_predicted = 2 * (matrixBsqIndex(mySamples, 0, 0, z - 1));
+            scaledPredicted = 2 * (matrixBsqIndex(mySamples, 0, 0, z - 1));
         }
     }
 
-    return (int) scaled_predicted;
+    return (int) scaledPredicted;
 }
 
 int Predictor::getLocalSum(unsigned int x, unsigned int y, unsigned int z)
 {
     unsigned int sum = 0;
 
-#ifndef NDEBUG
     if (x == 0 && y == 0)
     {
-        fprintf(stderr, "Error, called local_sum for band %d with x=0, y=0\n\n", z);
+        cerr << "Error, called local_sum for band " << z << " with x=0, y=0\n\n" << endl;
         return 0x80000000;
     }
-#endif
 
     if (y > 0) sum = 4 * matrixBsqIndex(mySamples, x, y - 1, z);
     else
@@ -182,9 +174,12 @@ int Predictor::getLocalSum(unsigned int x, unsigned int y, unsigned int z)
     return sum;
 }
 
-long long Predictor::mod_star(long long arg, long long op)
+long long Predictor::modRstar(long long arg, long long op)
 {
+    // This is largely based on example provided on CCSDS site
+
     long long power2 = ((long long) 0x1) << (op - 1);
+
     // trick of shifting not of the op quantity altogether as
     // when op == 64 no shift is actually performed by the system
     return ((arg + power2) - (((((arg + power2) >> (op - 1) >> 1)) << (op - 1)) << 1)) - power2;
@@ -192,31 +187,31 @@ long long Predictor::mod_star(long long arg, long long op)
 
 
 unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
-                                                      unsigned int s_min, unsigned int s_mid, unsigned int s_max,
-                                                      int scaled_predicted)
+                                                      unsigned int signalMinimum, unsigned int signalMidway, unsigned int signalMaximum,
+                                                      int scaledPredicted)
 {
     unsigned short int mapped = 0;
-    int delta = ((int) matrixBsqIndex(mySamples, x, y, z)) - scaled_predicted / 2;
-    unsigned int omega = scaled_predicted / 2 - s_min;
-    unsigned int abs_delta = delta < 0 ? (-1 * delta) : delta;
-    int sign_scaled = (scaled_predicted & 0x1) != 0 ? -1 : 1;
+    int delta = ((int) matrixBsqIndex(mySamples, x, y, z)) - scaledPredicted / 2;
+    unsigned int omega = scaledPredicted / 2 - signalMinimum;
+    unsigned int absDelta = delta < 0 ? (-1 * delta) : delta;
+    int sign_scaled = (scaledPredicted & 0x1) != 0 ? -1 : 1;
 
-    if (omega > s_max - scaled_predicted / 2)
+    if (omega > signalMaximum - scaledPredicted / 2)
     {
-        omega = s_max - scaled_predicted / 2;
+        omega = signalMaximum - scaledPredicted / 2;
     }
 
-    if (abs_delta > omega)
+    if (absDelta > omega)
     {
-        mapped = abs_delta + omega;
+        mapped = absDelta + omega;
     }
     else if ((sign_scaled * delta) <= omega && (sign_scaled * delta) >= 0)
     {
-        mapped = 2 * abs_delta;
+        mapped = 2 * absDelta;
     }
     else
     {
-        mapped = 2 * abs_delta - 1;
+        mapped = 2 * absDelta - 1;
     }
 
     return mapped;
@@ -247,53 +242,51 @@ void Predictor::initializeWeights(unsigned int z)
 void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, int error)
 {
     int i = 0;
-    int weight_limit = 0x1 << (PredictionWeightResolution + 2);
-    int sign_error = error < 0 ? -1 : 1;
+    int weightLimit = 0x1 << (PredictionWeightResolution + 2);
+    int signError = error < 0 ? -1 : 1;
     int scaling_exp = PredictionWeightInitial + ((int) (y * myXDimension + x - myXDimension)) / PredictionWeightInterval;
     if (scaling_exp < PredictionWeightInitial) scaling_exp = PredictionWeightInitial;
     if (scaling_exp > PredictionWeightFinal) scaling_exp = PredictionWeightFinal;
     scaling_exp += DynamicRange - PredictionWeightResolution;
 
-    // Now I can update the weights; they are saved in the weights matrix such as
+    // Update the weights; they are saved in the weights matrix such as
     // the first index of the matrix is the spectral band and the other elements are
     // the various weights: pred_1, pred_2, pred_p, N, W, NW.
     if (z > 0)
     {
-        int cur_pred_bands = z < PredictionBands ? z : PredictionBands;
-        //cout << "TRACE #B, cur_pred_bands=" << cur_pred_bands << endl;
+        int currentPredictionBands = z < PredictionBands ? z : PredictionBands;
 
-        for (i = 0; i < cur_pred_bands; i++)
+        for (i = 0; i < currentPredictionBands; i++)
         {
-            int central_difference = 0;
-            if (getCentralDifference(&central_difference, x, y, z - i - 1) < 0)
+            int centralDifference = 0;
+            if (getCentralDifference(&centralDifference, x, y, z - i - 1) < 0)
             {
-                fprintf(stderr, "Error in getting the central differences for band %d", z - i);
+                cerr << "Error in getting the central differences for band " << (z - i);
             }
 
             if (scaling_exp > 0)
             {
-            	myWeights[i] = myWeights[i] + ((((sign_error * central_difference) >> scaling_exp) + 1) >> 1);
+            	myWeights[i] = myWeights[i] + ((((signError * centralDifference) >> scaling_exp) + 1) >> 1);
             }
             else
             {
-                //cout << "TRACE #C, i=" << i << ", x=" << x << ", y=" << y << ", z=" << z << ", weights[i]=" << weights[i] <<  endl;
-            	myWeights[i] = myWeights[i] + ((((sign_error * central_difference) << -1 * scaling_exp) + 1) >> 1);
+            	myWeights[i] = myWeights[i] + ((((signError * centralDifference) << -1 * scaling_exp) + 1) >> 1);
             }
-            if (myWeights[i] < (-1 * weight_limit))
+            if (myWeights[i] < (-1 * weightLimit))
             {
-            	myWeights[i] = -1 * weight_limit;
+            	myWeights[i] = -1 * weightLimit;
             }
-            if (myWeights[i] > (weight_limit - 1))
+            if (myWeights[i] > (weightLimit - 1))
             {
-            	myWeights[i] = weight_limit - 1;
+            	myWeights[i] = weightLimit - 1;
             }
         }
     }
 
     if (PredictionFull != 0)
     {
-        int directional_difference[3];
-        if (getDirectionalDifference(directional_difference, x, y, z) < 0)
+        int directionalDifferenceVector[3];
+        if (getDirectionalDifference(directionalDifferenceVector, x, y, z) < 0)
         {
             cerr << "Error in getting the directional differences";
         }
@@ -303,88 +296,81 @@ void Predictor::updateWeights(unsigned int x, unsigned int y, unsigned int z, in
             if (scaling_exp > 0)
             {
             	myWeights[PredictionBands + i] = myWeights[PredictionBands + i]
-                        + ((((sign_error * directional_difference[i]) >> scaling_exp) + 1) >> 1);
+                        + ((((signError * directionalDifferenceVector[i]) >> scaling_exp) + 1) >> 1);
             }
             else
             {
             	myWeights[PredictionBands + i] = myWeights[PredictionBands + i]
-                        + ((((sign_error * directional_difference[i]) << -1 * scaling_exp) + 1) >> 1);
+                        + ((((signError * directionalDifferenceVector[i]) << -1 * scaling_exp) + 1) >> 1);
             }
 
-            if (myWeights[PredictionBands + i] < (-1 * weight_limit))
+            if (myWeights[PredictionBands + i] < (-1 * weightLimit))
             {
-            	myWeights[PredictionBands + i] = -1 * weight_limit;
+            	myWeights[PredictionBands + i] = -1 * weightLimit;
             }
 
-            if (myWeights[PredictionBands + i] > (weight_limit - 1))
+            if (myWeights[PredictionBands + i] > (weightLimit - 1))
             {
-            	myWeights[PredictionBands + i] = weight_limit - 1;
+            	myWeights[PredictionBands + i] = weightLimit - 1;
             }
         }
     }
 }
 
-int Predictor::getCentralDifference(int * central_difference, unsigned int x, unsigned int y, unsigned int z)
+int Predictor::getCentralDifference(int * centralDifference, unsigned int x, unsigned int y, unsigned int z)
 {
 
     // Central difference computed: it is common both to reduced and
     // full prediction mode
     if (y == 0 && x == 0)
     {
-        *central_difference = 0;
+        *centralDifference = 0;
     }
     else
     {
-        int local_sum_temp = getLocalSum(x, y, z);
-#ifndef NDEBUG
-        if (local_sum_temp == 0x80000000)
+        int localSum = getLocalSum(x, y, z);
+
+        if (localSum == 0x80000000)
         {
             return -1;
         }
-#endif
-        *central_difference = 4 * matrixBsqIndex(mySamples, x, y, z) - local_sum_temp;
+
+        *centralDifference = 4 * matrixBsqIndex(mySamples, x, y, z) - localSum;
     }
 
     return 0;
 }
 
-int Predictor::getDirectionalDifference(int directional_difference[3], unsigned int x, unsigned int y, unsigned int z)
+int Predictor::getDirectionalDifference(int directionalDifferenceVector[3], unsigned int x, unsigned int y, unsigned int z)
 {
-    int local_sum_temp = getLocalSum(x, y, z);
+    int localSum = getLocalSum(x, y, z);
 
-#ifndef NDEBUG
-    if (local_sum_temp == 0x80000000)
+    if (localSum == 0x80000000)
     {
         return -1;
     }
-    if (PredictionFull == 0)
-    {
-        fprintf(stderr, "Error: directional differences asked, but full prediction mode disabled.\n");
-        return -1;
-    }
-#endif
 
-    //full prediction mode, the differences in the directional_difference vector are
-    //in this order: central, north, west, north-west
+    // The differences in the directionalDifferenceVector are
+    // in this order: central, north, west, north-west
     if (y > 0)
     {
-        directional_difference[0] = 4 * matrixBsqIndex(mySamples, x, y - 1, z) - local_sum_temp;
+        directionalDifferenceVector[0] = 4 * matrixBsqIndex(mySamples, x, y - 1, z) - localSum;
         if (x > 0)
         {
-            directional_difference[1] = 4 * matrixBsqIndex(mySamples, x - 1, y, z) - local_sum_temp;
-            directional_difference[2] = 4 * matrixBsqIndex(mySamples, x - 1, y - 1, z) - local_sum_temp;
+            directionalDifferenceVector[1] = 4 * matrixBsqIndex(mySamples, x - 1, y, z) - localSum;
+            directionalDifferenceVector[2] = 4 * matrixBsqIndex(mySamples, x - 1, y - 1, z) - localSum;
         }
         else
         {
-            directional_difference[1] = directional_difference[0];
-            directional_difference[2] = directional_difference[0];
+            directionalDifferenceVector[1] = directionalDifferenceVector[0];
+            directionalDifferenceVector[2] = directionalDifferenceVector[0];
         }
     }
     else
     {
-        directional_difference[0] = 0;
-        directional_difference[1] = 0;
-        directional_difference[2] = 0;
+        directionalDifferenceVector[0] = 0;
+        directionalDifferenceVector[1] = 0;
+        directionalDifferenceVector[2] = 0;
     }
 
     return 0;
