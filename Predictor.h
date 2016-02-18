@@ -66,8 +66,8 @@ class Predictor
 
         // based on the local differences and the samples, determine the scaled predicted
         // sample value
-        int calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
-                                     unsigned int signalMidway, unsigned int signalMaximum);
+        int calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
+                                     unsigned int sampleMidway, unsigned int sampleMaximum);
 
         // Find the local sum for the sample index
         int getLocalSum(unsigned int x, unsigned int y, unsigned int z);
@@ -78,8 +78,8 @@ class Predictor
 
         // Given the scaled predicted sample value, map it to an unsigned value
         // enabling it to be represented with D bits
-        unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
-                                                   unsigned int signalMidway, unsigned int signalMaximum, int scaledPredicted);
+        unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
+                                                   unsigned int sampleMidway, unsigned int sampleMaximum, int scaledPredicted);
         void initializeWeights(unsigned int z);
         void updateWeights(unsigned int x, unsigned int y, unsigned int z, int error);
 

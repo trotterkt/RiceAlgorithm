@@ -47,9 +47,9 @@ ushort* Predictor::getResiduals(ushort* samples)
 
     // This defines the range of the signal value as described in the Blue Book
     // for 16-bit samples
-    unsigned int signalMinimum = 0;
-    unsigned int signalMaximum = (0x1 << DynamicRange) - 1;
-    unsigned int signalMidway = 0x1 << (DynamicRange - 1);
+    unsigned int sampleMinimum = 0;
+    unsigned int sampleMaximum = (0x1 << DynamicRange) - 1;
+    unsigned int sampleMidway = 0x1 << (DynamicRange - 1);
 
 
     // Now actually it goes over the various samples and it computes the prediction
@@ -66,10 +66,10 @@ ushort* Predictor::getResiduals(ushort* samples)
                 int error = 0;
 
                 // prediction of the current sample and saving the residual
-                predictedSample = calculatePredictedSample(x, y, z, signalMinimum, signalMidway, signalMaximum);
+                predictedSample = calculatePredictedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum);
 
 
-                mappedResidual = computeMappedResidual(x, y, z, signalMinimum, signalMidway, signalMaximum, predictedSample);
+                mappedResidual = computeMappedResidual(x, y, z, sampleMinimum, sampleMidway, sampleMaximum, predictedSample);
 
                 matrixBsqIndex(myResiduals, x, y, z) = mappedResidual;
                 if (x == 0 && y == 0)
@@ -92,8 +92,8 @@ ushort* Predictor::getResiduals(ushort* samples)
 }
 
 
-int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int signalMinimum,
-                                        unsigned int signalMidway, unsigned int signalMaximum)
+int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
+                                        unsigned int sampleMidway, unsigned int sampleMaximum)
 {
     long long scaledPredicted = 0;
     long long diffPredicted = 0;
@@ -136,17 +136,17 @@ int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned
 
         // scaled predicted sample
         localSum = getLocalSum(x, y, z);
-        scaledPredicted = modRstar(diffPredicted + ((localSum - 4 * signalMidway) << PredictionWeightResolution), RegisterSize);
+        scaledPredicted = modRstar(diffPredicted + ((localSum - 4 * sampleMidway) << PredictionWeightResolution), RegisterSize);
         scaledPredicted = scaledPredicted >> (PredictionWeightResolution + 1);
-        scaledPredicted = scaledPredicted + 1 + 2 * signalMidway;
-        if (scaledPredicted < 2 * signalMinimum) scaledPredicted = 2 * signalMinimum;
-        if (scaledPredicted > (2 * signalMaximum + 1)) scaledPredicted = (2 * signalMaximum + 1);
+        scaledPredicted = scaledPredicted + 1 + 2 * sampleMidway;
+        if (scaledPredicted < 2 * sampleMinimum) scaledPredicted = 2 * sampleMinimum;
+        if (scaledPredicted > (2 * sampleMaximum + 1)) scaledPredicted = (2 * sampleMaximum + 1);
     }
     else
     {
         if (z == 0 || PredictionBands == 0)
         {
-            scaledPredicted = 2 * signalMidway;
+            scaledPredicted = 2 * sampleMidway;
         }
         else
         {
@@ -187,18 +187,18 @@ long long Predictor::modRstar(long long arg, long long op)
 
 
 unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
-                                                      unsigned int signalMinimum, unsigned int signalMidway, unsigned int signalMaximum,
+                                                      unsigned int sampleMinimum, unsigned int sampleMidway, unsigned int sampleMaximum,
                                                       int scaledPredicted)
 {
     unsigned short int mapped = 0;
     int delta = ((int) matrixBsqIndex(mySamples, x, y, z)) - scaledPredicted / 2;
-    unsigned int omega = scaledPredicted / 2 - signalMinimum;
+    unsigned int omega = scaledPredicted / 2 - sampleMinimum;
     unsigned int absDelta = delta < 0 ? (-1 * delta) : delta;
     int sign_scaled = (scaledPredicted & 0x1) != 0 ? -1 : 1;
 
-    if (omega > signalMaximum - scaledPredicted / 2)
+    if (omega > sampleMaximum - scaledPredicted / 2)
     {
-        omega = signalMaximum - scaledPredicted / 2;
+        omega = sampleMaximum - scaledPredicted / 2;
     }
 
     if (absDelta > omega)
