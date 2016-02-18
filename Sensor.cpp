@@ -121,9 +121,9 @@ void Sensor::process()
 	sendHeader();
 
     //myEncodedBitCount = 0;
-    myEncodedBitCount = 19*BitsPerByte;
 
-	unsigned int encodedBlock[BlockSize];
+	// :TODO: formalize this a little more
+    myEncodedBitCount = 19*BitsPerByte; // Start with header length
 
 
 	// The first option must be non-compression
@@ -160,6 +160,9 @@ void Sensor::process()
 
     long totalSamples = myXDimension*myYDimension*myZDimension;
 
+    //:TODO: This is one of the 1st places where we will start looking
+    // at applying Amdahl's Law!!!
+
     for(blockIndex = 0; blockIndex<totalSamples; blockIndex+=32)
     {
         size_t encodedSize(0);
@@ -177,8 +180,6 @@ void Sensor::process()
 
             // 1 block at a time
             (*iteration)->setSamples(&residualsPtr[blockIndex]);
-
-            memset(encodedBlock, 0, BlockSize * sizeof(unsigned int));  // is this right?
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
@@ -245,7 +246,7 @@ void Sensor::process()
             << "\n(intermediate t2-t3): " << fixed << getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
 
     cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"<< endl;
-//exit(0);
+
 }
 
 
