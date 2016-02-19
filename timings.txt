@@ -11,7 +11,19 @@ Representative intermediate Encoding processing times ==>
 
 Encoding processing time ==> 10.2643 seconds
 Compression processing time ==> 11.3716 seconds
+************************************************************
+	Alternate Approach (Windows)
+	Compressing Landsat_agriculture-u16be-6x1024x1024...
+	Prediction processing time ==> 2.2742 seconds
 
+	Representative intermediate Encoding processing times ==> 
+	(intermediate t0-t1): 0.0000 seconds
+	(intermediate t1-t2): 0.0000 seconds
+	(intermediate t2-t3): 0.0000 seconds
+
+	Encoding processing time ==> 13.1223 seconds
+	Compression processing time ==> 15.4135 seconds
+	
 ===============================================================
 
 European:
