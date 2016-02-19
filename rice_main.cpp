@@ -13,6 +13,7 @@
 #include <Sensor.h>
 #include <Predictor.h>
 #include <Timing.h>
+#include <FileBasedImagePersistence.h>
 
 
     
@@ -30,12 +31,16 @@ int main(int argc, char *argv[])
 
     cout << "Compressing Landsat_agriculture-u16be-6x1024x1024..." << endl;
    
+    FileBasedImagePersistence image("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+
     // Construct my LandSat sensor, which performs the compression of the supplied
     // raw image data per the Rice algorithm
-	Sensor landsat("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+	Sensor landsat(&image, "Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+
+//	landsat.setImageSource(&image);
 
 	// The raw data may include numerous image sets. Here, I will address only one.
-	landsat.getSamples(1);
+//	landsat.getSamples(1);
 	
     timestamp_t t0 = getTimestamp();
 
@@ -45,6 +50,9 @@ int main(int argc, char *argv[])
     timestamp_t t1 = getTimestamp();
 
     cout << "Compression processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
+
+    // Write out the encoded data. This is outside of the compression processing
+    image.writeEncodedData();
 
     return 0;
 }

@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <fstream>
+//#include <fstream>
 #include <vector>
 #include <sstream>
 #include <Predictor.h>
@@ -22,6 +22,7 @@
 #include <SplitSequence.h>
 #include <SecondExtensionOption.h>
 #include <ZeroBlockOption.h>
+#include <ImagePersistence.h>
 #include <boost/dynamic_bitset.hpp>
 
 const double LandsatDownlinkRate(384);
@@ -61,9 +62,9 @@ struct CompressedHeader
 class Sensor
 {
 	public:
-		Sensor(char* filename, unsigned int x, unsigned int y, unsigned int z);
+		Sensor(RiceAlgorithm::ImagePersistence* image, char* filename, unsigned int x, unsigned int y, unsigned int z);
 		virtual ~Sensor();
-		ushort* getSamples(uint scanNumber=1);
+//		ushort* getSamples(uint scanNumber=1);
 		void process();
 
 		 void operator=(RiceAlgorithm::AdaptiveEntropyEncoder& right){
@@ -74,9 +75,14 @@ class Sensor
 		 	 	 	 	 	 	 	 	 	 	 	 	 	 	 	 }
 		 bool operator>(RiceAlgorithm::AdaptiveEntropyEncoder& right){  return false; }
 
+		 void setImageSource(RiceAlgorithm::ImagePersistence* image) {mySource = image; }
+
 	private:
+		 RiceAlgorithm::ImagePersistence* mySource;
+
 		// prefix only :TODO: reassess for persistence
 		std::ostringstream myFileStream;
+
 
 	    ushort* mySamples;
 	    unsigned int myEncodedBlock[MaximumEncodedBlockSize];
@@ -85,11 +91,11 @@ class Sensor
 	    boost::dynamic_bitset<> myFullEncodedStream;
 
 
-	    std::ifstream mySampleStream;
-	    unsigned long myLength;
+//	    std::ifstream mySampleStream;
+//	    unsigned long myLength;
 
 	    // will need to both write to and read from this stream
-        std::fstream myEncodedStream;
+//        std::fstream myEncodedStream;
 	    void sendHeader();
 
         unsigned int myXDimension;
