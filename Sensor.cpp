@@ -116,7 +116,6 @@ void Sensor::process()
 
             CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
 
-            //encodedLength = (*iteration)->encode(encodedBlock, encodedStream, selection);
             encodedLength = (*iteration)->encode(encodedStream, selection);
 
             // This basically determines the winner
