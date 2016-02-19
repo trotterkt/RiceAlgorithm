@@ -84,14 +84,16 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     }
 
 
-    vector< size_t > encodedSizeList;
+    //vector< size_t > encodedSizeList;
+    size_t encodedSizeList[32];
     size_t totalEncodedSize(0);
 
     // Get the total encoded size first
     for(int index = 0; index < 32; index++)
     {
         size_t encodedSize = (myInputSamples[index] >> selection) + 1;
-        encodedSizeList.push_back(encodedSize);
+        //encodedSizeList.push_back(encodedSize);
+        encodedSizeList[index] = encodedSize;
         totalEncodedSize += encodedSize;
     }
 
@@ -111,6 +113,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
         encodedStream <<= encodedSizeList[index];        
     }
     encodedStream[0] |= 1;
+
     //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     // after the zero sequence number that was split off, then we add that value to the stream
@@ -120,16 +123,41 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
 
     for(int index = 0; index < 32; index++)
     {
-        ushort  maskedSample = myInputSamples[index] & mask;
+        ushort maskedSample = myInputSamples[index] & mask;
+
+        //:TODO: this section appears to be responsible for about 8 seconds in the
+        // total encoding time
+        //===================================================================================
         boost::dynamic_bitset<> encodedSample(selection, maskedSample);
-        
+
         encodedStream.resize(totalEncodedSize + selection);
         encodedStream <<= selection;
         encodedSample.resize(totalEncodedSize + selection);
         encodedStream |= encodedSample;
-        
+
         totalEncodedSize = encodedStream.size();
+        //===================================================================================
     }
+
+//    // Alternate approach
+//    //************************************************
+//    // what is the largest size in bits possible? 32*K14 = 448 bits = 56 bytes
+//    unsigned long long encodedSample2(0); // 8 bytes == 64 bits
+//    size_t additionalEncodedSize = selection * 32;
+//    totalEncodedSize = encodedStream.size() + additionalEncodedSize;
+//    encodedStream.resize(totalEncodedSize);
+//    encodedStream <<= additionalEncodedSize;
+//
+//
+//    for(int index = 0; index < 32; index++)
+//    {
+//        ushort maskedSample = myInputSamples[index] & mask;
+//        encodedSample2 |= maskedSample;
+//        encodedSample2 <<= selection;
+//    }
+//    boost::dynamic_bitset<> mergedEncodedSample(totalEncodedSize, encodedSample2);
+//    encodedStream |= mergedEncodedSample;
+//    //************************************************
 
 
     size_t numberEncodedBytes;

@@ -1,0 +1,23 @@
+ON UBUNTU:
+
+My implementation
+Compressing Landsat_agriculture-u16be-6x1024x1024...
+Prediction processing time ==> 1.1068 seconds
+
+Representative intermediate Encoding processing times ==> 
+(intermediate t0-t1): 0.0000 seconds
+(intermediate t1-t2): 0.0000 seconds
+(intermediate t2-t3): 0.0000 seconds
+
+Encoding processing time ==> 10.2643 seconds
+Compression processing time ==> 11.3716 seconds
+
+===============================================================
+
+European:
+Overall Compression duration 2.103419 (sec)
+Prediction duration 1.399099 (sec)
+Encoding duration 0.704320 (sec)
+11754624 bytes (11479.12 kb) in the compressed image
+Compressed rate 14.946777 bits/sample
+

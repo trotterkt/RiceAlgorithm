@@ -98,6 +98,7 @@ void Sensor::process()
 
     for(blockIndex = 0; blockIndex<totalSamples; blockIndex+=32)
     {
+
         size_t encodedSize(0);
 
         // Reset for each capture of the winning length
@@ -109,6 +110,7 @@ void Sensor::process()
         for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
                 iteration != myEncoderList.end(); ++iteration)
         {
+
             encodedStream.clear();
 
             // 1 block at a time
@@ -127,6 +129,7 @@ void Sensor::process()
 
                 encodedSize = (*iteration)->getEncodedBlockSize();
             }
+
         }
 
         t1_intermediate = getTimestamp();
