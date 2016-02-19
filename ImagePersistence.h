@@ -11,6 +11,8 @@
 #ifndef IMAGEPERSISTENCE_H_
 #define IMAGEPERSISTENCE_H_
 
+#include <sys/types.h>
+
 //:TODO: I see this as a very temporary persistence mechanism
 // until I elect what to use (i.e. PFW, Boost Serialization library, etc.)
 // Will be described architecturally, probably within a specific layer
