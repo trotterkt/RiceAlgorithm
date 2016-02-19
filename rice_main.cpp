@@ -35,13 +35,8 @@ int main(int argc, char *argv[])
 
     // Construct my LandSat sensor, which performs the compression of the supplied
     // raw image data per the Rice algorithm
-	Sensor landsat(&image, "Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+	Sensor landsat(&image, Rows, Columns, Bands);
 
-//	landsat.setImageSource(&image);
-
-	// The raw data may include numerous image sets. Here, I will address only one.
-//	landsat.getSamples(1);
-	
     timestamp_t t0 = getTimestamp();
 
     // Initiate the Rice algorithm compression

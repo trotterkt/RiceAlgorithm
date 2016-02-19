@@ -23,36 +23,11 @@ using namespace std;
 using namespace RiceAlgorithm;
 
 
-Sensor::Sensor(ImagePersistence* image, char* filename, unsigned int x, unsigned int y, unsigned int z) :
+Sensor::Sensor(ImagePersistence* image, unsigned int x, unsigned int y, unsigned int z) :
         mySource(image), mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z), myWinningEncodedLength((unsigned int)-1)
 {
 
     mySamples = mySource->getSampleData(1); //:TODO: only one scan, need to address multiple
-
-// Filename ignores extension :TODO: will need to isolate persistence later
-//	myFileStream << filename;
-//
-//	mySampleStream.open((myFileStream.str() + ".raw").c_str(), ios::in | ios::binary);
-//
-//    if (!mySampleStream.is_open())
-//    {
-//        exit(EXIT_FAILURE);
-//    }
-//
-//    myEncodedStream.open((myFileStream.str() + ".comp").c_str(), ios::out | ios::in | ios::binary | ios::trunc);
-//
-//    if (!myEncodedStream.is_open())
-//    {
-//        exit(EXIT_FAILURE);
-//    }
-//
-//	// get the length of the file
-//    mySampleStream.seekg(0, ios::end);
-//	myLength = mySampleStream.tellg();
-//	mySampleStream.seekg(0, ios::beg);
-//
-//
-//    mySamples = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
     // Create the encoding types
     size_t bufferSize = myXDimension*myYDimension*myZDimension;
@@ -71,60 +46,14 @@ Sensor::Sensor(ImagePersistence* image, char* filename, unsigned int x, unsigned
 
 Sensor::~Sensor()
 {
-//    mySampleStream.close();
-//    myEncodedStream.close();
 
-//    delete[] mySamples;
 }
-
-//ushort* Sensor::getSamples(uint scanNumber)
-//{
-//    unsigned short int buffer(0);
-//    static unsigned long readElements(0);
-//
-//    streamsize sampleSize = sizeof(buffer);
-//
-//    uint blockSize = myXDimension * myYDimension * myZDimension;
-//
-//    // Skip ahead on the next scan
-//    readElements = ((scanNumber-1) * blockSize);
-//
-//
-//    //Now, instead, we are in the situation that only the exact D bits are specified for
-//    //every sample.
-//    //I read two bytes (16 bits) at a time, eventually eliminating the most
-//    //significant bits, in case the length of the residuals is smaller than 16 bits,
-//    //keeping the remaining bits for the next residual
-//    //I repeat until the input file is empty
-//    //while ((readElements * sampleSize) < (myLength/scanNumber))
-//    while (readElements < (blockSize*scanNumber))
-//    {
-//        mySampleStream.read(reinterpret_cast<char*>(&buffer), sampleSize);
-//
-//        // This assumes the data is in BSQ format and we do not need to adjust the indexing
-//        mySamples[readElements] = buffer;
-//
-//        readElements++;
-//    }
-//
-//    // Determine if uneven number (1) of bytes left
-//    if ((myLength - mySampleStream.tellg()) == 1)
-//    {
-//    	mySampleStream.read(reinterpret_cast<char*>(&buffer), 1);
-//        mySamples[readElements] = buffer;
-//    }
-//
-//
-//    return mySamples;
-//}
 
 void Sensor::process()
 {
 	// The goal hear is to form the telemetry of the data
 
 	sendHeader();
-
-    //myEncodedBitCount = 0;
 
 	// :TODO: formalize this a little more
     myEncodedBitCount = 19*BitsPerByte; // Start with header length
@@ -429,14 +358,8 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     for (vector<unsigned char>::iterator it =
             packedDataBlocks.begin(); it != packedDataBlocks.end(); ++it)
     {
-
-//        //retrieves block and converts it to a char*
-//        myEncodedStream.write(reinterpret_cast<char*>(&*it), sizeof(unsigned char));
-
-        // :TODO: Alternate approach of writing directly to memory
-        //**************************************************************************************
+        //retrieves block and converts it to a char*
         mySource->sendEncodedData(reinterpret_cast<char*>(&*it));
-        //**************************************************************************************
 
         // if we've written the targeted number of bytes
         // return
@@ -446,10 +369,6 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
         	break;
         }
     }
-
-    // since the stream is bidirectional, we must reposition the file pointer
-    // after every read to write, or visa versa
-//    myEncodedStream.seekg(0, ios::end);
 }
 
 bool Sensor::getLastByte(unsigned char &lastByte)
@@ -461,26 +380,14 @@ bool Sensor::getLastByte(unsigned char &lastByte)
     int byteIndex = myEncodedBitCount % BitsPerByte;
     if(byteIndex)
     {
-//        myEncodedStream.seekg (byteIndex, ios::beg);
-//        myEncodedStream.get(*reinterpret_cast<char *>(&lastByte));
-
-        // :TODO: Alternate approach of writing and reading directly to memory
-        //**************************************************************************************
-       lastByte = (mySource->getEncodedData())[byteIndex];
-        //**************************************************************************************
+        lastByte = (mySource->getEncodedData())[byteIndex];
 
         partialByteFlag = true;
     }
 
-    // since the stream is bidirectional, we must reposition the file pointer
-    // after every read to write, or visa versa
     unsigned int putByte = myEncodedBitCount / BitsPerByte;
-//    myEncodedStream.seekp (putByte, ios::beg);
 
-    // :TODO: Alternate approach of writing and reading directly to memory
-    //**************************************************************************************
     mySource->setNextInsertionByte(putByte);
-    //**************************************************************************************
 
     return partialByteFlag;
 

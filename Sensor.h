@@ -14,7 +14,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-//#include <fstream>
 #include <vector>
 #include <sstream>
 #include <Predictor.h>
@@ -62,9 +61,9 @@ struct CompressedHeader
 class Sensor
 {
 	public:
-		Sensor(RiceAlgorithm::ImagePersistence* image, char* filename, unsigned int x, unsigned int y, unsigned int z);
+		Sensor(RiceAlgorithm::ImagePersistence* image, unsigned int x, unsigned int y, unsigned int z);
 		virtual ~Sensor();
-//		ushort* getSamples(uint scanNumber=1);
+
 		void process();
 
 		 void operator=(RiceAlgorithm::AdaptiveEntropyEncoder& right){
@@ -80,9 +79,6 @@ class Sensor
 	private:
 		 RiceAlgorithm::ImagePersistence* mySource;
 
-		// prefix only :TODO: reassess for persistence
-		std::ostringstream myFileStream;
-
 
 	    ushort* mySamples;
 	    unsigned int myEncodedBlock[MaximumEncodedBlockSize];
@@ -90,12 +86,6 @@ class Sensor
 	    // append all encoded blocks before sending at once
 	    boost::dynamic_bitset<> myFullEncodedStream;
 
-
-//	    std::ifstream mySampleStream;
-//	    unsigned long myLength;
-
-	    // will need to both write to and read from this stream
-//        std::fstream myEncodedStream;
 	    void sendHeader();
 
         unsigned int myXDimension;
