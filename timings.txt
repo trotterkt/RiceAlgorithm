@@ -1,3 +1,18 @@
+ON CYBERPOWER PC (CentOS):
+
+Compressing Landsat_agriculture-u16be-6x1024x1024...
+Prediction processing time ==> 1.2358 seconds
+
+Representative intermediate Encoding processing times ==> 
+(intermediate t0-t1): 0.0000 seconds
+(intermediate t1-t2): 0.0000 seconds
+(intermediate t2-t3): 0.0000 seconds
+
+Encoding processing time ==> 6.8884 seconds
+Compression processing time ==> 8.1243 seconds
+**********************************************************
+
+
 ON UBUNTU:
 
 My implementation
