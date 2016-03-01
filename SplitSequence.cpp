@@ -138,6 +138,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
         totalEncodedSize = encodedStream.size();
         //===================================================================================
     }
+    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
 //    // Alternate approach
 //    //************************************************
@@ -177,6 +178,8 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
     encodedStream |= encodedSelectionStream;
 
+    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+
     // Determine the shift amount if we are not on a full byte, as is probably normally
     // the case. There would otherwise often be leading zero bits
     size_t shiftBits = numberEncodedBytes*BitsPerByte - encodedStream.size();
@@ -185,7 +188,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     encodedStream.resize(encodedStream.size() + shiftBits);
     encodedStream <<= shiftBits;
 
-     //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
+    // cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     return code_len;
 }
