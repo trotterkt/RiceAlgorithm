@@ -166,9 +166,15 @@ int Predictor::getLocalSum(unsigned int x, unsigned int y, unsigned int z)
         return 0x80000000;
     }
 
-    if (y > 0) sum = 4 * matrixBsqIndex(mySamples, x, y - 1, z);
+    // Using column-oriented local sums
+    if (y > 0)
+    {
+    	sum = 4 * matrixBsqIndex(mySamples, x, y - 1, z);
+    }
     else
+    {
         sum = 4 * matrixBsqIndex(mySamples, x - 1, y, z);
+    }
 
     return sum;
 }
