@@ -42,11 +42,14 @@ Sensor::Sensor(ImagePersistence* image, unsigned int x, unsigned int y, unsigned
     myEncoderList.push_back(secondExt);
     myEncoderList.push_back(zeroBlock);
     myEncoderList.push_back(split);
+
+    // Prepare for the decompression step
+    groundPtr = new GroundSystem(image);
 }
 
 Sensor::~Sensor()
 {
-
+	delete groundPtr;
 }
 
 void Sensor::process()
