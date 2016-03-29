@@ -29,8 +29,8 @@ I-Logix-RPY-Archive version 8.5.2 Modeler * 1159120
 				- _name = "RiceAlgorithm";
 				- _id = GUID e438ebd7-5db2-4c78-a747-1931170ae3c1;
 			}
-			- _UpLeft = 561 10 ;
-			- _DownRight = 1670 742 ;
+			- _UpLeft = 561 0 ;
+			- _DownRight = 1670 763 ;
 			- _instanceName = "";
 			- m_nDiagramIndex = 0;
 		}

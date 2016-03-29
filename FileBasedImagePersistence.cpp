@@ -61,6 +61,11 @@ void FileBasedImagePersistence::writeEncodedData()
     myEncodedStream.write(myEncodedData, myEncodedBytesWritten);
 }
 
+void FileBasedImagePersistence::readEncodedData(size_t bytesToRead)
+{
+    myEncodedStream.write(myEncodedData, myEncodedBytesWritten);
+}
+
 void FileBasedImagePersistence::setSamples(uint scanNumber)
 {
     unsigned short int buffer(0);

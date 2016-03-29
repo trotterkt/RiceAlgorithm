@@ -8,7 +8,7 @@
 #ifndef GROUNDSYSTEM_H_
 #define GROUNDSYSTEM_H_
 
-#include <ImagePersistence.h>;
+#include <ImagePersistence.h>
 
 namespace RiceAlgorithm
 {
@@ -20,6 +20,15 @@ class GroundSystem
 		virtual ~GroundSystem();
 
 		void process();
+
+	private:
+		void readHeader();
+	    CompressedHeader myHeader;
+
+        RiceAlgorithm::ImagePersistence* mySource;
+
+        ushort* myRawSamples;
+
 };
 
 } /* namespace RiceAlgorithm */

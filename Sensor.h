@@ -32,33 +32,6 @@ const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize);
 
 
 
-// Note that if member types are not defined as being of similar size
-// there can be an alignment problem. See Annotated  C++ Ref Manual,
-// Sec 5.3.2. This will not be an issue for this structure, since
-// I will not be writing in out directly as a whole.
-
-struct CompressedHeader
-{
-    char userData;
-    short xDimension;
-    short yDimension;
-    short zDimension;
-
-    char signSampDynRangeBsq1;   // sample type, reserved, dyn range, bsq(1)
-    short bsq;
-    short wordSizEncodeMethod; // reserved, out word size, encoding method,
-                                 // reserved
-    char predictBandMode;        // user input predictor band,
-                                 // predictor full, reserved,
-    char neighborRegSize;        // neighbor sum,
-                                 //reserve, register size
-    char predictWeightResInit;   // weight resolution, weight interval, initial weight,
-                                 // final weight, reserved, initial weight table,
-                                  // weight init resolution
-    char predictWeightInitFinal;    // reserved, block size flag, restricted, ref interval
-    char predictWeightTable;
-    short blockSizeRefInterval;
-};
 
 class Sensor
 {
