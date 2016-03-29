@@ -24,6 +24,8 @@
 #include <ImagePersistence.h>
 #include <boost/dynamic_bitset.hpp>
 
+#include <GroundSystem.h>
+
 const double LandsatDownlinkRate(384);
 
 const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize);
@@ -75,6 +77,8 @@ class Sensor
 		 bool operator>(RiceAlgorithm::AdaptiveEntropyEncoder& right){  return false; }
 
 		 void setImageSource(RiceAlgorithm::ImagePersistence* image) {mySource = image; }
+
+		 RiceAlgorithm::GroundSystem* getGround() { return groundPtr; }
 
 	private:
 		 RiceAlgorithm::ImagePersistence* mySource;
@@ -132,6 +136,9 @@ class Sensor
         bool getLastByte(unsigned char &lastByte);
 
         unsigned int myEncodedBitCount;
+
+
+        RiceAlgorithm::GroundSystem* groundPtr;
 
 };
 

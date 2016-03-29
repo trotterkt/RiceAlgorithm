@@ -32,6 +32,8 @@ class FileBasedImagePersistence: public ImagePersistence
         // This operation in not part of the compression.
         virtual void writeEncodedData();
 
+        const char* getBaseName() { return myBaseFileStream.str().c_str(); }
+
     protected:
         virtual void setSamples(uint scanNumber);
 
@@ -43,6 +45,9 @@ class FileBasedImagePersistence: public ImagePersistence
 
         // will need to both write to and read from this stream
         std::fstream myEncodedStream;
+
+
+        std::fstream myDecodedStream;
 };
 
 } /* namespace RiceAlgorithm */

@@ -49,5 +49,9 @@ int main(int argc, char *argv[])
     // Write out the encoded data. This is outside of the compression processing
     image.writeEncodedData();
 
+
+    // Kick off the associated decompression
+    landsat.getGround()->process();
+
     return 0;
 }
