@@ -37,6 +37,74 @@ void GroundSystem::process()
 
     // Encoded data should begin right after the header (byte 19)
 
+    // 1st grab the Encoded ID
+    const int HeaderLength(19);
+    unsigned int currentByteLocation(HeaderLength);
+
+    unsigned char selectionByteValue = mySource->getEncodedData()[currentByteLocation];
+    selectionByteValue >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+    selectionByteValue -= 1;
+    CodingSelection selection = CodingSelection(selectionByteValue);
+    
+   
+    // When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
+    // 1 binary bit for each of the 32 samples. This will be followed by 32 * k-select
+    // value
+    
+    //:TRICKY:
+    // count number ones in a byte
+    //((i>>7)&1)+(i>>6)&1)+(i>>5)&1)+(i>>4)&1)+(i>>3)&1)+((i>>2)&1)+((i>>1)&1)+(i&1);
+    
+    // How do I pull out the encoded block lengths? See Sec. 6 of standard for CIP
+    // alt. use 'a priori'
+    
+    ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension)/32];
+
+    // Assuming k-split type -
+    // - count bits until 32-ones have been counted
+    int encodeCount(0);
+    unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
+
+    // get rid of the selection info
+    encodedByte <<= CodeOptionBitFieldFundamentalOrNoComp;
+
+    size_t encodedLength(0);
+
+    encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+    
+    ushort splitValue[32];
+    size_t splitCount(0);
+    size_t index(0);
+
+    while(encodeCount < 32)
+    {
+        // Count the bit if its '1'
+        encodeCount += ((encodedByte>>(encodedLength%BitsPerByte))&1);
+        
+        // Capture the encoded value :TODO: somethings not right!
+        //=====================================================
+        splitCount++;
+        if((encodedByte>>(encodedLength%BitsPerByte))&1)
+        {
+            splitValue[index]=splitCount;
+            index++;
+            splitCount = 0;
+        }
+        //=====================================================
+
+        encodedLength++;
+
+        if(!(encodedLength%BitsPerByte))
+        {
+            currentByteLocation++;
+            encodedByte = mySource->getEncodedData()[currentByteLocation];
+        }
+    }
+
+    // Total encoded length will be the current bit count, plus 32 x k-split
+    encodedLength += (32 * selection);
+
+    delete [] encodedBlockSizes;
 }
 
 
