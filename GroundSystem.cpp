@@ -68,51 +68,50 @@ void GroundSystem::process()
     int encodeCount(0);
     unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
 
-    // get rid of the selection info
-    encodedByte <<= CodeOptionBitFieldFundamentalOrNoComp;
-
     size_t encodedLength(0);
 
-    encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
-    
+   
     ushort splitValue[32];
     int splitCount(0);
     int index(0);
 
+    int shiftPosition = CodeOptionBitFieldFundamentalOrNoComp-1;
+
     while(encodeCount < 32)
     {
         // Count the bit if its '1'
-        encodeCount += ((encodedByte>>(encodedLength%BitsPerByte))&1);
+        encodeCount += ((encodedByte>>(shiftPosition))&1);
         
-        // Capture the encoded value :TODO: somethings not right!
-        //=====================================================
-
-
-        if((encodedByte>>(encodedLength%BitsPerByte))&1)
-        {
-            splitValue[index] = ++splitCount;
-            cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
-            index++;
-            splitCount = -1;
-        }
-
         splitCount++;
 
+        // Capture the encoded value 
         //=====================================================
 
-        encodedLength++;
-        cout << encodedLength << " ";
-
-        if(!(encodedLength%BitsPerByte))
+        if((encodedByte>>(shiftPosition))&1)
         {
-        	cout << "|";
+            splitValue[index] = splitCount;
+            cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+            index++;
+            splitCount = 0;
+        }
+      
+        shiftPosition--;
+        encodedLength++;
+        
+        if(shiftPosition < 0)
+        {
             currentByteLocation++;
             encodedByte = mySource->getEncodedData()[currentByteLocation];
+            shiftPosition = BitsPerByte-1;
         }
     }
 
+    encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+
     // Total encoded length will be the current bit count, plus 32 x k-split
+    cout << "\nencodedLength=" << encodedLength << endl;
     encodedLength += (32 * selection);
+    cout << "\nencodedLength=" << encodedLength << endl;
 
     delete [] encodedBlockSizes;
 }
