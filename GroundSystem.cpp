@@ -8,6 +8,9 @@
 #include <GroundSystem.h>
 #include <Sensor.h>
 #include <Endian.h>
+#include <iostream>
+
+using namespace std;
 
 namespace RiceAlgorithm
 {
@@ -73,8 +76,8 @@ void GroundSystem::process()
     encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
     
     ushort splitValue[32];
-    size_t splitCount(0);
-    size_t index(0);
+    int splitCount(0);
+    int index(0);
 
     while(encodeCount < 32)
     {
@@ -83,19 +86,26 @@ void GroundSystem::process()
         
         // Capture the encoded value :TODO: somethings not right!
         //=====================================================
-        splitCount++;
+
+
         if((encodedByte>>(encodedLength%BitsPerByte))&1)
         {
-            splitValue[index]=splitCount;
+            splitValue[index] = ++splitCount;
+            cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
             index++;
-            splitCount = 0;
+            splitCount = -1;
         }
+
+        splitCount++;
+
         //=====================================================
 
         encodedLength++;
+        cout << encodedLength << " ";
 
         if(!(encodedLength%BitsPerByte))
         {
+        	cout << "|";
             currentByteLocation++;
             encodedByte = mySource->getEncodedData()[currentByteLocation];
         }
