@@ -9,6 +9,7 @@
 #include <Sensor.h>
 #include <Endian.h>
 #include <iostream>
+#include <stdio.h>
 #include <math.h>
 
 using namespace std;
@@ -206,7 +207,7 @@ void GroundSystem::process()
         
         selectionByteValue >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
         selectionByteValue -= 1;
-        cout << "Encoding Selection = K" << int(selectionByteValue) << endl;
+        cout << "Encoding Selection = K" << int(selectionByteValue) << ", currentByteLocation=" << currentByteLocation << endl;
         CodingSelection selection = CodingSelection(selectionByteValue);
 
         // When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
