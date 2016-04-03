@@ -184,6 +184,8 @@ void GroundSystem::process()
     // 1st grab the Encoded ID
     const int HeaderLength(19);
     unsigned int currentByteLocation(HeaderLength);
+    ulong totalEncodedLength(HeaderLength*BitsPerByte);
+
     unsigned int additionalBits(0);
     
     ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension) / 32];
@@ -192,23 +194,18 @@ void GroundSystem::process()
     //for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
     while (currentByteLocation < 1000) //:TODO: Temp
     {
-
-        unsigned char selectionByteValue = mySource->getEncodedData()[currentByteLocation];
-        unsigned char selectionByteValueNext = mySource->getEncodedData()[currentByteLocation+1];
         
         // Account for selection value not being on a byte boundary
-        selectionByteValue <<= additionalBits;
+        // The selection ID may span as much as two bytes
+        unsigned char selectionBytes[2];
+        memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
+        shiftLeft(selectionBytes, 16, additionalBits);
 
-        if(additionalBits > 4)
-        {
-            // In this case, we need the neighboring bits too
-            selectionByteValue |= (selectionByteValueNext>>=additionalBits);
-        }
-        
-        selectionByteValue >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
-        selectionByteValue -= 1;
-        cout << "Encoding Selection = K" << int(selectionByteValue) << ", currentByteLocation=" << currentByteLocation << endl;
-        CodingSelection selection = CodingSelection(selectionByteValue);
+
+        selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+        selectionBytes[0] -= 1;
+        cout << "Encoding Selection = K" << int(selectionBytes[0]) << ", currentByteLocation=" << currentByteLocation << endl;
+        CodingSelection selection = CodingSelection(selectionBytes[0]);
 
         // When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
         // 1 binary bit for each of the 32 samples. This will be followed by 32 * k-select
@@ -266,7 +263,7 @@ void GroundSystem::process()
 
             if (shiftPosition < 0)
             {
-                currentByteLocation++;
+                //currentByteLocation++;
                 copyIndex++;
                 shiftPosition = BitsPerByte - 1;
             }
@@ -280,16 +277,19 @@ void GroundSystem::process()
         encodedLength += (32 * selection);
         cout << "\nencodedLength=" << encodedLength << endl;
 
-        currentByteLocation += (32 * selection/BitsPerByte);
-        cout << "currentByteLocation=" << currentByteLocation << endl;
-        additionalBits += encodedLength%BitsPerByte;
-        if(additionalBits > 7)
+        totalEncodedLength += encodedLength;
+
+        currentByteLocation = (totalEncodedLength/BitsPerByte);
+        if(totalEncodedLength%BitsPerByte)
         {
-            additionalBits = 0;
+        	currentByteLocation++;
         }
+
+        cout << "currentByteLocation=" << currentByteLocation << endl;
+
+        additionalBits = totalEncodedLength%BitsPerByte;
         cout << "additional bits=" << additionalBits << endl;
 
-        currentByteLocation++;
     }
 
     delete[] encodedBlockSizes;

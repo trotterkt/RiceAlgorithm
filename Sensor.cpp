@@ -153,7 +153,7 @@ void Sensor::process()
 			encodedStream.resize(appendedSize);
         	//cout << "Again  partial appendage: " << encodedStream << endl;
 
-			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), lastByte);
+			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), ulong(lastByte));
 			lastByteStream <<= (encodedStream.size() - partialBits);
 			encodedStream |= lastByteStream;
         	//cout << "After partial appendage : " << encodedStream << endl;
@@ -166,8 +166,6 @@ void Sensor::process()
         static unsigned int lastWinningEncodedLength(0);
 
         sendEncodedSamples(encodedStream, encodedSize);
-
-        getLastByte(lastByte);
 
         t3_intermediate = getTimestamp();
 
@@ -381,16 +379,16 @@ bool Sensor::getLastByte(unsigned char &lastByte)
     // Get the last byte written, and in some cases, reset the file pointer to the one previous
 
     bool partialByteFlag(false);
+    unsigned int putByte = myEncodedBitCount / BitsPerByte;
 
     int byteIndex = myEncodedBitCount % BitsPerByte;
     if(byteIndex)
     {
-        lastByte = (mySource->getEncodedData())[byteIndex];
+        lastByte = (mySource->getEncodedData())[(myEncodedBitCount / BitsPerByte) + 1];
 
         partialByteFlag = true;
+        putByte++;
     }
-
-    unsigned int putByte = myEncodedBitCount / BitsPerByte;
 
     mySource->setNextInsertionByte(putByte);
 
