@@ -170,131 +170,167 @@ GroundSystem::~GroundSystem()
 
 void GroundSystem::process()
 {
-    // :TODO: This begins the decoding
-    readHeader();
+	// :TODO: This begins the decoding
+	readHeader();
 
-    // Having the raw sample dimensions from the header, allocate space for
-    // the decoding
-    const ulong NumberOfSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
+	// Having the raw sample dimensions from the header, allocate space for
+	// the decoding
+	const ulong NumberOfSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
-    myRawSamples = new ushort[NumberOfSamples];
+	myRawSamples = new ushort[NumberOfSamples];
 
-    // Encoded data should begin right after the header (byte 19)
+	// Encoded data should begin right after the header (byte 19)
 
-    // 1st grab the Encoded ID
-    const int HeaderLength(19);
-    unsigned int currentByteLocation(HeaderLength);
-    ulong totalEncodedLength(HeaderLength*BitsPerByte);
+	// 1st grab the Encoded ID
+	const int HeaderLength(19);
+	unsigned int currentByteLocation(HeaderLength);
+	ulong totalEncodedLength(HeaderLength * BitsPerByte);
 
-    unsigned int additionalBits(0);
+	unsigned int additionalBits(0);
+
+	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension
+			* myHeader.zDimension) / 32];
+	int count(0);
+	// Read in one 32-sample block at a time (not on byte boundary)
+	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
+	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
+	for (long blockIndex = 0; blockIndex < (NumberOfSamples / 32); blockIndex++)
+	{
+		cout << "Block Iteration:" << ++count << endl;
+
+		// Account for selection value not being on a byte boundary
+		// The selection ID may span as much as two bytes
+		unsigned char selectionBytes[2];
+		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
+		shiftLeft(selectionBytes, 16, additionalBits);
+
+		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+		selectionBytes[0] -= 1;  // Only applicable for split seq
+
+		cout << "Encoding Selection = K" << int(selectionBytes[0]) << ", currentByteLocation="
+				<< currentByteLocation << endl;
+		CodingSelection selection = CodingSelection(selectionBytes[0]);
+
+		// When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
+		// 1 binary bit for each of the 32 samples. This will be followed by 32 * k-select
+		// value
+
+		//:TRICKY:
+		// count number ones in a byte
+		//((i>>7)&1)+(i>>6)&1)+(i>>5)&1)+(i>>4)&1)+(i>>3)&1)+((i>>2)&1)+((i>>1)&1)+(i&1);
+
+		// How do I pull out the encoded block lengths? See Sec. 6 of standard for CIP
+		// alt. use 'a priori'
+
+		// Assuming k-split type -
+		// - count bits until 32-ones have been counted
+		int encodeCount(0);
+		unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
+
+		// Account for encoded value not being on a byte boundary
+		const unsigned int CopySize(32 * sizeof(ushort));
+		unsigned char encodedDataCopy[CopySize];
+		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
+
+		shiftLeft(encodedDataCopy, CopySize * BitsPerByte,
+				(CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
+
+		size_t encodedLength(0);
+
+		ushort splitValue[32];
+		int splitCount(0);
+		int index(0);
+		int copyIndex(0);
+
+		int shiftPosition(7);
+
+		switch (selection)
+		{
+			case RiceAlgorithm::K0:
+			case RiceAlgorithm::K1:
+			case RiceAlgorithm::K2:
+			case RiceAlgorithm::K3:
+			case RiceAlgorithm::K4:
+			case RiceAlgorithm::K5:
+			case RiceAlgorithm::K6:
+			case RiceAlgorithm::K7:
+			case RiceAlgorithm::K8:
+			case RiceAlgorithm::K9:
+			case RiceAlgorithm::K10:
+			case RiceAlgorithm::K11:
+			case RiceAlgorithm::K12:
+			case RiceAlgorithm::K13:
+			case RiceAlgorithm::K14:
+
+				while (encodeCount < 32)
+				{
+					// Count the bit if its '1'
+					encodeCount += ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1);
+
+					splitCount++;
+
+					// Capture the encoded value
+					//=====================================================
+
+					if ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1)
+					{
+						splitValue[index] = splitCount;
+						cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+						index++;
+						splitCount = 0;
+					}
+
+					shiftPosition--;
+					encodedLength++;
+
+					if (shiftPosition < 0)
+					{
+						copyIndex++;
+						shiftPosition = BitsPerByte - 1;
+					}
+				}
+
+				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+
+				// Total encoded length will be the current bit count, plus 32 x k-split
+				cout << "\nencodedLength=" << encodedLength << endl;
+				encodedLength += (32 * selection);
+				cout << "\nencodedLength=" << encodedLength << endl;
+
+				break;
+
+			case RiceAlgorithm::SecondExtensionOpt:
+			case RiceAlgorithm::ZeroBlockOpt:
+
+				break;
 
 
-    ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension) / 32];
-int count(0);
-    // Read in one 32-sample block at a time (not on byte boundary)
-    //for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
-    //while (currentByteLocation < NumberofSamples) //:TODO: Temp
-    for(long blockIndex=0; blockIndex < (NumberOfSamples/32); blockIndex++)
-    {
-    	cout << "Block Iteration:" << ++count << endl;
-        
-        // Account for selection value not being on a byte boundary
-        // The selection ID may span as much as two bytes
-        unsigned char selectionBytes[2];
-        memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
-        shiftLeft(selectionBytes, 16, additionalBits);
+			case RiceAlgorithm::NoCompressionOpt:
+
+				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+				encodedLength += (32 * sizeof(ushort));
+				break;
 
 
-        selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
-        selectionBytes[0] -= 1;
-        cout << "Encoding Selection = K" << int(selectionBytes[0]) << ", currentByteLocation=" << currentByteLocation << endl;
-        CodingSelection selection = CodingSelection(selectionBytes[0]);
+		}
 
-        // When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
-        // 1 binary bit for each of the 32 samples. This will be followed by 32 * k-select
-        // value
+		totalEncodedLength += encodedLength;
 
-        //:TRICKY:
-        // count number ones in a byte
-        //((i>>7)&1)+(i>>6)&1)+(i>>5)&1)+(i>>4)&1)+(i>>3)&1)+((i>>2)&1)+((i>>1)&1)+(i&1);
+		currentByteLocation = (totalEncodedLength / BitsPerByte);
+		if (totalEncodedLength % BitsPerByte)
+		{
+			currentByteLocation++;
+		}
 
-        // How do I pull out the encoded block lengths? See Sec. 6 of standard for CIP
-        // alt. use 'a priori'
+		cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
+				<< totalEncodedLength << endl;
 
+		additionalBits = totalEncodedLength % BitsPerByte;
+		cout << "additional bits=" << additionalBits << endl;
 
-        // Assuming k-split type -
-        // - count bits until 32-ones have been counted
-        int encodeCount(0);
-        unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
+	}
 
-        // Account for encoded value not being on a byte boundary
-        const unsigned int CopySize(32 * sizeof(ushort));
-        unsigned char encodedDataCopy[CopySize];
-        memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
-
-        shiftLeft(encodedDataCopy, CopySize*BitsPerByte, (CodeOptionBitFieldFundamentalOrNoComp+additionalBits));
-
-        size_t encodedLength(0);
-
-        ushort splitValue[32];
-        int splitCount(0);
-        int index(0);
-        int copyIndex(0);
-        
-        int shiftPosition(7);
-
-        while (encodeCount < 32)
-        {
-            // Count the bit if its '1'
-            encodeCount += ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1);
-
-            splitCount++;
-
-            // Capture the encoded value
-            //=====================================================
-
-            if ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1)
-            {
-                splitValue[index] = splitCount;
-                cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
-                index++;
-                splitCount = 0;
-            }
-
-            shiftPosition--;
-            encodedLength++;
-
-            if (shiftPosition < 0)
-            {
-                copyIndex++;
-                shiftPosition = BitsPerByte - 1;
-            }
-        }
-
-        
-        encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
-
-        // Total encoded length will be the current bit count, plus 32 x k-split
-        cout << "\nencodedLength=" << encodedLength << endl;
-        encodedLength += (32 * selection);
-        cout << "\nencodedLength=" << encodedLength << endl;
-
-        totalEncodedLength += encodedLength;
-
-        currentByteLocation = (totalEncodedLength/BitsPerByte);
-        if(totalEncodedLength%BitsPerByte)
-        {
-        	currentByteLocation++;
-        }
-
-        cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength=" << totalEncodedLength << endl;
-
-        additionalBits = totalEncodedLength%BitsPerByte;
-        cout << "additional bits=" << additionalBits << endl;
-
-    }
-
-    delete[] encodedBlockSizes;
+	delete[] encodedBlockSizes;
 }
 
 
