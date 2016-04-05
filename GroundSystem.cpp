@@ -175,9 +175,9 @@ void GroundSystem::process()
 
     // Having the raw sample dimensions from the header, allocate space for
     // the decoding
-    const ulong NumberofSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
+    const ulong NumberOfSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
-    myRawSamples = new ushort[NumberofSamples];
+    myRawSamples = new ushort[NumberOfSamples];
 
     // Encoded data should begin right after the header (byte 19)
 
@@ -187,13 +187,16 @@ void GroundSystem::process()
     ulong totalEncodedLength(HeaderLength*BitsPerByte);
 
     unsigned int additionalBits(0);
-    
-    ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension) / 32];
 
+
+    ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension) / 32];
+int count(0);
     // Read in one 32-sample block at a time (not on byte boundary)
     //for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
-    while (currentByteLocation < 1000) //:TODO: Temp
+    //while (currentByteLocation < NumberofSamples) //:TODO: Temp
+    for(long blockIndex=0; blockIndex < (NumberOfSamples/32); blockIndex++)
     {
+    	cout << "Block Iteration:" << ++count << endl;
         
         // Account for selection value not being on a byte boundary
         // The selection ID may span as much as two bytes
@@ -263,7 +266,6 @@ void GroundSystem::process()
 
             if (shiftPosition < 0)
             {
-                //currentByteLocation++;
                 copyIndex++;
                 shiftPosition = BitsPerByte - 1;
             }
@@ -285,7 +287,7 @@ void GroundSystem::process()
         	currentByteLocation++;
         }
 
-        cout << "currentByteLocation=" << currentByteLocation << endl;
+        cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength=" << totalEncodedLength << endl;
 
         additionalBits = totalEncodedLength%BitsPerByte;
         cout << "additional bits=" << additionalBits << endl;
