@@ -81,6 +81,7 @@ class Sensor
 		RiceAlgorithm::SplitSequence* split; // this will become more specific
 
 		void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength=0);
+		//void sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned char &lastByte, unsigned int encodedLength=0);
 
 
 		template<typename T> void packCompressedData(T data, boost::dynamic_bitset<unsigned char> &packedData, ulong bitSize=sizeof(T)*RiceAlgorithm::BitsPerByte)

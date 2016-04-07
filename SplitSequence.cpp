@@ -79,7 +79,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
         if(code_len_temp < code_len)
         {
             code_len = code_len_temp;
-            selection = RiceAlgorithm::CodingSelection(k);
+            selection = RiceAlgorithm::CodingSelection(k+1);
         }
     }
 
@@ -91,7 +91,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     // Get the total encoded size first
     for(int index = 0; index < 32; index++)
     {
-        size_t encodedSize = (myInputSamples[index] >> selection) + 1;
+        size_t encodedSize = (myInputSamples[index] >> (selection-1)) + 1;
         //encodedSizeList.push_back(encodedSize);
         encodedSizeList[index] = encodedSize;
         totalEncodedSize += encodedSize;
@@ -118,7 +118,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
 
     // after the zero sequence number that was split off, then we add that value to the stream
     // for each of the samples
-    boost::dynamic_bitset<> maskBits(selection, 0xffff);
+    boost::dynamic_bitset<> maskBits((selection-1), 0xffff);
     ulong mask = maskBits.to_ulong();
 
     for(int index = 0; index < 32; index++)
@@ -128,11 +128,11 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
         //:TODO: this section appears to be responsible for about 8 seconds in the
         // total encoding time
         //===================================================================================
-        boost::dynamic_bitset<> encodedSample(selection, maskedSample);
+        boost::dynamic_bitset<> encodedSample((selection-1), maskedSample);
 
-        encodedStream.resize(totalEncodedSize + selection);
-        encodedStream <<= selection;
-        encodedSample.resize(totalEncodedSize + selection);
+        encodedStream.resize(totalEncodedSize + (selection-1));
+        encodedStream <<= (selection-1);
+        encodedSample.resize(totalEncodedSize + (selection-1));
         encodedStream |= encodedSample;
 
         totalEncodedSize = encodedStream.size();
@@ -174,7 +174,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     
 	// see Lossless Data Compression, Blue Book, sec 5.1.2
     // place the code encoding selection
-    boost::dynamic_bitset<> encodedSelectionStream(totalEncodedSize, (selection + 1));
+    boost::dynamic_bitset<> encodedSelectionStream(totalEncodedSize, selection);
     encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
     encodedStream |= encodedSelectionStream;
 

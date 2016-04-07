@@ -24,11 +24,11 @@ namespace RiceAlgorithm
 const size_t BlockSize(32*DynamicRange);
 const ushort BitsPerByte(8);
 
-enum CodingSelection {K0=0,             // Fundamental Sequence (FS) is the same as Split-Sequence, with K=0
+enum CodingSelection {K0=1,             // Fundamental Sequence (FS) is the same as Split-Sequence, with K=0
 					  K1, K2, K3, K4, K5,
 					  K6, K7, K8, K9, K10,
-					  K11, K12, K13, K14,
-					  SplitSeq, ZeroBlockOpt, SecondExtensionOpt, NoCompressionOpt};
+					  K11, K12, K13,
+					  ZeroBlockOpt=0, SecondExtensionOpt=-1, NoCompressionOpt=15};
 
 //:TODO: will probably change this to be more in line with a Factory pattern
 
@@ -51,11 +51,44 @@ public:
     // encoding in the base class is basically nothing, and this is also the same as no compression option
     virtual unsigned int encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection)
 	                                                                                   {
+        																					size_t totalEncodedSize(0);
+
 																							memcpy(myEncodedBlock, myInputSamples, BlockSize * sizeof(ushort));
 																						    myCodingSelection = NoCompressionOpt;
 																							selection = NoCompressionOpt; // :TODO: is this necessary any more?
 
-																						    return BlockSize;
+																							totalEncodedSize = 32 * sizeof(ushort);
+        																					// include space for the  code option
+        																				    //totalEncodedSize += CodeOptionBitFieldFundamentalOrNoComp;
+
+																							//encodedStream.append(int(selection));
+
+    																				        encodedStream.resize((totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp);
+
+       																				        // see Lossless Data Compression, Blue Book, sec 5.1.2
+        																				    // place the code encoding selection
+        																				    boost::dynamic_bitset<> encodedSelectionStream((totalEncodedSize*BitsPerByte)+CodeOptionBitFieldFundamentalOrNoComp, selection);
+        																			        //encodedStream <<= CodeOptionBitFieldFundamentalOrNoComp;
+        																			        encodedStream |= encodedSelectionStream;
+        																			        //encodedStream <<= (sizeof(ushort) * BitsPerByte);
+
+
+        																				    for(int index = 0; index < 32; index++)
+        																				    {
+        																				        ushort sample = myInputSamples[index];
+
+        																				        //:TODO: this section appears to be responsible for about 8 seconds in the
+        																				        // total encoding time
+        																				        //===================================================================================
+        															        				    encodedStream <<= (sizeof(ushort) * BitsPerByte);
+        																				        boost::dynamic_bitset<> encodedSample((encodedStream.size()), sample);
+        																				        encodedStream |= encodedSample;
+        																				        //===================================================================================
+        																				    }
+
+
+
+        																				    return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
 																						};
 
 	CodingSelection getSelection() { return myCodingSelection; }

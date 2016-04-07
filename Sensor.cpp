@@ -93,6 +93,7 @@ void Sensor::process()
 
     int blockIndex(0);
     unsigned int encodedLength(0);
+    ulong count(0);
 
     long totalSamples = myXDimension*myYDimension*myZDimension;
 
@@ -133,12 +134,54 @@ void Sensor::process()
                 encodedSize = (*iteration)->getEncodedBlockSize();
             }
 
+            //******************************
+            //break; // debugging
+            //******************************
+
         }
 
         t1_intermediate = getTimestamp();
 
-        //cout << "And the Winner is: " << int(winningSelection) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << endl;
+        count++;
 
+switch(winningSelection)
+{
+	case RiceAlgorithm::K0:
+	case RiceAlgorithm::K1:
+	case RiceAlgorithm::K2:
+	case RiceAlgorithm::K3:
+	case RiceAlgorithm::K4:
+	case RiceAlgorithm::K5:
+	case RiceAlgorithm::K6:
+	case RiceAlgorithm::K7:
+	case RiceAlgorithm::K8:
+	case RiceAlgorithm::K9:
+	case RiceAlgorithm::K10:
+	case RiceAlgorithm::K11:
+	case RiceAlgorithm::K12:
+	case RiceAlgorithm::K13:
+		cout << "And the Winner is: K" << int(winningSelection-1) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+		break;
+
+	case RiceAlgorithm::SecondExtensionOpt:
+		cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+		break;
+
+	case RiceAlgorithm::ZeroBlockOpt:
+		cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+		break;
+
+
+	case RiceAlgorithm::NoCompressionOpt:
+        cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+
+        break;
+
+	default:
+		cout << "Unanticipated encoding -- Exiting" << endl;
+		exit(-1);
+
+}
 
         ushort partialBits = myEncodedBitCount % BitsPerByte;
         unsigned char lastByte(0);
@@ -165,7 +208,16 @@ void Sensor::process()
 
         static unsigned int lastWinningEncodedLength(0);
 
+        ulong byteCount(0);
+        int additionalBits(myEncodedBitCount%BitsPerByte);
+        byteCount = (myEncodedBitCount/BitsPerByte);
+        if(myEncodedBitCount%BitsPerByte)
+        {
+        	byteCount++;
+        }
         sendEncodedSamples(encodedStream, encodedSize);
+        cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
+        //sendEncodedSamples(encodedStream, lastByte, encodedSize);
 
         t3_intermediate = getTimestamp();
 
@@ -182,6 +234,10 @@ void Sensor::process()
             << "\n(intermediate t2-t3): " << fixed << getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
 
     cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"<< endl;
+
+    //**********************************************
+    //exit(0);
+    //**********************************************
 
 }
 
@@ -277,6 +333,7 @@ void Sensor::sendHeader()
 }
 
 void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength)
+//void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned char &lastByte, unsigned int encodedLength)
 {
 	bool endFlag(false);
 
@@ -288,9 +345,10 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 
 	size_t bytes = encodedStream.size() / BitsPerByte;
+	unsigned int previousSize = encodedStream.size();
+
 	if (encodedStream.size() % BitsPerByte)
 	{
-		unsigned int previousSize = encodedStream.size();
 		bytes++;
 		unsigned int newSize = bytes * BitsPerByte;
 		encodedStream.resize(newSize);
@@ -320,7 +378,8 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 	}
 
-	writeCompressedData(convertedStream, encodedStream.size(), true);
+	//writeCompressedData(convertedStream, encodedStream.size(), true);
+	writeCompressedData(convertedStream, previousSize, true);
 
 	//*****************************************************
 //	static int debugCount(0);
@@ -381,13 +440,15 @@ bool Sensor::getLastByte(unsigned char &lastByte)
     bool partialByteFlag(false);
     unsigned int putByte = myEncodedBitCount / BitsPerByte;
 
-    int byteIndex = myEncodedBitCount % BitsPerByte;
-    if(byteIndex)
+    int additionalBits = myEncodedBitCount % BitsPerByte;
+    if(additionalBits)
     {
-        lastByte = (mySource->getEncodedData())[(myEncodedBitCount / BitsPerByte) + 1];
+
+    	putByte++;
+
+        lastByte = (mySource->getEncodedData())[myEncodedBitCount / BitsPerByte];
 
         partialByteFlag = true;
-        putByte++;
     }
 
     mySource->setNextInsertionByte(putByte);

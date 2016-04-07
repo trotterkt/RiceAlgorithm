@@ -190,13 +190,13 @@ void GroundSystem::process()
 
 	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension
 			* myHeader.zDimension) / 32];
-	int count(0);
+	ulong count(0);
 	// Read in one 32-sample block at a time (not on byte boundary)
 	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
 	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
 	for (long blockIndex = 0; blockIndex < (NumberOfSamples / 32); blockIndex++)
 	{
-		cout << "Block Iteration:" << ++count << endl;
+		//cout << "Block Iteration:" << ++count << endl;
 
 		// Account for selection value not being on a byte boundary
 		// The selection ID may span as much as two bytes
@@ -205,11 +205,56 @@ void GroundSystem::process()
 		shiftLeft(selectionBytes, 16, additionalBits);
 
 		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
-		selectionBytes[0] -= 1;  // Only applicable for split seq
+		selectionBytes[0] = selectionBytes[0] & 0xf;
+		//selectionBytes[0] -= 1;  // Only applicable for split seq
 
-		cout << "Encoding Selection = K" << int(selectionBytes[0]) << ", currentByteLocation="
-				<< currentByteLocation << endl;
+
 		CodingSelection selection = CodingSelection(selectionBytes[0]);
+
+		count++;
+
+		switch(selection)
+		{
+			case RiceAlgorithm::K0:
+			case RiceAlgorithm::K1:
+			case RiceAlgorithm::K2:
+			case RiceAlgorithm::K3:
+			case RiceAlgorithm::K4:
+			case RiceAlgorithm::K5:
+			case RiceAlgorithm::K6:
+			case RiceAlgorithm::K7:
+			case RiceAlgorithm::K8:
+			case RiceAlgorithm::K9:
+			case RiceAlgorithm::K10:
+			case RiceAlgorithm::K11:
+			case RiceAlgorithm::K12:
+			case RiceAlgorithm::K13:
+				cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
+				     << currentByteLocation << ", count=" << count << endl;
+				break;
+
+			case RiceAlgorithm::SecondExtensionOpt:
+				cout << "Found Winner is: 2ndEXT currentByteLocation="
+			         << currentByteLocation << ", count=" << count << endl;
+				break;
+
+			case RiceAlgorithm::ZeroBlockOpt:
+				cout << "Found Winner is: ZEROBLOCK currentByteLocation="
+			         << currentByteLocation << ", count=" << count << endl;
+				break;
+
+
+			case RiceAlgorithm::NoCompressionOpt:
+		        cout << "Found Winner is: NOCOMP currentByteLocation="
+			         << currentByteLocation << ", count=" << count << endl;
+				break;
+
+			default:
+				cout << "Unanticipated encoding -- Exiting" << endl;
+				exit(-1);
+
+		}
+
 
 		// When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
 		// 1 binary bit for each of the 32 samples. This will be followed by 32 * k-select
@@ -260,7 +305,6 @@ void GroundSystem::process()
 			case RiceAlgorithm::K11:
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
-			case RiceAlgorithm::K14:
 
 				while (encodeCount < 32)
 				{
@@ -294,7 +338,7 @@ void GroundSystem::process()
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				cout << "\nencodedLength=" << encodedLength << endl;
-				encodedLength += (32 * selection);
+				encodedLength += (32 * (selection-1));
 				cout << "\nencodedLength=" << encodedLength << endl;
 
 				break;
@@ -306,9 +350,10 @@ void GroundSystem::process()
 
 
 			case RiceAlgorithm::NoCompressionOpt:
-
+				encodedLength = (32 * sizeof(ushort));
+				encodedLength *= BitsPerByte;
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
-				encodedLength += (32 * sizeof(ushort));
+
 				break;
 
 
@@ -323,7 +368,7 @@ void GroundSystem::process()
 		}
 
 		cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
-				<< totalEncodedLength << endl;
+			 << totalEncodedLength << endl;
 
 		additionalBits = totalEncodedLength % BitsPerByte;
 		cout << "additional bits=" << additionalBits << endl;
