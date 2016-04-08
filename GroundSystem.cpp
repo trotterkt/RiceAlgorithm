@@ -389,7 +389,7 @@ void GroundSystem::readHeader()
     // been materialized, just read this directly rather than
     // re-reading from the file. Just trying to perform consecutive
     // encoding, decoding here
-    char* encodedData = mySource->getEncodedData();
+    unsigned char* encodedData = mySource->getEncodedData();
 
     memcpy(&myHeader.xDimension, &encodedData[1], sizeof(myHeader.xDimension));
     memcpy(&myHeader.yDimension, &encodedData[3], sizeof(myHeader.yDimension));

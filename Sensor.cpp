@@ -76,6 +76,11 @@ void Sensor::process()
 
     CodingSelection winningSelection;
     boost::dynamic_bitset<> encodedStream;
+    boost::dynamic_bitset<> winningEncodedStream;
+
+    // To combine encoded blocks, current is dependent on the previous.
+    // Specifically need the last byte
+    boost::dynamic_bitset<> previousEncodedStream;
 
     timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
 
@@ -132,10 +137,13 @@ void Sensor::process()
                 winningSelection = selection;
 
                 encodedSize = (*iteration)->getEncodedBlockSize();
+                //encodedStream.resize(encodedSize);
+                winningEncodedStream = encodedStream;
             }
 
             //******************************
-            //break; // debugging
+            //if(blockIndex > 32)
+            //  break; // debugging
             //******************************
 
         }
@@ -189,15 +197,17 @@ switch(winningSelection)
         // When the last byte written is partial, as compared with the
         // total bits written, capture it so that it can be merged with
         // the next piece of encoded data
-        if (getLastByte(lastByte))
+        if (getLastByte(&lastByte))
 		{
         	//cout << "Before partial appendage: " << encodedStream << endl;
         	unsigned int appendedSize = encodedStream.size()+partialBits;
 			encodedStream.resize(appendedSize);
-        	//cout << "Again  partial appendage: " << encodedStream << endl;
 
 			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), ulong(lastByte));
-			lastByteStream <<= (encodedStream.size() - partialBits);
+            //cout << "lastByteStream (Before): " << lastByteStream << endl;
+			lastByteStream <<= (encodedStream.size() - BitsPerByte);
+            //cout << "lastByteStream (After ): " << lastByteStream << endl;
+
 			encodedStream |= lastByteStream;
         	//cout << "After partial appendage : " << encodedStream << endl;
 		}
@@ -215,9 +225,12 @@ switch(winningSelection)
         {
         	byteCount++;
         }
+
+        //sendEncodedSamples(winningEncodedStream, encodedSize);
         sendEncodedSamples(encodedStream, encodedSize);
         cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
         //sendEncodedSamples(encodedStream, lastByte, encodedSize);
+        previousEncodedStream = winningEncodedStream;
 
         t3_intermediate = getTimestamp();
 
@@ -433,25 +446,30 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
     }
 }
 
-bool Sensor::getLastByte(unsigned char &lastByte)
+bool Sensor::getLastByte(unsigned char *lastByte)
 {
     // Get the last byte written, and in some cases, reset the file pointer to the one previous
 
     bool partialByteFlag(false);
-    unsigned int putByte = myEncodedBitCount / BitsPerByte;
+    unsigned int encodedLength = myEncodedBitCount / BitsPerByte;
 
     int additionalBits = myEncodedBitCount % BitsPerByte;
     if(additionalBits)
     {
 
-    	putByte++;
+        encodedLength++;
 
-        lastByte = (mySource->getEncodedData())[myEncodedBitCount / BitsPerByte];
+        unsigned char* encodedPtr = mySource->getEncodedData();
 
+        *lastByte = encodedPtr[encodedLength-1];
+        
         partialByteFlag = true;
     }
 
-    mySource->setNextInsertionByte(putByte);
+    if(partialByteFlag)
+    {
+        mySource->setNextInsertionByte(encodedLength-1);
+    }
 
     return partialByteFlag;
 

@@ -107,7 +107,7 @@ class Sensor
 
         void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize=0, bool flag=false);
 
-        bool getLastByte(unsigned char &lastByte);
+        bool getLastByte(unsigned char *lastByte);
 
         unsigned int myEncodedBitCount;
 
