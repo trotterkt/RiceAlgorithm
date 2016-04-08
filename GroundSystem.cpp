@@ -362,10 +362,10 @@ void GroundSystem::process()
 		totalEncodedLength += encodedLength;
 
 		currentByteLocation = (totalEncodedLength / BitsPerByte);
-		if (totalEncodedLength % BitsPerByte)
-		{
-			currentByteLocation++;
-		}
+		//if (totalEncodedLength % BitsPerByte)
+		//{
+		//	currentByteLocation++;
+		//}
 
 		cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
 			 << totalEncodedLength << endl;

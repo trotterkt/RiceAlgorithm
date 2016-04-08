@@ -221,10 +221,10 @@ switch(winningSelection)
         ulong byteCount(0);
         int additionalBits(myEncodedBitCount%BitsPerByte);
         byteCount = (myEncodedBitCount/BitsPerByte);
-        if(myEncodedBitCount%BitsPerByte)
-        {
-        	byteCount++;
-        }
+        //if(myEncodedBitCount%BitsPerByte)
+        //{
+        //	byteCount++;
+        //}
 
         //sendEncodedSamples(winningEncodedStream, encodedSize);
         sendEncodedSamples(encodedStream, encodedSize);
@@ -418,10 +418,10 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 	}
 
     size_t numberOfBytes = bitSize/BitsPerByte;
-    if(bitSize % BitsPerByte)
-    {
-    	numberOfBytes++;
-    }
+    //if(bitSize % BitsPerByte)
+    //{
+    	//numberOfBytes++;
+    //}
 
 
     vector<unsigned char> packedDataBlocks(packedData.num_blocks());

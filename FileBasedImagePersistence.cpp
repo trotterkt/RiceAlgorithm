@@ -58,12 +58,12 @@ FileBasedImagePersistence::~FileBasedImagePersistence()
 
 void FileBasedImagePersistence::writeEncodedData()
 {
-    myEncodedStream.write(myEncodedData, myEncodedBytesWritten);
+    myEncodedStream.write(reinterpret_cast<char*>(myEncodedData), myEncodedBytesWritten);
 }
 
 void FileBasedImagePersistence::readEncodedData(size_t bytesToRead)
 {
-    myEncodedStream.write(myEncodedData, myEncodedBytesWritten);
+    myEncodedStream.write(reinterpret_cast<char*>(myEncodedData), myEncodedBytesWritten);
 }
 
 void FileBasedImagePersistence::setSamples(uint scanNumber)

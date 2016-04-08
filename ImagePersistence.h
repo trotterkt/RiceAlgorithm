@@ -59,7 +59,7 @@ class ImagePersistence
                                                   return mySampleData;
                                                }
 
-        char* getEncodedData() { return myEncodedData; }
+        unsigned char* getEncodedData() { return myEncodedData; }
 
         virtual void sendEncodedData(char* encodedData) {
                                                             myEncodedData[myEncodedBytesWritten] = *encodedData;
@@ -73,7 +73,7 @@ class ImagePersistence
     protected:
 
         ushort* mySampleData;
-        char* myEncodedData;
+        unsigned char* myEncodedData;
 
         virtual void setSamples(uint scanNumber) = 0;
 
