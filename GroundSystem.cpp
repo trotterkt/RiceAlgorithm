@@ -183,7 +183,7 @@ void GroundSystem::process()
 
 	// 1st grab the Encoded ID
 	const int HeaderLength(19);
-	unsigned int currentByteLocation(HeaderLength);
+	unsigned long currentByteLocation(HeaderLength);
 	ulong totalEncodedLength(HeaderLength * BitsPerByte);
 
 	unsigned int additionalBits(0);
@@ -194,7 +194,7 @@ void GroundSystem::process()
 	// Read in one 32-sample block at a time (not on byte boundary)
 	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
 	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
-	for (long blockIndex = 0; blockIndex < (NumberOfSamples / 32); blockIndex++)
+	for (ulong blockIndex = 0; blockIndex < (NumberOfSamples / 32); blockIndex++)
 	{
 		//cout << "Block Iteration:" << ++count << endl;
 
@@ -231,6 +231,7 @@ void GroundSystem::process()
 			case RiceAlgorithm::K13:
 				cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
 				     << currentByteLocation << ", count=" << count << endl;
+
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
@@ -273,12 +274,39 @@ void GroundSystem::process()
 		unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
 
 		// Account for encoded value not being on a byte boundary
-		const unsigned int CopySize(32 * sizeof(ushort));
+		const unsigned int CopySize(32 * sizeof(ushort) + 1);
 		unsigned char encodedDataCopy[CopySize];
 		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
-		shiftLeft(encodedDataCopy, CopySize * BitsPerByte,
+		//*******************************************
+		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+		{
+			cout << "winning encoding          ==>";
+
+			for(int countIndex=0; countIndex < CopySize; countIndex++)
+			{
+				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			}
+			cout << dec << endl;
+		}
+		//*******************************************
+
+
+		shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
 				(CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
+
+		//*******************************************
+		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+		{
+			cout << "winning encoding (shifted)==>";
+
+			for(int countIndex=0; countIndex < CopySize; countIndex++)
+			{
+				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			}
+			cout << dec << endl;
+		}
+		//*******************************************
 
 		size_t encodedLength(0);
 

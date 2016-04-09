@@ -59,8 +59,7 @@ void Sensor::process()
 	sendHeader();
 
 	// :TODO: formalize this a little more
-    myEncodedBitCount = 19*BitsPerByte; // Start with header length
-
+	myEncodedBitCount = 19 * BitsPerByte; // Start with header length
 
 	// The first option must be non-compression
 	// so that we can set the block to reference to
@@ -74,183 +73,198 @@ void Sensor::process()
 	//:TODO: Nest this loop in another and iterate over the next residual block
 	std::vector<AdaptiveEntropyEncoder*>::iterator winningIteration;
 
-    CodingSelection winningSelection;
-    boost::dynamic_bitset<> encodedStream;
-    boost::dynamic_bitset<> winningEncodedStream;
+	CodingSelection winningSelection;
+	boost::dynamic_bitset<> encodedStream;
+	boost::dynamic_bitset<> winningEncodedStream;
 
-    // To combine encoded blocks, current is dependent on the previous.
-    // Specifically need the last byte
-    boost::dynamic_bitset<> previousEncodedStream;
+	// To combine encoded blocks, current is dependent on the previous.
+	// Specifically need the last byte
+	boost::dynamic_bitset<> previousEncodedStream;
 
-    timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
+	timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
 
-    timestamp_t t0 = getTimestamp();
+	timestamp_t t0 = getTimestamp();
 
-    // Should only need to get the residuals once for a given raw image set
-    ushort* residualsPtr = myPreprocessor.getResiduals(mySamples);
-    
-    timestamp_t t1 = getTimestamp();
+	// Should only need to get the residuals once for a given raw image set
+	ushort* residualsPtr = myPreprocessor.getResiduals(mySamples);
 
-    cout << "Prediction processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
+	timestamp_t t1 = getTimestamp();
 
+	cout << "Prediction processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"
+			<< endl;
 
-    timestamp_t t2 = getTimestamp();
+	timestamp_t t2 = getTimestamp();
 
-    int blockIndex(0);
-    unsigned int encodedLength(0);
-    ulong count(0);
+	int blockIndex(0);
+	unsigned int encodedLength(0);
+	ulong count(0);
 
-    long totalSamples = myXDimension*myYDimension*myZDimension;
+	long totalSamples = myXDimension * myYDimension * myZDimension;
 
-    //:TODO: This is one of the 1st places where we will start looking
-    // at applying Amdahl's Law!!!
+	//:TODO: This is one of the 1st places where we will start looking
+	// at applying Amdahl's Law!!!
 
-    for(blockIndex = 0; blockIndex<totalSamples; blockIndex+=32)
-    {
+	for (blockIndex = 0; blockIndex < totalSamples; blockIndex += 32)
+	{
 
-        size_t encodedSize(0);
+		size_t encodedSize(0);
 
-        // Reset for each capture of the winning length
-        myWinningEncodedLength = (unsigned int) -1;
+		// Reset for each capture of the winning length
+		myWinningEncodedLength = (unsigned int) -1;
 
-        t0_intermediate = getTimestamp();
+		t0_intermediate = getTimestamp();
 
-        // Loop through each one of the possible encoders
-        for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
-                iteration != myEncoderList.end(); ++iteration)
-        {
-
-            encodedStream.clear();
-
-            // 1 block at a time
-            (*iteration)->setSamples(&residualsPtr[blockIndex]);
-
-            CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
-
-            encodedLength = (*iteration)->encode(encodedStream, selection);
-
-            // This basically determines the winner
-            if (encodedLength < myWinningEncodedLength)
-            {
-                *this = *(*iteration);
-                myWinningEncodedLength = encodedLength;
-                winningSelection = selection;
-
-                encodedSize = (*iteration)->getEncodedBlockSize();
-                //encodedStream.resize(encodedSize);
-                winningEncodedStream = encodedStream;
-            }
-
-            //******************************
-            //if(blockIndex > 32)
-            //  break; // debugging
-            //******************************
-
-        }
-
-        t1_intermediate = getTimestamp();
-
-        count++;
-
-switch(winningSelection)
-{
-	case RiceAlgorithm::K0:
-	case RiceAlgorithm::K1:
-	case RiceAlgorithm::K2:
-	case RiceAlgorithm::K3:
-	case RiceAlgorithm::K4:
-	case RiceAlgorithm::K5:
-	case RiceAlgorithm::K6:
-	case RiceAlgorithm::K7:
-	case RiceAlgorithm::K8:
-	case RiceAlgorithm::K9:
-	case RiceAlgorithm::K10:
-	case RiceAlgorithm::K11:
-	case RiceAlgorithm::K12:
-	case RiceAlgorithm::K13:
-		cout << "And the Winner is: K" << int(winningSelection-1) << " of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
-		break;
-
-	case RiceAlgorithm::SecondExtensionOpt:
-		cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
-		break;
-
-	case RiceAlgorithm::ZeroBlockOpt:
-		cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
-		break;
-
-
-	case RiceAlgorithm::NoCompressionOpt:
-        cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength << " on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
-
-        break;
-
-	default:
-		cout << "Unanticipated encoding -- Exiting" << endl;
-		exit(-1);
-
-}
-
-        ushort partialBits = myEncodedBitCount % BitsPerByte;
-        unsigned char lastByte(0);
-
-        // When the last byte written is partial, as compared with the
-        // total bits written, capture it so that it can be merged with
-        // the next piece of encoded data
-        if (getLastByte(&lastByte))
+		// Loop through each one of the possible encoders
+		for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
+				iteration != myEncoderList.end(); ++iteration)
 		{
-        	//cout << "Before partial appendage: " << encodedStream << endl;
-        	unsigned int appendedSize = encodedStream.size()+partialBits;
-			encodedStream.resize(appendedSize);
 
-			boost::dynamic_bitset<> lastByteStream(encodedStream.size(), ulong(lastByte));
-            //cout << "lastByteStream (Before): " << lastByteStream << endl;
-			lastByteStream <<= (encodedStream.size() - BitsPerByte);
-            //cout << "lastByteStream (After ): " << lastByteStream << endl;
+			encodedStream.clear();
 
-			encodedStream |= lastByteStream;
-        	//cout << "After partial appendage : " << encodedStream << endl;
+			// 1 block at a time
+			(*iteration)->setSamples(&residualsPtr[blockIndex]);
+
+			CodingSelection selection; // This will be most applicable for distinguishing FS and K-split
+
+			encodedLength = (*iteration)->encode(encodedStream, selection);
+
+			// This basically determines the winner
+			if (encodedLength < myWinningEncodedLength)
+			{
+				*this = *(*iteration);
+				myWinningEncodedLength = encodedLength;
+				winningSelection = selection;
+
+				encodedSize = (*iteration)->getEncodedBlockSize();
+				//encodedStream.resize(encodedSize);
+				winningEncodedStream = encodedStream;
+			}
+
+			//******************************
+			//if(blockIndex > 32)
+			//  break; // debugging
+			//******************************
+
 		}
 
-        myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
+		t1_intermediate = getTimestamp();
 
-        t2_intermediate = getTimestamp();
+		count++;
 
-        static unsigned int lastWinningEncodedLength(0);
+		switch (winningSelection)
+		{
+			case RiceAlgorithm::K0:
+			case RiceAlgorithm::K1:
+			case RiceAlgorithm::K2:
+			case RiceAlgorithm::K3:
+			case RiceAlgorithm::K4:
+			case RiceAlgorithm::K5:
+			case RiceAlgorithm::K6:
+			case RiceAlgorithm::K7:
+			case RiceAlgorithm::K8:
+			case RiceAlgorithm::K9:
+			case RiceAlgorithm::K10:
+			case RiceAlgorithm::K11:
+			case RiceAlgorithm::K12:
+			case RiceAlgorithm::K13:
+				cout << "And the Winner is: K" << int(winningSelection - 1) << " of code length: "
+						<< myWinningEncodedLength << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]"
+						<< ", count=" << count << endl;
+				break;
 
-        ulong byteCount(0);
-        int additionalBits(myEncodedBitCount%BitsPerByte);
-        byteCount = (myEncodedBitCount/BitsPerByte);
-        //if(myEncodedBitCount%BitsPerByte)
-        //{
-        //	byteCount++;
-        //}
+			case RiceAlgorithm::SecondExtensionOpt:
+				cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength
+				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				break;
 
-        //sendEncodedSamples(winningEncodedStream, encodedSize);
-        sendEncodedSamples(encodedStream, encodedSize);
-        cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
-        //sendEncodedSamples(encodedStream, lastByte, encodedSize);
-        previousEncodedStream = winningEncodedStream;
+			case RiceAlgorithm::ZeroBlockOpt:
+				cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength
+				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				break;
 
-        t3_intermediate = getTimestamp();
+			case RiceAlgorithm::NoCompressionOpt:
+				cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength
+				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
 
-        lastWinningEncodedLength = encodedStream.size();
+				break;
 
-    }
+			default:
+				cout << "Unanticipated encoding -- Exiting" << endl;
+				exit(-1);
 
-    timestamp_t t3 = getTimestamp();
+		}
 
+		//*******************************************
+		if((count > 9881) && (count < 9886))
+		{
+			cout << "winning encoding==>" << winningEncodedStream << endl;
+			cout << "        encoding==>" << encodedStream << endl;
+		}
+		//*******************************************
 
-    cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
-            << "\n(intermediate t0-t1): " << fixed << getSecondsDiff(t0_intermediate, t1_intermediate) << " seconds"
-            << "\n(intermediate t1-t2): " << fixed << getSecondsDiff(t1_intermediate, t2_intermediate) << " seconds"
-            << "\n(intermediate t2-t3): " << fixed << getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
+		ushort partialBits = myEncodedBitCount % BitsPerByte;
+		unsigned char lastByte(0);
 
-    cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"<< endl;
+		// When the last byte written is partial, as compared with the
+		// total bits written, capture it so that it can be merged with
+		// the next piece of encoded data
+		if (getLastByte(&lastByte))
+		{
+			//cout << "Before partial appendage: " << encodedStream << endl;
+			unsigned int appendedSize = winningEncodedStream.size() + partialBits;
+			winningEncodedStream.resize(appendedSize);
 
-    //**********************************************
-    //exit(0);
-    //**********************************************
+			boost::dynamic_bitset<> lastByteStream(winningEncodedStream.size(), ulong(lastByte));
+			//cout << "lastByteStream (Before): " << lastByteStream << endl;
+			lastByteStream <<= (winningEncodedStream.size() - BitsPerByte);
+			//cout << "lastByteStream (After ): " << lastByteStream << endl;
+
+			winningEncodedStream |= lastByteStream;
+			//cout << "After partial appendage : " << encodedStream << endl;
+		}
+
+		myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
+
+		t2_intermediate = getTimestamp();
+
+		static unsigned int lastWinningEncodedLength(0);
+
+		ulong byteCount(0);
+		int additionalBits(myEncodedBitCount % BitsPerByte);
+		byteCount = (myEncodedBitCount / BitsPerByte);
+		//if(myEncodedBitCount%BitsPerByte)
+		//{
+		//	byteCount++;
+		//}
+
+		//sendEncodedSamples(winningEncodedStream, encodedSize);
+		sendEncodedSamples(winningEncodedStream, encodedSize);
+		cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
+		//sendEncodedSamples(encodedStream, lastByte, encodedSize);
+		previousEncodedStream = winningEncodedStream;
+
+		t3_intermediate = getTimestamp();
+
+		lastWinningEncodedLength = winningEncodedStream.size();
+
+	}
+
+	timestamp_t t3 = getTimestamp();
+
+	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
+			<< "\n(intermediate t0-t1): " << fixed
+			<< getSecondsDiff(t0_intermediate, t1_intermediate) << " seconds"
+			<< "\n(intermediate t1-t2): " << fixed
+			<< getSecondsDiff(t1_intermediate, t2_intermediate) << " seconds"
+			<< "\n(intermediate t2-t3): " << fixed
+			<< getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
+
+	cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"
+			<< endl;
+
+	//**********************************************
+	//exit(0);
+	//**********************************************
 
 }
 
@@ -428,6 +442,8 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 
     //populate vector blocks
     boost::to_block_range(packedData, packedDataBlocks.begin());
+
+    cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
 
     //write out each block
     for (vector<unsigned char>::iterator it =

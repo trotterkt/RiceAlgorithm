@@ -70,6 +70,8 @@ class ImagePersistence
 
         void setNextInsertionByte(unsigned long long byteIndex) { myEncodedBytesWritten = byteIndex; }
 
+        unsigned long long getBytesWritten() { return myEncodedBytesWritten; }
+
     protected:
 
         ushort* mySampleData;
