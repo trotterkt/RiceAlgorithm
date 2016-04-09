@@ -436,5 +436,4 @@ void GroundSystem::readHeader()
     bigEndianVersusLittleEndian(myHeader.xDimension);
     bigEndianVersusLittleEndian(myHeader.yDimension);
     bigEndianVersusLittleEndian(myHeader.zDimension);
-
 }
