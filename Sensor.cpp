@@ -8,7 +8,6 @@
  *  Copyright 2016 Keir Trotter
  */
 
-
 #include <Sensor.h>
 #include <iostream>
 #include <bitset>
@@ -18,33 +17,31 @@
 #include <Timing.h>
 #include <Endian.h>
 
-
 using namespace std;
 using namespace RiceAlgorithm;
 
-
 Sensor::Sensor(ImagePersistence* image, unsigned int x, unsigned int y, unsigned int z) :
-        mySource(image), mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(x, y, z), myWinningEncodedLength((unsigned int)-1)
+		mySource(image), mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(
+				x, y, z), myWinningEncodedLength((unsigned int) -1)
 {
 
-    mySamples = mySource->getSampleData(1); //:TODO: only one scan, need to address multiple
+	mySamples = mySource->getSampleData(1); //:TODO: only one scan, need to address multiple
 
-    // Create the encoding types
-    size_t bufferSize = myXDimension*myYDimension*myZDimension;
+	// Create the encoding types
+	size_t bufferSize = myXDimension * myYDimension * myZDimension;
 
-    AdaptiveEntropyEncoder* noComp = new AdaptiveEntropyEncoder(bufferSize);
-    SecondExtensionOption* secondExt = new SecondExtensionOption(bufferSize);
-    ZeroBlockOption* zeroBlock = new ZeroBlockOption(bufferSize);
-    SplitSequence* split = new SplitSequence(bufferSize);
+	AdaptiveEntropyEncoder* noComp = new AdaptiveEntropyEncoder(bufferSize);
+	SecondExtensionOption* secondExt = new SecondExtensionOption(bufferSize);
+	ZeroBlockOption* zeroBlock = new ZeroBlockOption(bufferSize);
+	SplitSequence* split = new SplitSequence(bufferSize);
 
+	myEncoderList.push_back(noComp);  // No compression must be the first item
+	myEncoderList.push_back(secondExt);
+	myEncoderList.push_back(zeroBlock);
+	myEncoderList.push_back(split);
 
-    myEncoderList.push_back(noComp);  // No compression must be the first item
-    myEncoderList.push_back(secondExt);
-    myEncoderList.push_back(zeroBlock);
-    myEncoderList.push_back(split);
-
-    // Prepare for the decompression step
-    groundPtr = new GroundSystem(image);
+	// Prepare for the decompression step
+	groundPtr = new GroundSystem(image);
 }
 
 Sensor::~Sensor()
@@ -61,14 +58,6 @@ void Sensor::process()
 	// :TODO: formalize this a little more
 	myEncodedBitCount = 19 * BitsPerByte; // Start with header length
 
-	// The first option must be non-compression
-	// so that we can set the block to reference to
-//	if(myEncoderList[0]->getSelection() != NoCompressionOpt)
-//	{
-//		exception wrongTypeException; //:TODO: need title
-//
-//		throw wrongTypeException;
-//	}
 
 	//:TODO: Nest this loop in another and iterate over the next residual block
 	std::vector<AdaptiveEntropyEncoder*>::iterator winningIteration;
@@ -140,11 +129,12 @@ void Sensor::process()
 				winningEncodedStream = encodedStream;
 			}
 
-			//******************************
-			//if(blockIndex > 32)
-			//  break; // debugging
-			//******************************
-
+			#ifdef DEBUG
+						//******************************
+						//if(blockIndex > 32)
+						//  break; // debugging
+						//******************************
+			#endif
 		}
 
 		t1_intermediate = getTimestamp();
@@ -167,24 +157,36 @@ void Sensor::process()
 			case RiceAlgorithm::K11:
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
-				cout << "And the Winner is: K" << int(winningSelection - 1) << " of code length: "
-						<< myWinningEncodedLength << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]"
-						<< ", count=" << count << endl;
+				#ifdef DEBUG
+
+								cout << "And the Winner is: K" << int(winningSelection - 1) << " of code length: "
+								<< myWinningEncodedLength << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]"
+								<< ", count=" << count << endl;
+				#endif
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
-				cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength
-				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#ifdef DEBUG
+
+								cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength
+								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#endif
 				break;
 
 			case RiceAlgorithm::ZeroBlockOpt:
-				cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength
-				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#ifdef DEBUG
+
+								cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength
+								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#endif
 				break;
 
 			case RiceAlgorithm::NoCompressionOpt:
-				cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength
-				     << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#ifdef DEBUG
+
+								cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength
+								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+				#endif
 
 				break;
 
@@ -194,13 +196,16 @@ void Sensor::process()
 
 		}
 
-		//*******************************************
-		if((count > 9881) && (count < 9886))
-		{
-			cout << "winning encoding==>" << winningEncodedStream << endl;
-			cout << "        encoding==>" << encodedStream << endl;
-		}
-		//*******************************************
+		#ifdef DEBUG
+
+				//*******************************************
+				if((count > 9881) && (count < 9886))
+				{
+					cout << "winning encoding==>" << winningEncodedStream << endl;
+					cout << "        encoding==>" << encodedStream << endl;
+				}
+				//*******************************************
+		#endif
 
 		ushort partialBits = myEncodedBitCount % BitsPerByte;
 		unsigned char lastByte(0);
@@ -210,17 +215,20 @@ void Sensor::process()
 		// the next piece of encoded data
 		if (getLastByte(&lastByte))
 		{
-			//cout << "Before partial appendage: " << encodedStream << endl;
+			#ifdef DEBUG
+
+						cout << "Before partial appendage: " << encodedStream << endl;
+			#endif
+
 			unsigned int appendedSize = winningEncodedStream.size() + partialBits;
 			winningEncodedStream.resize(appendedSize);
-
 			boost::dynamic_bitset<> lastByteStream(winningEncodedStream.size(), ulong(lastByte));
-			//cout << "lastByteStream (Before): " << lastByteStream << endl;
 			lastByteStream <<= (winningEncodedStream.size() - BitsPerByte);
-			//cout << "lastByteStream (After ): " << lastByteStream << endl;
-
 			winningEncodedStream |= lastByteStream;
-			//cout << "After partial appendage : " << encodedStream << endl;
+
+			#ifdef DEBUG
+						cout << "After partial appendage : " << encodedStream << endl;
+			#endif
 		}
 
 		myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
@@ -232,15 +240,13 @@ void Sensor::process()
 		ulong byteCount(0);
 		int additionalBits(myEncodedBitCount % BitsPerByte);
 		byteCount = (myEncodedBitCount / BitsPerByte);
-		//if(myEncodedBitCount%BitsPerByte)
-		//{
-		//	byteCount++;
-		//}
 
-		//sendEncodedSamples(winningEncodedStream, encodedSize);
 		sendEncodedSamples(winningEncodedStream, encodedSize);
-		cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
-		//sendEncodedSamples(encodedStream, lastByte, encodedSize);
+
+		#ifdef DEBUG
+				cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
+		#endif
+
 		previousEncodedStream = winningEncodedStream;
 
 		t3_intermediate = getTimestamp();
@@ -261,115 +267,112 @@ void Sensor::process()
 
 	cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"
 			<< endl;
-
-	//**********************************************
-	//exit(0);
-	//**********************************************
-
 }
-
 
 void Sensor::sendHeader()
 {
-    // Note: Header is not completely populated for all defined parameters.
-    // Only what is applicable to the selected test raw data to
-    // identify identical information. Also, probably not the most
-    // clean way to fill in fields.
+	// Note: Header is not completely populated for all defined parameters.
+	// Only what is applicable to the selected test raw data to
+	// identify identical information. Also, probably not the most
+	// clean way to fill in fields.
 
-    CompressedHeader header = {0};
+	CompressedHeader header = { 0 };
 
-    // Collect the structure data
-    header.xDimension = myXDimension;
-    header.yDimension = myYDimension;
-    header.zDimension = myZDimension;
-    bigEndianVersusLittleEndian(header.xDimension);
-    bigEndianVersusLittleEndian(header.yDimension);
-    bigEndianVersusLittleEndian(header.zDimension);
+	// Collect the structure data
+	header.xDimension = myXDimension;
+	header.yDimension = myYDimension;
+	header.zDimension = myZDimension;
+	bigEndianVersusLittleEndian(header.xDimension);
+	bigEndianVersusLittleEndian(header.yDimension);
+	bigEndianVersusLittleEndian(header.zDimension);
 
-    //----------------------------------------------------------------------------
-    bool signedSamples(false);
-    bool bsq(true);
-    header.signSampDynRangeBsq1 |= signedSamples;         header.signSampDynRangeBsq1 <<= 2; // reserved
-                                                          header.signSampDynRangeBsq1 <<= 4;
-    header.signSampDynRangeBsq1 |= (DynamicRange & 0xf);  header.signSampDynRangeBsq1 <<= 1;
-    header.signSampDynRangeBsq1 |= bsq;
-    //----------------------------------------------------------------------------
+	//----------------------------------------------------------------------------
+	bool signedSamples(false);
+	bool bsq(true);
+	header.signSampDynRangeBsq1 |= signedSamples;
+	header.signSampDynRangeBsq1 <<= 2; // reserved
+	header.signSampDynRangeBsq1 <<= 4;
+	header.signSampDynRangeBsq1 |= (DynamicRange & 0xf);
+	header.signSampDynRangeBsq1 <<= 1;
+	header.signSampDynRangeBsq1 |= bsq;
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    bool blockType(true);
+	//----------------------------------------------------------------------------
+	bool blockType(true);
 
-    header.wordSizEncodeMethod |= blockType;  header.wordSizEncodeMethod <<= 2;
-    //----------------------------------------------------------------------------
+	header.wordSizEncodeMethod |= blockType;
+	header.wordSizEncodeMethod <<= 2;
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
+	//----------------------------------------------------------------------------
 
-    header.predictBandMode |= UserInputPredictionBands;  header.predictBandMode <<= 2;
-    //----------------------------------------------------------------------------
+	header.predictBandMode |= UserInputPredictionBands;
+	header.predictBandMode <<= 2;
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    bool neighborSum(true);
+	//----------------------------------------------------------------------------
+	bool neighborSum(true);
 
-    header.neighborRegSize |= neighborSum;  header.neighborRegSize <<= 7;
-    header.neighborRegSize |= RegisterSize;
-    //----------------------------------------------------------------------------
+	header.neighborRegSize |= neighborSum;
+	header.neighborRegSize <<= 7;
+	header.neighborRegSize |= RegisterSize;
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    header.predictWeightResInit |= (PredictionWeightResolution - 4);  header.predictWeightResInit <<= 4;
+	//----------------------------------------------------------------------------
+	header.predictWeightResInit |= (PredictionWeightResolution - 4);
+	header.predictWeightResInit <<= 4;
 
-    unsigned int scaledWeight = log2(PredictionWeightInterval);
-    header.predictWeightResInit |= (scaledWeight - 4);
-    //----------------------------------------------------------------------------
+	unsigned int scaledWeight = log2(PredictionWeightInterval);
+	header.predictWeightResInit |= (scaledWeight - 4);
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    header.predictWeightInitFinal |= (PredictionWeightInitial + 6);  header.predictWeightInitFinal <<= 4;
+	//----------------------------------------------------------------------------
+	header.predictWeightInitFinal |= (PredictionWeightInitial + 6);
+	header.predictWeightInitFinal <<= 4;
 
-    header.predictWeightInitFinal |= (PredictionWeightFinal + 6);
-    //----------------------------------------------------------------------------
+	header.predictWeightInitFinal |= (PredictionWeightFinal + 6);
+	//----------------------------------------------------------------------------
 
-    //----------------------------------------------------------------------------
-    header.blockSizeRefInterval |= (0x40);  // Block size 32 flag
+	//----------------------------------------------------------------------------
+	header.blockSizeRefInterval |= (0x40);  // Block size 32 flag
 
-    ushort refInterval(ReferenceInterval);
-    bigEndianVersusLittleEndian(refInterval);
+	ushort refInterval(ReferenceInterval);
+	bigEndianVersusLittleEndian(refInterval);
 
-    header.blockSizeRefInterval |= refInterval;
-    //----------------------------------------------------------------------------
+	header.blockSizeRefInterval |= refInterval;
+	//----------------------------------------------------------------------------
 
-    boost::dynamic_bitset<unsigned char> packedData;
-    packCompressedData(header.userData, packedData);                // byte 0
-    packCompressedData(header.xDimension, packedData);              // bytes 1,2
-    packCompressedData(header.yDimension, packedData);              // bytes 3,4
-    packCompressedData(header.zDimension, packedData);              // bytes 5,6
-    packCompressedData(header.signSampDynRangeBsq1, packedData);    // byte 7
-    packCompressedData(header.bsq, packedData);                     // bytes 8,9
-    packCompressedData(header.wordSizEncodeMethod, packedData);     // bytes 10,11
-    packCompressedData(header.predictBandMode, packedData);         // byte 12
-    packCompressedData(header.neighborRegSize, packedData);         // byte 13
-    packCompressedData(header.predictWeightResInit, packedData);    // byte 14
-    packCompressedData(header.predictWeightInitFinal, packedData);  // byte 15
-    packCompressedData(header.predictWeightTable, packedData);      // byte 16
-    packCompressedData(header.blockSizeRefInterval, packedData);    // bytes 17,18
+	boost::dynamic_bitset<unsigned char> packedData;
+	packCompressedData(header.userData, packedData);                // byte 0
+	packCompressedData(header.xDimension, packedData);              // bytes 1,2
+	packCompressedData(header.yDimension, packedData);              // bytes 3,4
+	packCompressedData(header.zDimension, packedData);              // bytes 5,6
+	packCompressedData(header.signSampDynRangeBsq1, packedData);    // byte 7
+	packCompressedData(header.bsq, packedData);                     // bytes 8,9
+	packCompressedData(header.wordSizEncodeMethod, packedData);     // bytes 10,11
+	packCompressedData(header.predictBandMode, packedData);         // byte 12
+	packCompressedData(header.neighborRegSize, packedData);         // byte 13
+	packCompressedData(header.predictWeightResInit, packedData);    // byte 14
+	packCompressedData(header.predictWeightInitFinal, packedData);  // byte 15
+	packCompressedData(header.predictWeightTable, packedData);      // byte 16
+	packCompressedData(header.blockSizeRefInterval, packedData);    // bytes 17,18
 
+	size_t bitsPerBlock = packedData.bits_per_block;
+	size_t numBlocks = packedData.num_blocks();
 
-    size_t bitsPerBlock = packedData.bits_per_block;
-    size_t numBlocks = packedData.num_blocks();
-
-
-    writeCompressedData(packedData);
+	writeCompressedData(packedData);
 
 }
 
 void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned int encodedLength)
-//void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned char &lastByte, unsigned int encodedLength)
 {
 	bool endFlag(false);
 
 	// if 0, then whatever is there can be appended and sent
-	if(encodedLength == 0)
+	if (encodedLength == 0)
 	{
 		endFlag = true;
 	}
-
 
 	size_t bytes = encodedStream.size() / BitsPerByte;
 	unsigned int previousSize = encodedStream.size();
@@ -405,88 +408,81 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 	}
 
-	//writeCompressedData(convertedStream, encodedStream.size(), true);
 	writeCompressedData(convertedStream, previousSize, true);
 
-	//*****************************************************
-//	static int debugCount(0);
-//	if(debugCount >=3)
-//	{
-//	   myEncodedStream.close(); // :TODO: temporary test
-//	   exit(0);
-//	}
-//	debugCount++;
-    //*****************************************************
-
-
+	#ifdef DEBUG
+		//*****************************************************
+	//	static int debugCount(0);
+	//	if(debugCount >=3)
+	//	{
+	//	   myEncodedStream.close(); // temporary test
+	//	   exit(0);
+	//	}
+	//	debugCount++;
+		//*****************************************************
+	#endif
 }
 
-void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize, bool flag)
+void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize,
+		bool flag)
 {
-    
 	// A non-default bit size might be specified, but this must be adjusted to the nearest
 	// full bit
 	if (!bitSize)
 	{
-		bitSize=packedData.size();
+		bitSize = packedData.size();
 	}
 
-    size_t numberOfBytes = bitSize/BitsPerByte;
-    //if(bitSize % BitsPerByte)
-    //{
-    	//numberOfBytes++;
-    //}
+	size_t numberOfBytes = bitSize / BitsPerByte;
 
+	vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 
-    vector<unsigned char> packedDataBlocks(packedData.num_blocks());
+	//populate vector blocks
+	boost::to_block_range(packedData, packedDataBlocks.begin());
 
-    //populate vector blocks
-    boost::to_block_range(packedData, packedDataBlocks.begin());
+	#ifdef DEBUG
+		cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
+	#endif
 
-    cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
+	//write out each block
+	for (vector<unsigned char>::iterator it = packedDataBlocks.begin();
+			it != packedDataBlocks.end(); ++it)
+	{
+		//retrieves block and converts it to a char*
+		mySource->sendEncodedData(reinterpret_cast<char*>(&*it));
 
-    //write out each block
-    for (vector<unsigned char>::iterator it =
-            packedDataBlocks.begin(); it != packedDataBlocks.end(); ++it)
-    {
-        //retrieves block and converts it to a char*
-        mySource->sendEncodedData(reinterpret_cast<char*>(&*it));
-
-        // if we've written the targeted number of bytes
-        // return
-        numberOfBytes--;
-        if(!numberOfBytes)
-        {
-        	break;
-        }
-    }
+		// if we've written the targeted number of bytes
+		// return
+		numberOfBytes--;
+		if (!numberOfBytes)
+		{
+			break;
+		}
+	}
 }
 
 bool Sensor::getLastByte(unsigned char *lastByte)
 {
-    // Get the last byte written, and in some cases, reset the file pointer to the one previous
+	// Get the last byte written, and in some cases, reset the file pointer to the one previous
 
-    bool partialByteFlag(false);
-    unsigned int encodedLength = myEncodedBitCount / BitsPerByte;
+	bool partialByteFlag(false);
+	unsigned int encodedLength = myEncodedBitCount / BitsPerByte;
 
-    int additionalBits = myEncodedBitCount % BitsPerByte;
-    if(additionalBits)
-    {
+	int additionalBits = myEncodedBitCount % BitsPerByte;
+	if (additionalBits)
+	{
 
-        encodedLength++;
+		encodedLength++;
 
-        unsigned char* encodedPtr = mySource->getEncodedData();
+		unsigned char* encodedPtr = mySource->getEncodedData();
+		*lastByte = encodedPtr[encodedLength - 1];
+		partialByteFlag = true;
+	}
 
-        *lastByte = encodedPtr[encodedLength-1];
-        
-        partialByteFlag = true;
-    }
+	if (partialByteFlag)
+	{
+		mySource->setNextInsertionByte(encodedLength - 1);
+	}
 
-    if(partialByteFlag)
-    {
-        mySource->setNextInsertionByte(encodedLength-1);
-    }
-
-    return partialByteFlag;
-
+	return partialByteFlag;
 }

@@ -229,25 +229,32 @@ void GroundSystem::process()
 			case RiceAlgorithm::K11:
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
-				cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
-				     << currentByteLocation << ", count=" << count << endl;
-
+				#ifdef DEBUG
+					cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
+						 << currentByteLocation << ", count=" << count << endl;
+				#endif
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
-				cout << "Found Winner is: 2ndEXT currentByteLocation="
-			         << currentByteLocation << ", count=" << count << endl;
+				#ifdef DEBUG
+					cout << "Found Winner is: 2ndEXT currentByteLocation="
+						 << currentByteLocation << ", count=" << count << endl;
+				#endif
 				break;
 
 			case RiceAlgorithm::ZeroBlockOpt:
-				cout << "Found Winner is: ZEROBLOCK currentByteLocation="
-			         << currentByteLocation << ", count=" << count << endl;
+				#ifdef DEBUG
+					cout << "Found Winner is: ZEROBLOCK currentByteLocation="
+						 << currentByteLocation << ", count=" << count << endl;
+				#endif
 				break;
 
 
 			case RiceAlgorithm::NoCompressionOpt:
-		        cout << "Found Winner is: NOCOMP currentByteLocation="
-			         << currentByteLocation << ", count=" << count << endl;
+				#ifdef DEBUG
+								cout << "Found Winner is: NOCOMP currentByteLocation="
+									 << currentByteLocation << ", count=" << count << endl;
+				#endif
 				break;
 
 			default:
@@ -278,35 +285,38 @@ void GroundSystem::process()
 		unsigned char encodedDataCopy[CopySize];
 		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
-		//*******************************************
-		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
-		{
-			cout << "winning encoding          ==>";
+		#ifdef DEBUG
+				//*******************************************
+				if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+				{
+					cout << "winning encoding          ==>";
 
-			for(int countIndex=0; countIndex < CopySize; countIndex++)
-			{
-				cout << hex << int(encodedDataCopy[countIndex]) << " ";
-			}
-			cout << dec << endl;
-		}
-		//*******************************************
-
+					for(int countIndex=0; countIndex < CopySize; countIndex++)
+					{
+						cout << hex << int(encodedDataCopy[countIndex]) << " ";
+					}
+					cout << dec << endl;
+				}
+				//*******************************************
+		#endif
 
 		shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
 				(CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
 
-		//*******************************************
-		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
-		{
-			cout << "winning encoding (shifted)==>";
+		#ifdef DEBUG
+				//*******************************************
+				if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+				{
+					cout << "winning encoding (shifted)==>";
 
-			for(int countIndex=0; countIndex < CopySize; countIndex++)
-			{
-				cout << hex << int(encodedDataCopy[countIndex]) << " ";
-			}
-			cout << dec << endl;
-		}
-		//*******************************************
+					for(int countIndex=0; countIndex < CopySize; countIndex++)
+					{
+						cout << hex << int(encodedDataCopy[countIndex]) << " ";
+					}
+					cout << dec << endl;
+				}
+				//*******************************************
+		#endif
 
 		size_t encodedLength(0);
 
@@ -347,7 +357,11 @@ void GroundSystem::process()
 					if ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1)
 					{
 						splitValue[index] = splitCount;
-						cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+
+						#ifdef DEBUG
+			            cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+						#endif
+
 						index++;
 						splitCount = 0;
 					}
@@ -365,10 +379,7 @@ void GroundSystem::process()
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
-				cout << "\nencodedLength=" << encodedLength << endl;
 				encodedLength += (32 * (selection-1));
-				cout << "\nencodedLength=" << encodedLength << endl;
-
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
@@ -390,17 +401,17 @@ void GroundSystem::process()
 		totalEncodedLength += encodedLength;
 
 		currentByteLocation = (totalEncodedLength / BitsPerByte);
-		//if (totalEncodedLength % BitsPerByte)
-		//{
-		//	currentByteLocation++;
-		//}
 
-		cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
-			 << totalEncodedLength << endl;
+		#ifdef DEBUG
+				cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
+					 << totalEncodedLength << endl;
+		#endif
 
 		additionalBits = totalEncodedLength % BitsPerByte;
-		cout << "additional bits=" << additionalBits << endl;
 
+		#ifdef DEBUG
+				cout << "additional bits=" << additionalBits << endl;
+		#endif
 	}
 
 	delete[] encodedBlockSizes;
