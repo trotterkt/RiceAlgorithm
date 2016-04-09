@@ -8,6 +8,7 @@
  *  Copyright 2016 Keir Trotter
  */
 
+
 #include <ImagePersistence.h>
 
 //:TODO: I see this as a very temporary persistence mechanism
@@ -23,7 +24,7 @@ ImagePersistence::ImagePersistence(unsigned int x, unsigned int y, unsigned int 
     mySampleData = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
     // Encoded data will never be more than the original, and likely shorter
-    myEncodedData = reinterpret_cast<char*>(new ushort[myXDimension * myYDimension * myZDimension]);
+    myEncodedData = reinterpret_cast<unsigned char*>(new ushort[myXDimension * myYDimension * myZDimension]);
 }
 
 ImagePersistence::~ImagePersistence()
