@@ -8,12 +8,13 @@
  *  Copyright 2016 Keir Trotter
  */
 
-
 #include <SplitSequence.h>
 #include <iostream>
+#include <ShiftFunctions.h>
 #include <vector>
 #include <boost/dynamic_bitset.hpp>
 #include <Timing.h>
+#include <Endian.h>
 
 using namespace std;
 
@@ -84,7 +85,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     }
 
 
-    //vector< size_t > encodedSizeList;
     size_t encodedSizeList[32];
     size_t totalEncodedSize(0);
 
@@ -92,7 +92,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     for(int index = 0; index < 32; index++)
     {
         size_t encodedSize = (myInputSamples[index] >> (selection-1)) + 1;
-        //encodedSizeList.push_back(encodedSize);
         encodedSizeList[index] = encodedSize;
         totalEncodedSize += encodedSize;
     }
@@ -191,6 +190,44 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     // cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     return code_len;
+}
+
+void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsigned char* encodedStream, ushort* preprocessedStream)
+{
+	// counting all of the values in the splitValue array of 32 elements
+	// provides the location of the beginning bits for the split values
+	// in bits
+	int bitLocation(0);
+    for(int index=0; index < 32; index++)
+    {
+    	bitLocation += splitValue[index];
+    }
+
+
+    // Make a new array for the 32 split values
+	const unsigned int CopySize(32 * sizeof(ushort)); // Encoded data will be no larger than this
+	unsigned char encodedDataCopy[CopySize];
+	memcpy(encodedDataCopy, encodedStream, CopySize);
+
+
+    // Combine the individual values per the split sequence method
+    // and save in the preprocessed array
+	size_t bufferSize(CopySize * BitsPerByte);
+
+	shiftLeft(encodedDataCopy, bufferSize, bitLocation);
+
+	for(int index=0; index<32; index++)
+	{
+		ushort value(0);
+		memcpy(&value, encodedDataCopy, sizeof(ushort));
+		bigEndianVersusLittleEndian(value);
+
+		value >>= (sizeof(ushort) * BitsPerByte - (selection - 1));
+		preprocessedStream[index] = ((splitValue[index]-1) << (selection - 1)) |  value;
+
+		shiftLeft(encodedDataCopy, bufferSize, (selection - 1));
+	}
+
 }
 
 } /* namespace RiceAlgorithm */

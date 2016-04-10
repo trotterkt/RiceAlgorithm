@@ -10,148 +10,10 @@
 #include <Endian.h>
 #include <iostream>
 #include <stdio.h>
-#include <math.h>
+#include <ShiftFunctions.h>
 
 using namespace std;
 using namespace RiceAlgorithm;
-
-// Taken from the CUDA implementation
-//***************************************************************
-void shiftRight(unsigned char* array, unsigned int bitSize, unsigned int arrayBitShift)
-{
-    unsigned int numberOfBytes(bitSize/BitsPerByte);
-
-    if(bitSize % BitsPerByte)
-    {
-        numberOfBytes++;
-    }
-
-    // Decide where in the copy the new bytes will go
-    //unsigned char* arrayCopy = new unsigned char[numberOfBytes];
-    // Not allocating from global memory is significantly faster
-    const int MaximumByteArray(80);
-    unsigned char arrayCopy[MaximumByteArray] = {0};
-
-    // Shift from bit to bit, and byte to byte
-    unsigned int byteShift = arrayBitShift / BitsPerByte;
-    unsigned int bitShift = arrayBitShift % BitsPerByte;
-
-    // Include neighboring bits to transfer to next byte
-    // First figure out the mask
-    unsigned char mask = powf(2, bitShift) - 1;
-    unsigned char previousBits(0);
-
-
-    // Copy from byte to shifted byte
-    for(unsigned int byteIndex=0; byteIndex<numberOfBytes; byteIndex++)
-    {
-        // don't shift larger than the size of the stream
-        if((byteIndex + byteShift) >= numberOfBytes)
-        {
-            break;
-        }
-
-        //***************************************************
-        // do some index checking
-        if((byteIndex + byteShift) >= MaximumByteArray)
-        {
-            printf("We have an error  in shiftRight-- (byteIndex + byteShift)=%d\n", (byteIndex + byteShift));
-            return;
-        }
-        //***************************************************
-
-        arrayCopy[byteIndex + byteShift] = (array[byteIndex]) >> bitShift;
-
-        if (byteIndex > 0)
-        {
-            arrayCopy[byteIndex + byteShift] |= previousBits;
-        }
-
-        previousBits = (array[byteIndex] & mask) << (BitsPerByte - bitShift);
-    }
-
-    //***************************************************
-    // do more index checking
-    if((numberOfBytes) >= MaximumByteArray)
-    {
-        printf("We have an error  in shiftRight-- (numberOfBytes)=%d\n", numberOfBytes);
-        return;
-    }
-    //***************************************************
-
-    memcpy(array, arrayCopy, numberOfBytes);
-
-}
-
-void shiftLeft(unsigned char* array, unsigned int bitSize, unsigned int arrayBitShift)
-{
-    unsigned int numberOfBytes(bitSize/BitsPerByte);
-
-    if(bitSize % BitsPerByte)
-    {
-        numberOfBytes++;
-    }
-
-    // Decide where in the copy the new bytes will go
-    //unsigned char* arrayCopy = new unsigned char[numberOfBytes];
-    // Not allocating from global memory is significantly faster
-    const int MaximumByteArray(80);
-    unsigned char arrayCopy[MaximumByteArray] = {0};
-
-    memset(arrayCopy, 0, sizeof(arrayCopy));
-
-    // Shift from bit to bit, and byte to byte
-    unsigned int byteShift = arrayBitShift / BitsPerByte;
-    unsigned int bitShift = arrayBitShift % BitsPerByte;
-
-    // Include neighboring bits to transfer to next byte
-    // First figure out the mask
-    unsigned char mask = powf(2, bitShift) - 1;
-    unsigned char previousBits(0);
-
-
-    // Copy from byte to shifted byte
-    for(unsigned int byteIndex=byteShift; byteIndex<numberOfBytes; byteIndex++)
-    {
-        // don't shift larger than the size of the stream
-        if((byteIndex - byteShift) < 0)
-        {
-            break;
-        }
-
-        previousBits = (array[byteIndex+1] & (mask << (BitsPerByte - bitShift)));
-        previousBits >>= (BitsPerByte - bitShift);
-
-        //***************************************************
-        // do some index checking
-        if((byteIndex - byteShift) >= MaximumByteArray)
-        {
-            printf("We have an error  in shiftLeft -- (byteIndex - byteShift)=%d\n", (byteIndex + byteShift));
-            return;
-        }
-        //***************************************************
-
-        arrayCopy[byteIndex - byteShift] = (array[byteIndex]) << bitShift;
-
-        if (byteIndex <= (numberOfBytes-1))
-        {
-            arrayCopy[byteIndex - byteShift] |= previousBits;
-        }
-
-    }
-
-    //***************************************************
-    // do more index checking
-    if((numberOfBytes) >= MaximumByteArray)
-    {
-        printf("We have an error in shiftLeft -- (numberOfBytes)=%d\n", numberOfBytes);
-        return;
-    }
-    //***************************************************
-
-    memcpy(array, arrayCopy, numberOfBytes);
-}
-//***************************************************************
 
 
 
@@ -191,6 +53,10 @@ void GroundSystem::process()
 	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension
 			* myHeader.zDimension) / 32];
 	ulong count(0);
+
+
+	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
+
 	// Read in one 32-sample block at a time (not on byte boundary)
 	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
 	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
@@ -211,7 +77,8 @@ void GroundSystem::process()
 
 		CodingSelection selection = CodingSelection(selectionBytes[0]);
 
-		count++;
+
+		#ifdef DEBUG
 
 		switch(selection)
 		{
@@ -229,32 +96,24 @@ void GroundSystem::process()
 			case RiceAlgorithm::K11:
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
-				#ifdef DEBUG
 					cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
 						 << currentByteLocation << ", count=" << count << endl;
-				#endif
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
-				#ifdef DEBUG
 					cout << "Found Winner is: 2ndEXT currentByteLocation="
 						 << currentByteLocation << ", count=" << count << endl;
-				#endif
 				break;
 
 			case RiceAlgorithm::ZeroBlockOpt:
-				#ifdef DEBUG
 					cout << "Found Winner is: ZEROBLOCK currentByteLocation="
 						 << currentByteLocation << ", count=" << count << endl;
-				#endif
 				break;
 
 
 			case RiceAlgorithm::NoCompressionOpt:
-				#ifdef DEBUG
 								cout << "Found Winner is: NOCOMP currentByteLocation="
 									 << currentByteLocation << ", count=" << count << endl;
-				#endif
 				break;
 
 			default:
@@ -262,6 +121,7 @@ void GroundSystem::process()
 				exit(-1);
 
 		}
+		#endif
 
 
 		// When the encoded zero-prefixed section ends, there should be a stream of 31 ones.
@@ -281,41 +141,44 @@ void GroundSystem::process()
 		unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
 
 		// Account for encoded value not being on a byte boundary
-		const unsigned int CopySize(32 * sizeof(ushort) + 1);
+		const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
 		unsigned char encodedDataCopy[CopySize];
 		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
 		#ifdef DEBUG
-				//*******************************************
-				if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
-				{
-					cout << "winning encoding          ==>";
+		count++;
 
-					for(int countIndex=0; countIndex < CopySize; countIndex++)
-					{
-						cout << hex << int(encodedDataCopy[countIndex]) << " ";
-					}
-					cout << dec << endl;
-				}
-				//*******************************************
+		//*******************************************
+		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+		{
+			cout << "winning encoding          ==>";
+
+			for(int countIndex=0; countIndex < CopySize; countIndex++)
+			{
+				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			}
+			cout << dec << endl;
+		}
+		//*******************************************
+
 		#endif
 
 		shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
 				(CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
 
 		#ifdef DEBUG
-				//*******************************************
-				if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
-				{
-					cout << "winning encoding (shifted)==>";
+		//*******************************************
+		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+		{
+			cout << "winning encoding (shifted)==>";
 
-					for(int countIndex=0; countIndex < CopySize; countIndex++)
-					{
-						cout << hex << int(encodedDataCopy[countIndex]) << " ";
-					}
-					cout << dec << endl;
-				}
-				//*******************************************
+			for(int countIndex=0; countIndex < CopySize; countIndex++)
+			{
+				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			}
+			cout << dec << endl;
+		}
+		//*******************************************
 		#endif
 
 		size_t encodedLength(0);
@@ -377,6 +240,10 @@ void GroundSystem::process()
 				}
 
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+
+
+				ushort preprocessedStream[32];
+				decodedSequence.decode(selection, splitValue, encodedDataCopy, preprocessedStream);
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));

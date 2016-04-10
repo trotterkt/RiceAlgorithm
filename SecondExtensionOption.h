@@ -25,6 +25,7 @@ class SecondExtensionOption : public AdaptiveEntropyEncoder
 		virtual ~SecondExtensionOption();
 
 		unsigned int encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection);
+		void decode(CodingSelection selection, ushort* splitValue, ushort* encodedStream, ushort* preprocessedStream);
 
 };
 

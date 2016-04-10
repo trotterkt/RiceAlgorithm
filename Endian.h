@@ -11,6 +11,8 @@
 #ifndef ENDIAN_H_
 #define ENDIAN_H_
 
+#include <stdint.h>
+
 inline static bool isSystemBigEndian()
 {
     int endianCheck = 1;
