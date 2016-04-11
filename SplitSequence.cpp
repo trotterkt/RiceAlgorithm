@@ -192,7 +192,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     return code_len;
 }
 
-void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsigned char* encodedStream, ushort* preprocessedStream)
+void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsigned char* encodedStream, ulong blockIndex, ushort* preprocessedStream)
 {
 	// counting all of the values in the splitValue array of 32 elements
 	// provides the location of the beginning bits for the split values
@@ -223,7 +223,7 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		bigEndianVersusLittleEndian(value);
 
 		value >>= (sizeof(ushort) * BitsPerByte - (selection - 1));
-		preprocessedStream[index] = ((splitValue[index]-1) << (selection - 1)) |  value;
+		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
 
 		shiftLeft(encodedDataCopy, bufferSize, (selection - 1));
 	}

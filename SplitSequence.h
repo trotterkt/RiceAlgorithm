@@ -24,7 +24,7 @@ class SplitSequence : public AdaptiveEntropyEncoder
 		virtual ~SplitSequence();
 
         unsigned int encode(boost::dynamic_bitset<> &encodedStream, CodingSelection &selection);
-		void decode(CodingSelection selection, ushort* splitValue, unsigned char* encodedStream, ushort* preprocessedStream);
+		void decode(CodingSelection selection, ushort* splitValue, unsigned char* encodedStream, ulong blockIndex, ushort* preprocessedStream);
 
 };
 

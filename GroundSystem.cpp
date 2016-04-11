@@ -245,8 +245,7 @@ void GroundSystem::process()
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
 
-				ushort preprocessedStream[32]; //:TODO: Replace with full array (residualsPtr) and include block index
-				decodedSequence.decode(selection, splitValue, encodedDataCopy, preprocessedStream);
+				decodedSequence.decode(selection, splitValue, encodedDataCopy, blockIndex, residualsPtr);
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));
@@ -262,6 +261,8 @@ void GroundSystem::process()
 				encodedLength = (32 * sizeof(ushort));
 				encodedLength *= BitsPerByte;
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
+
+				memcpy(&residualsPtr[blockIndex*32], encodedDataCopy, sizeof(ushort)*32);
 
 				break;
 
