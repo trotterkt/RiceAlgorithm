@@ -57,6 +57,9 @@ void GroundSystem::process()
 
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
+	//:TODO: This might better belong in an object that reverses the prediction
+	ushort* residualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
+
 	// Read in one 32-sample block at a time (not on byte boundary)
 	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
 	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
@@ -242,7 +245,7 @@ void GroundSystem::process()
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
 
-				ushort preprocessedStream[32];
+				ushort preprocessedStream[32]; //:TODO: Replace with full array (residualsPtr) and include block index
 				decodedSequence.decode(selection, splitValue, encodedDataCopy, preprocessedStream);
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
@@ -282,6 +285,7 @@ void GroundSystem::process()
 	}
 
 	delete[] encodedBlockSizes;
+	delete[] residualsPtr;
 }
 
 
