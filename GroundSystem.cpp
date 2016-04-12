@@ -285,6 +285,15 @@ void GroundSystem::process()
 		#endif
 	}
 
+
+	// Perform unprediction of the residual values
+	RiceAlgorithm::Predictor unprocessor(myHeader.xDimension, myHeader.yDimension, myHeader.zDimension);
+
+
+	//unprocessor.calculatePredictedSample()
+    //unprocessor.getResiduals(residualsPtr);
+
+
 	delete[] encodedBlockSizes;
 	delete[] residualsPtr;
 }
