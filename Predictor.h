@@ -50,7 +50,10 @@ class Predictor
 
         ushort* getSamples() { return mySamples; }
 
+
         ushort* getResiduals(ushort* samples);
+
+        void getSamples(ushort* residualsPtr, ushort* samples);
 
         size_t getSizeOfSamples() { return ( sizeof(ushort) * (myXDimension * myYDimension * myZDimension)); }
 
@@ -78,8 +81,13 @@ class Predictor
 
         // Given the scaled predicted sample value, map it to an unsigned value
         // enabling it to be represented with D bits
-        unsigned short int computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
-                                                   unsigned int sampleMidway, unsigned int sampleMaximum, int scaledPredicted);
+        ushort computeMappedResidual(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
+                                     unsigned int sampleMidway, unsigned int sampleMaximum, int scaledPredicted);
+
+        ushort computeUnmappedSample(unsigned int x, unsigned int y, unsigned int z,
+                                     unsigned int sampleMinimum, unsigned int sampleMidway, unsigned int sampleMaximum,
+                                     int scaledPredicted);
+
         void initializeWeights(unsigned int z);
         void updateWeights(unsigned int x, unsigned int y, unsigned int z, int error);
 

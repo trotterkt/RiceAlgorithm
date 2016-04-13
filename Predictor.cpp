@@ -91,6 +91,56 @@ ushort* Predictor::getResiduals(ushort* samples)
 }
 
 
+void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
+{
+    mySamples = samples;
+
+    myResiduals = residualsPtr;
+
+    //============================================================================================================
+
+    // This defines the range of the signal value as described in the Blue Book
+    // for 16-bit samples
+    unsigned int sampleMinimum = 0;
+    unsigned int sampleMaximum = (0x1 << DynamicRange) - 1;
+    unsigned int sampleMidway = 0x1 << (DynamicRange - 1);
+
+
+    // Now actually it goes over the various residuals and it computes the applicable
+    // raw sample for each of them
+    for (unsigned int z = 0; z < myZDimension; z++)
+    {
+        for (unsigned int y = 0; y < myYDimension; y++)
+        {
+            for (unsigned int x = 0; x < myXDimension; x++)
+            {
+                int predictedSample = 0;
+                ushort unmappedSample = 0;
+                int error = 0;
+
+                // prediction of the current sample and saving the residual
+                predictedSample = calculatePredictedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum);
+
+
+                unmappedSample = computeUnmappedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum, predictedSample);
+
+                matrixBsqIndex(mySamples, x, y, z) = unmappedSample;
+                if (x == 0 && y == 0)
+                {
+                    //  weights initialization
+                    initializeWeights(z);
+                }
+                else
+                {
+                    // Update the weights and prepare next sample prediction
+                    error = 2 * (matrixBsqIndex(mySamples, x, y, z)) - predictedSample;
+                    updateWeights(x, y, z, error);
+                }
+            }
+        }
+    }
+}
+
 int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned int z, unsigned int sampleMinimum,
                                         unsigned int sampleMidway, unsigned int sampleMaximum)
 {
@@ -191,9 +241,9 @@ long long Predictor::modRstar(long long arg, long long op)
 }
 
 
-unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
-                                                      unsigned int sampleMinimum, unsigned int sampleMidway, unsigned int sampleMaximum,
-                                                      int scaledPredicted)
+ushort Predictor::computeMappedResidual(unsigned int x, unsigned int y, unsigned int z,
+                                        unsigned int sampleMinimum, unsigned int sampleMidway, unsigned int sampleMaximum,
+                                        int scaledPredicted)
 {
     unsigned short int mapped = 0;
     int delta = ((int) matrixBsqIndex(mySamples, x, y, z)) - scaledPredicted / 2;
@@ -220,6 +270,53 @@ unsigned short int Predictor::computeMappedResidual(unsigned int x, unsigned int
     }
 
     return mapped;
+}
+
+ushort Predictor::computeUnmappedSample(unsigned int x, unsigned int y, unsigned int z,
+                                        unsigned int sampleMinimum, unsigned int sampleMidway, unsigned int sampleMaximum,
+                                        int scaledPredicted)
+{
+    ushort sample = 0;
+    unsigned int omega = (scaledPredicted / 2) - sampleMinimum;
+    unsigned int selectedOmega = 0;
+    int delta = 0;
+
+
+    if (omega > sampleMaximum - (scaledPredicted / 2))
+    {
+        omega = sampleMaximum - (scaledPredicted / 2);
+        selectedOmega = 1;
+    }
+
+    if(matrixBsqIndex(myResiduals, x, y, z) > 2*omega)
+    {
+        if(selectedOmega == 0)
+        {
+            delta = matrixBsqIndex(myResiduals, x, y, z) - omega;
+        }
+        else
+        {
+            delta = omega - matrixBsqIndex(myResiduals, x, y, z);
+        }
+    }
+    else
+    {
+        if((matrixBsqIndex(myResiduals, x, y, z) & 0x1) == 0)
+        {
+            int sign_scaled = (scaledPredicted & 0x1) != 0 ? -1 : 1;
+            delta = sign_scaled*(matrixBsqIndex(myResiduals, x, y, z)/2);
+        }
+        else
+        {
+            int sign_scaled = (scaledPredicted & 0x1) != 0 ? 1 : -1;
+            delta = sign_scaled*((matrixBsqIndex(myResiduals, x, y, z) + 1)/2);
+        }
+    }
+
+    sample = delta + (scaledPredicted / 2);
+
+
+    return sample;
 }
 
 void Predictor::initializeWeights(unsigned int z)
