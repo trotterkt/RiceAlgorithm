@@ -22,7 +22,7 @@
 namespace RiceAlgorithm
 {
 const size_t BlockSize(32*DynamicRange);
-const ushort BitsPerByte(8);
+const ushort BitsPerByte(8u);
 
 enum CodingSelection {K0=1,             // Fundamental Sequence (FS) is the same as Split-Sequence, with K=0
 					  K1, K2, K3, K4, K5,

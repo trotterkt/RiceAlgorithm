@@ -205,14 +205,14 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 
 
     // Make a new array for the 32 split values
-	const unsigned int CopySize(32 * sizeof(ushort)); // Encoded data will be no larger than this
+	const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
 	unsigned char encodedDataCopy[CopySize];
 	memcpy(encodedDataCopy, encodedStream, CopySize);
 
 
     // Combine the individual values per the split sequence method
     // and save in the preprocessed array
-	size_t bufferSize(CopySize * BitsPerByte);
+	size_t bufferSize(CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp);
 
 	shiftLeft(encodedDataCopy, bufferSize, bitLocation);
 

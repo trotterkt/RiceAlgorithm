@@ -37,23 +37,22 @@ void GroundSystem::process()
 
 	// Having the raw sample dimensions from the header, allocate space for
 	// the decoding
-	const ulong NumberOfSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
+	const long NumberOfSamples(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
 	myRawSamples = new ushort[NumberOfSamples];
 
 	// Encoded data should begin right after the header (byte 19)
 
 	// 1st grab the Encoded ID
-	const int HeaderLength(19);
-	unsigned long currentByteLocation(HeaderLength);
+	const ulong HeaderLength(19u);
 	ulong totalEncodedLength(HeaderLength * BitsPerByte);
 
 	unsigned int additionalBits(0);
 
-	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension * myHeader.yDimension
-			* myHeader.zDimension) / 32];
-	ulong count(0);
-
+	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension *
+	                                        myHeader.yDimension *
+			                                myHeader.zDimension) / 32];
+	long count(0);
 
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
@@ -61,21 +60,22 @@ void GroundSystem::process()
 	ushort* residualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
 
 	// Read in one 32-sample block at a time (not on byte boundary)
-	//for (long blockIndex = 0; blockIndex < NumberofSamples/32; blockIndex++)
-	//while (currentByteLocation < NumberofSamples) //:TODO: Temp
-	for (ulong blockIndex = 0; blockIndex < (NumberOfSamples / 32); blockIndex++)
+	const long MaximumBlocks(NumberOfSamples / 32);
+
+	for (long blockIndex = 0; blockIndex < MaximumBlocks; blockIndex++)
 	{
+        ulong currentByteLoc = totalEncodedLength / BitsPerByte;
+
 		//cout << "Block Iteration:" << ++count << endl;
 
 		// Account for selection value not being on a byte boundary
 		// The selection ID may span as much as two bytes
-		unsigned char selectionBytes[2];
-		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
+		unsigned char selectionBytes[2] = {0};
+		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLoc], 2);
 		shiftLeft(selectionBytes, 16, additionalBits);
 
 		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
 		selectionBytes[0] = selectionBytes[0] & 0xf;
-		//selectionBytes[0] -= 1;  // Only applicable for split seq
 
 
 		CodingSelection selection = CodingSelection(selectionBytes[0]);
@@ -99,24 +99,24 @@ void GroundSystem::process()
 			case RiceAlgorithm::K11:
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
-					cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
-						 << currentByteLocation << ", count=" << count << endl;
+					cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLoc="
+						 << currentByteLoc << ", count=" << count << endl;
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
-					cout << "Found Winner is: 2ndEXT currentByteLocation="
-						 << currentByteLocation << ", count=" << count << endl;
+					cout << "Found Winner is: 2ndEXT currentByteLoc="
+						 << currentByteLoc << ", count=" << count << endl;
 				break;
 
 			case RiceAlgorithm::ZeroBlockOpt:
-					cout << "Found Winner is: ZEROBLOCK currentByteLocation="
-						 << currentByteLocation << ", count=" << count << endl;
+					cout << "Found Winner is: ZEROBLOCK currentByteLoc="
+						 << currentByteLoc << ", count=" << count << endl;
 				break;
 
 
 			case RiceAlgorithm::NoCompressionOpt:
-								cout << "Found Winner is: NOCOMP currentByteLocation="
-									 << currentByteLocation << ", count=" << count << endl;
+								cout << "Found Winner is: NOCOMP currentByteLoc="
+									 << currentByteLoc << ", count=" << count << endl;
 				break;
 
 			default:
@@ -141,12 +141,11 @@ void GroundSystem::process()
 		// Assuming k-split type -
 		// - count bits until 32-ones have been counted
 		int encodeCount(0);
-		unsigned char encodedByte = mySource->getEncodedData()[currentByteLocation];
 
 		// Account for encoded value not being on a byte boundary
 		const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
 		unsigned char encodedDataCopy[CopySize];
-		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
+		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLoc], CopySize);
 
 		#ifdef DEBUG
 		count++;
@@ -166,8 +165,8 @@ void GroundSystem::process()
 
 		#endif
 
-		shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
-				(CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
+        shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
+                  (CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
 
 		#ifdef DEBUG
 		//*******************************************
@@ -254,6 +253,8 @@ void GroundSystem::process()
 			case RiceAlgorithm::SecondExtensionOpt:
 			case RiceAlgorithm::ZeroBlockOpt:
 
+			    cout << "Unexpected code" << endl;
+			    exit(-1);
 				break;
 
 
@@ -271,10 +272,10 @@ void GroundSystem::process()
 
 		totalEncodedLength += encodedLength;
 
-		currentByteLocation = (totalEncodedLength / BitsPerByte);
+		//currentByteLoc = (totalEncodedLength / BitsPerByte);
 
 		#ifdef DEBUG
-				cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
+				cout << "currentByteLoc=" << currentByteLoc << ", totalEncodedLength="
 					 << totalEncodedLength << endl;
 		#endif
 
@@ -289,13 +290,16 @@ void GroundSystem::process()
 	// Perform unprediction of the residual values
 	RiceAlgorithm::Predictor unprocessor(myHeader.xDimension, myHeader.yDimension, myHeader.zDimension);
 
+	ushort* samples = new ushort[myHeader.xDimension*myHeader.yDimension*myHeader.zDimension];
+	unprocessor.getSamples(residualsPtr, samples);
 
 	//unprocessor.calculatePredictedSample()
     //unprocessor.getResiduals(residualsPtr);
 
 
 	delete[] encodedBlockSizes;
-	delete[] residualsPtr;
+    delete[] residualsPtr;
+    delete[] samples;
 }
 
 
