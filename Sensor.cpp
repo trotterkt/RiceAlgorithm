@@ -16,6 +16,7 @@
 #include <limits.h>
 #include <Timing.h>
 #include <Endian.h>
+#include <DebuggingParameters.h>
 
 using namespace std;
 using namespace RiceAlgorithm;
@@ -139,7 +140,7 @@ void Sensor::process()
 
 		t1_intermediate = getTimestamp();
 
-		count++;
+        count++;
 
 		switch (winningSelection)
 		{
@@ -158,34 +159,38 @@ void Sensor::process()
 			case RiceAlgorithm::K12:
 			case RiceAlgorithm::K13:
 				#ifdef DEBUG
-
-								cout << "And the Winner is: K" << int(winningSelection - 1) << " of code length: "
-								<< myWinningEncodedLength << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]"
-								<< ", count=" << count << endl;
+                    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                       ((count >= LowerRange2) && (count <= UpperRange2)))
+                            cout << "And the Winner is: K" << int(winningSelection - 1) << " of code length: "
+                            << myWinningEncodedLength << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]"
+                            << ", count=" << count << endl;
 				#endif
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
 				#ifdef DEBUG
-
-								cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength
-								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+                    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                       ((count >= LowerRange2) && (count <= UpperRange2)))
+                            cout << "And the Winner is: 2ndEXT of code length: " << myWinningEncodedLength
+                            << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
 				#endif
 				break;
 
 			case RiceAlgorithm::ZeroBlockOpt:
 				#ifdef DEBUG
-
-								cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength
-								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+                    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                       ((count >= LowerRange2) && (count <= UpperRange2)))
+                            cout << "And the Winner is: ZEROBLOCK of code length: " << myWinningEncodedLength
+                            << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
 				#endif
 				break;
 
 			case RiceAlgorithm::NoCompressionOpt:
 				#ifdef DEBUG
-
-								cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength
-								<< " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
+                    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                       ((count >= LowerRange2) && (count <= UpperRange2)))
+                            cout << "And the Winner is: NOCOMP of code length: " << myWinningEncodedLength
+                            << " (total=" << myEncodedBitCount << ") on Block Sample [" << blockIndex << "]" << ", count=" << count << endl;
 				#endif
 
 				break;
@@ -198,13 +203,14 @@ void Sensor::process()
 
 		#ifdef DEBUG
 
-				//*******************************************
-				if((count > 9881) && (count < 9886))
-				{
-					cout << "winning encoding==>" << winningEncodedStream << endl;
-					cout << "        encoding==>" << encodedStream << endl;
-				}
-				//*******************************************
+        //*******************************************
+        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+           ((count >= LowerRange2) && (count <= UpperRange2)))
+        {
+            cout << "winning encoding==>" << winningEncodedStream << endl;
+        }
+        //*******************************************
+
 		#endif
 
 		ushort partialBits = myEncodedBitCount % BitsPerByte;
@@ -216,8 +222,9 @@ void Sensor::process()
 		if (getLastByte(&lastByte))
 		{
 			#ifdef DEBUG
-
-						cout << "Before partial appendage: " << encodedStream << endl;
+                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                   ((count >= LowerRange2) && (count <= UpperRange2)))
+                        cout << "Before partial appendage: " << encodedStream << endl;
 			#endif
 
 			unsigned int appendedSize = winningEncodedStream.size() + partialBits;
@@ -227,7 +234,9 @@ void Sensor::process()
 			winningEncodedStream |= lastByteStream;
 
 			#ifdef DEBUG
-						cout << "After partial appendage : " << encodedStream << endl;
+                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+                   ((count >= LowerRange2) && (count <= UpperRange2)))
+                        cout << "After partial appendage : " << encodedStream << endl;
 			#endif
 		}
 
@@ -244,7 +253,9 @@ void Sensor::process()
 		sendEncodedSamples(winningEncodedStream, encodedSize);
 
 		#ifdef DEBUG
-				cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
+            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+               ((count >= LowerRange2) && (count <= UpperRange2)))
+                    cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
 		#endif
 
 		previousEncodedStream = winningEncodedStream;
@@ -440,9 +451,9 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 	//populate vector blocks
 	boost::to_block_range(packedData, packedDataBlocks.begin());
 
-	#ifdef DEBUG
-		cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
-	#endif
+//	#ifdef DEBUG
+//		cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
+//	#endif
 
 	//write out each block
 	for (vector<unsigned char>::iterator it = packedDataBlocks.begin();

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <ShiftFunctions.h>
+#include <DebuggingParameters.h>
 
 using namespace std;
 using namespace RiceAlgorithm;
@@ -52,7 +53,7 @@ void GroundSystem::process()
 	ushort* encodedBlockSizes = new ushort[(myHeader.xDimension *
 	                                        myHeader.yDimension *
 			                                myHeader.zDimension) / 32];
-	long count(0);
+	ulong count(0);
 
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
@@ -61,17 +62,24 @@ void GroundSystem::process()
 
 	// Read in one 32-sample block at a time (not on byte boundary)
 	const long MaximumBlocks(NumberOfSamples / 32);
+    ulong currentByteLocation = totalEncodedLength / BitsPerByte;
 
 	for (long blockIndex = 0; blockIndex < MaximumBlocks; blockIndex++)
 	{
-        ulong currentByteLoc = totalEncodedLength / BitsPerByte;
+        count++;
 
-		//cout << "Block Iteration:" << ++count << endl;
+	    //:KLUDGE: At least on Windows...currentByteLocation is being
+	    // corrupted somehow. So using an identical variable
+	    // currentByteLocation2
+	    //=============================================================
+        currentByteLocation = totalEncodedLength / BitsPerByte;
+        ulong currentByteLocation2 = totalEncodedLength / BitsPerByte;
+        //=============================================================
 
 		// Account for selection value not being on a byte boundary
 		// The selection ID may span as much as two bytes
 		unsigned char selectionBytes[2] = {0};
-		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLoc], 2);
+		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation2], 2);
 		shiftLeft(selectionBytes, 16, additionalBits);
 
 		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
@@ -82,48 +90,49 @@ void GroundSystem::process()
 
 
 		#ifdef DEBUG
+            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+               ((count >= LowerRange2) && (count <= UpperRange2)))
+                    switch(selection)
+                    {
+                        case RiceAlgorithm::K0:
+                        case RiceAlgorithm::K1:
+                        case RiceAlgorithm::K2:
+                        case RiceAlgorithm::K3:
+                        case RiceAlgorithm::K4:
+                        case RiceAlgorithm::K5:
+                        case RiceAlgorithm::K6:
+                        case RiceAlgorithm::K7:
+                        case RiceAlgorithm::K8:
+                        case RiceAlgorithm::K9:
+                        case RiceAlgorithm::K10:
+                        case RiceAlgorithm::K11:
+                        case RiceAlgorithm::K12:
+                        case RiceAlgorithm::K13:
+                                cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLocation="
+                                     << currentByteLocation << ", count=" << count << endl;
+                            break;
 
-		switch(selection)
-		{
-			case RiceAlgorithm::K0:
-			case RiceAlgorithm::K1:
-			case RiceAlgorithm::K2:
-			case RiceAlgorithm::K3:
-			case RiceAlgorithm::K4:
-			case RiceAlgorithm::K5:
-			case RiceAlgorithm::K6:
-			case RiceAlgorithm::K7:
-			case RiceAlgorithm::K8:
-			case RiceAlgorithm::K9:
-			case RiceAlgorithm::K10:
-			case RiceAlgorithm::K11:
-			case RiceAlgorithm::K12:
-			case RiceAlgorithm::K13:
-					cout << "Encoding Selection = K" << int(selection-1) << ", currentByteLoc="
-						 << currentByteLoc << ", count=" << count << endl;
-				break;
+                        case RiceAlgorithm::SecondExtensionOpt:
+                                cout << "Found Winner is: 2ndEXT currentByteLocation="
+                                     << currentByteLocation << ", count=" << count << endl;
+                            break;
 
-			case RiceAlgorithm::SecondExtensionOpt:
-					cout << "Found Winner is: 2ndEXT currentByteLoc="
-						 << currentByteLoc << ", count=" << count << endl;
-				break;
-
-			case RiceAlgorithm::ZeroBlockOpt:
-					cout << "Found Winner is: ZEROBLOCK currentByteLoc="
-						 << currentByteLoc << ", count=" << count << endl;
-				break;
+                        case RiceAlgorithm::ZeroBlockOpt:
+                                cout << "Found Winner is: ZEROBLOCK currentByteLocation="
+                                     << currentByteLocation << ", count=" << count << endl;
+                            break;
 
 
-			case RiceAlgorithm::NoCompressionOpt:
-								cout << "Found Winner is: NOCOMP currentByteLoc="
-									 << currentByteLoc << ", count=" << count << endl;
-				break;
+                        case RiceAlgorithm::NoCompressionOpt:
+                                            cout << "Found Winner is: NOCOMP currentByteLocation="
+                                                 << currentByteLocation << ", count=" << count << endl;
+                            break;
 
-			default:
-				cout << "Unanticipated encoding -- Exiting" << endl;
-				exit(-1);
+                        default:
+                            cout << "Unanticipated encoding -- Exiting" << endl;
+                            exit(-1);
 
-		}
+                    }
 		#endif
 
 
@@ -143,15 +152,15 @@ void GroundSystem::process()
 		int encodeCount(0);
 
 		// Account for encoded value not being on a byte boundary
-		const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
+        const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
 		unsigned char encodedDataCopy[CopySize];
-		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLoc], CopySize);
+		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation2], CopySize);
 
 		#ifdef DEBUG
-		count++;
 
 		//*******************************************
-		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+           ((count >= LowerRange2) && (count <= UpperRange2)))
 		{
 			cout << "winning encoding          ==>";
 
@@ -170,7 +179,8 @@ void GroundSystem::process()
 
 		#ifdef DEBUG
 		//*******************************************
-		if(((count > 9881) && (count < 9886)) || ((count > 0) && (count < 4)))
+        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+           ((count >= LowerRange2) && (count <= UpperRange2)))
 		{
 			cout << "winning encoding (shifted)==>";
 
@@ -224,7 +234,9 @@ void GroundSystem::process()
 						splitValue[index] = splitCount;
 
 						#ifdef DEBUG
-			            cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+			            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+			               ((count >= LowerRange2) && (count <= UpperRange2)))
+				                cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
 						#endif
 
 						index++;
@@ -272,18 +284,23 @@ void GroundSystem::process()
 
 		totalEncodedLength += encodedLength;
 
-		//currentByteLoc = (totalEncodedLength / BitsPerByte);
+		//currentByteLocation = (totalEncodedLength / BitsPerByte);
 
 		#ifdef DEBUG
-				cout << "currentByteLoc=" << currentByteLoc << ", totalEncodedLength="
+        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+           ((count >= LowerRange2) && (count <= UpperRange2)))
+				cout << "currentByteLocation=" << currentByteLocation << ", totalEncodedLength="
 					 << totalEncodedLength << endl;
 		#endif
 
 		additionalBits = totalEncodedLength % BitsPerByte;
 
 		#ifdef DEBUG
+        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+           ((count >= LowerRange2) && (count <= UpperRange2)))
 				cout << "additional bits=" << additionalBits << endl;
 		#endif
+        
 	}
 
 
