@@ -33,12 +33,27 @@ Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
 
 Predictor::~Predictor()
 {
-    delete[] myResiduals;
-    delete[] myWeights;
+    if(myResiduals)
+    {
+        delete[] myResiduals;
+        myResiduals = 0;
+    }
+
+    if(myWeights)
+    {
+        delete[] myWeights;
+        myWeights = 0;
+    }
 }
 
 ushort* Predictor::getResiduals(ushort* samples)
 {
+
+    if(mySamples)
+    {
+        delete [] mySamples;
+        mySamples = 0;
+    }
 
     mySamples = samples;
 
@@ -93,9 +108,21 @@ ushort* Predictor::getResiduals(ushort* samples)
 
 void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
 {
+    if(mySamples)
+    {
+        delete [] mySamples;
+    }
+
     mySamples = samples;
 
+
+    if(myResiduals)
+    {
+        delete [] myResiduals;
+    }
+
     myResiduals = residualsPtr;
+
 
     //============================================================================================================
 

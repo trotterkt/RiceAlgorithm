@@ -300,7 +300,7 @@ void GroundSystem::process()
            ((count >= LowerRange2) && (count <= UpperRange2)))
 				cout << "additional bits=" << additionalBits << endl;
 		#endif
-        
+
 	}
 
 
@@ -315,7 +315,8 @@ void GroundSystem::process()
 
 
 	delete[] encodedBlockSizes;
-    delete[] residualsPtr;
+    //delete[] residualsPtr; // :KLUDGE: Do not delete residualsPtr here, since it will be destroyed in the
+	                         // destructor
     delete[] samples;
 }
 
