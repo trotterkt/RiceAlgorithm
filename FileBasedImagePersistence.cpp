@@ -66,6 +66,12 @@ void FileBasedImagePersistence::readEncodedData(size_t bytesToRead)
     myEncodedStream.write(reinterpret_cast<char*>(myEncodedData), myEncodedBytesWritten);
 }
 
+void FileBasedImagePersistence::writeDecodedData()
+{
+    // There is no header to the raw samples
+    myDecodedStream.write(reinterpret_cast<char*>(myDecodedData), myDecodedBytesToWrite);
+}
+
 void FileBasedImagePersistence::setSamples(uint scanNumber)
 {
     unsigned short int buffer(0);

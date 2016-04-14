@@ -307,11 +307,11 @@ void GroundSystem::process()
 	// Perform unprediction of the residual values
 	RiceAlgorithm::Predictor unprocessor(myHeader.xDimension, myHeader.yDimension, myHeader.zDimension);
 
-	ushort* samples = new ushort[myHeader.xDimension*myHeader.yDimension*myHeader.zDimension];
+	ushort* samples = new ushort[NumberOfSamples];
 	unprocessor.getSamples(residualsPtr, samples);
 
-	//unprocessor.calculatePredictedSample()
-    //unprocessor.getResiduals(residualsPtr);
+
+	mySource->sendDecodedData(reinterpret_cast<char*>(samples), NumberOfSamples*sizeof(short));
 
 
 	delete[] encodedBlockSizes;

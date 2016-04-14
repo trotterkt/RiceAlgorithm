@@ -25,6 +25,8 @@ ImagePersistence::ImagePersistence(unsigned int x, unsigned int y, unsigned int 
 
     // Encoded data will never be more than the original, and likely shorter
     myEncodedData = reinterpret_cast<unsigned char*>(new ushort[myXDimension * myYDimension * myZDimension]);
+
+    myDecodedData = reinterpret_cast<unsigned char*>(new ushort[myXDimension * myYDimension * myZDimension]);
 }
 
 ImagePersistence::~ImagePersistence()
@@ -32,6 +34,8 @@ ImagePersistence::~ImagePersistence()
     delete[] mySampleData;
 
     delete[] myEncodedData;
+
+    delete[] myDecodedData;
 }
 
 

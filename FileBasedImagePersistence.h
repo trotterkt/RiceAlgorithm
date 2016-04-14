@@ -34,6 +34,8 @@ class FileBasedImagePersistence: public ImagePersistence
 
         virtual void readEncodedData(size_t bytesToRead);
 
+        void writeDecodedData();
+
         const char* getBaseName() { return myBaseFileStream.str().c_str(); }
 
     protected:

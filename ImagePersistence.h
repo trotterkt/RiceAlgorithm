@@ -12,6 +12,7 @@
 #define IMAGEPERSISTENCE_H_
 
 #include <sys/types.h>
+#include <string.h>
 
 // Note that if member types are not defined as being of similar size
 // there can be an alignment problem. See Annotated  C++ Ref Manual,
@@ -66,6 +67,11 @@ class ImagePersistence
                                                             myEncodedBytesWritten++;
                                                         }
 
+        virtual void sendDecodedData(char* decodedData, const long long imageSize) {
+                                                                                 memcpy(myDecodedData, decodedData, imageSize);
+                                                                                 myDecodedBytesToWrite = imageSize;
+                                                                              }
+
         unsigned char getLastByte() { return myEncodedData[myEncodedBytesWritten-1]; }
 
         void setNextInsertionByte(unsigned long long byteIndex) { myEncodedBytesWritten = byteIndex; }
@@ -76,6 +82,7 @@ class ImagePersistence
 
         ushort* mySampleData;
         unsigned char* myEncodedData;
+        unsigned char* myDecodedData;
 
         virtual void setSamples(uint scanNumber) = 0;
 
@@ -86,8 +93,7 @@ class ImagePersistence
         uint myCurrentScanNumber;
 
         unsigned long long myEncodedBytesWritten;
-
-
+        unsigned long long myDecodedBytesToWrite;
 };
 
 } /* namespace RiceAlgorithm */
