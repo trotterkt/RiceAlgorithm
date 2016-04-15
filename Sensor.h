@@ -58,6 +58,9 @@ class Sensor
 			return groundPtr;
 		}
 
+		// For validation
+		ushort* getSamples() { return mySamples; }
+
 	private:
 		RiceAlgorithm::ImagePersistence* mySource;
 

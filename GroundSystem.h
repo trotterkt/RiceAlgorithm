@@ -21,6 +21,9 @@ class GroundSystem
 
 		void process();
 
+        // For validation
+        ushort* getSamples() { return myRawSamples; }
+
 	private:
 		void readHeader();
 	    CompressedHeader myHeader;

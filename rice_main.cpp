@@ -57,5 +57,31 @@ int main(int argc, char *argv[])
     image.writeDecodedData();
 
 
+    // Check what I have
+    //===============================================================================
+    #define matrixBsqIndexCheck(matrix, x, y, z) matrix[Rows*((z)*Columns + (y)) + (x)]
+    int count = 0;
+    for(int x=0; x<Rows; x++)
+    {
+        for(int y=0; y<Columns; y++)
+        {
+            for(int z=0; z<Bands; z++)
+            {
+                ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
+                ushort outSample = matrixBsqIndexCheck(landsat.getGround()->getSamples(), x, y, z);
+
+                if(inSample == outSample)
+                {
+                    count++;
+                    //cout << "Mismatch at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z << endl;
+                    cout << "Match at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z << endl;
+
+                     //if(count > 20) exit(0);
+                }
+            }
+        }
+    }
+    //===============================================================================
+
     return 0;
 }
