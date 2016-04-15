@@ -48,10 +48,10 @@ class FileBasedImagePersistence: public ImagePersistence
         unsigned long myLength;
 
         // will need to both write to and read from this stream
-        std::fstream myEncodedStream;
+        std::ofstream myEncodedStream;
 
 
-        std::fstream myDecodedStream;
+        std::ofstream myDecodedStream;
 };
 
 } /* namespace RiceAlgorithm */

@@ -40,7 +40,7 @@ FileBasedImagePersistence::FileBasedImagePersistence(char* filename, unsigned in
         exit(EXIT_FAILURE);
     }
 
-    myDecodedStream.open((myBaseFileStream.str() + ".raw_decoded").c_str(), ios::out | ios::in | ios::binary | ios::trunc);
+    myDecodedStream.open((myBaseFileStream.str() + ".raw_decoded").c_str(), ios::out | ios::binary | ios::trunc);
 
     if (!myDecodedStream.is_open())
     {

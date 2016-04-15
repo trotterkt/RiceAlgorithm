@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     // Write out the decoded data. This is outside of the decompression processing
     image.writeDecodedData();
 
+#ifdef DEBUG
 
     // Check what I have
     //===============================================================================
@@ -75,6 +76,8 @@ int main(int argc, char *argv[])
                 if(inSample != outSample)
                 {
                     cout << "Mismatch at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z;
+                    cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << endl;
+
                 }
                 else
                 {
@@ -89,6 +92,7 @@ int main(int argc, char *argv[])
         }
     }
     //===============================================================================
+#endif
 
     return 0;
 }

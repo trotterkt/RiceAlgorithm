@@ -94,8 +94,8 @@ class ImagePersistence
 
         uint myCurrentScanNumber;
 
-        unsigned long long myEncodedBytesWritten;
-        unsigned long long myDecodedBytesToWrite;
+        long myEncodedBytesWritten;
+        long myDecodedBytesToWrite;
 };
 
 } /* namespace RiceAlgorithm */
