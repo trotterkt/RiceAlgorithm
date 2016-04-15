@@ -68,9 +68,11 @@ class ImagePersistence
                                                         }
 
         virtual void sendDecodedData(char* decodedData, const long long imageSize) {
-                                                                                 memcpy(myDecodedData, decodedData, imageSize);
-                                                                                 myDecodedBytesToWrite = imageSize;
-                                                                              }
+                                                                                       memcpy(myDecodedData, decodedData, imageSize);
+                                                                                       myDecodedBytesToWrite = imageSize;
+                                                                                   }
+
+        ushort* getDecodedData() { return reinterpret_cast<ushort*>(myDecodedData); }
 
         unsigned char getLastByte() { return myEncodedData[myEncodedBytesWritten-1]; }
 

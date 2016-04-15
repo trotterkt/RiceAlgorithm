@@ -68,16 +68,23 @@ int main(int argc, char *argv[])
             for(int z=0; z<Bands; z++)
             {
                 ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
-                ushort outSample = matrixBsqIndexCheck(landsat.getGround()->getSamples(), x, y, z);
+                ushort outSample = matrixBsqIndexCheck(image.getDecodedData(), x, y, z);
 
-                if(inSample == outSample)
+                count++;
+
+                if(inSample != outSample)
                 {
-                    count++;
-                    //cout << "Mismatch at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z << endl;
-                    cout << "Match at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z << endl;
-
-                     //if(count > 20) exit(0);
+                    cout << "Mismatch at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z;
                 }
+                else
+                {
+                    cout << "***Match at Index:[" << (Rows*((z)*Columns + (y)) + (x)) << "] x=" << x << ", y=" << y << ", z=" << z;
+                }
+
+                cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << endl;
+
+                //if(count > 100) exit(0);
+
             }
         }
     }
