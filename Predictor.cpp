@@ -151,6 +151,15 @@ void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
 
                 unmappedSample = computeUnmappedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum, predictedSample);
 
+                #ifdef DEBUG
+                    int index = (1024*((z)*1024 + (y)) + (x));
+
+                    if(index > 999 && index < 1090)
+                    {
+                        cout << " Debug Prediction ==> Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << "... predictedSample=" << predictedSample << " unmappedSample=" << unmappedSample << endl;
+                    }
+                #endif
+
                 matrixBsqIndex(mySamples, x, y, z) = unmappedSample;
                 // For Debugging
                 //matrixBsqIndex(mySamples, x, y, z) = myXDimension*((z)*myYDimension + (y)) + (x);
