@@ -28,6 +28,7 @@
 const double LandsatDownlinkRate(384);
 
 const ushort MaximumEncodedBlockSize(RiceAlgorithm::BlockSize);
+const ulong HeaderLength(19u);
 
 class Sensor
 {
@@ -111,7 +112,7 @@ class Sensor
 
 		}
 
-		void writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize =
+		ulong writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize =
 				0, bool flag = false);
 
 		bool getLastByte(unsigned char *lastByte);

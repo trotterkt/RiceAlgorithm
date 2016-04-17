@@ -224,7 +224,7 @@ void Sensor::process()
 			#ifdef DEBUG
                 if(((count >= LowerRange1) && (count <= UpperRange1)) ||
                    ((count >= LowerRange2) && (count <= UpperRange2)))
-                        cout << "Before partial appendage: " << encodedStream << endl;
+                        cout << "Before partial appendage: " << winningEncodedStream << endl;
 			#endif
 
 			unsigned int appendedSize = winningEncodedStream.size() + partialBits;
@@ -236,7 +236,7 @@ void Sensor::process()
 			#ifdef DEBUG
                 if(((count >= LowerRange1) && (count <= UpperRange1)) ||
                    ((count >= LowerRange2) && (count <= UpperRange2)))
-                        cout << "After partial appendage : " << encodedStream << endl;
+                        cout << "After partial appendage : " << winningEncodedStream << endl;
 			#endif
 		}
 
@@ -371,7 +371,8 @@ void Sensor::sendHeader()
 	size_t bitsPerBlock = packedData.bits_per_block;
 	size_t numBlocks = packedData.num_blocks();
 
-	writeCompressedData(packedData);
+	ulong headerSize = HeaderLength*BitsPerByte;
+	writeCompressedData(packedData, headerSize);
 
 }
 
@@ -419,7 +420,11 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 	}
 
-	writeCompressedData(convertedStream, previousSize, true);
+    ulong totalBitCount(0);
+
+    //totalBitCount = writeCompressedData(convertedStream, previousSize, true);
+    totalBitCount = writeCompressedData(convertedStream, encodedLength, true);
+
 
 	#ifdef DEBUG
 		//*****************************************************
@@ -434,9 +439,11 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 	#endif
 }
 
-void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize,
+ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize,
 		bool flag)
 {
+	static ulong totalBitCount(0);
+
 	// A non-default bit size might be specified, but this must be adjusted to the nearest
 	// full bit
 	if (!bitSize)
@@ -444,7 +451,13 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 		bitSize = packedData.size();
 	}
 
-	size_t numberOfBytes = bitSize / BitsPerByte;
+
+	ulong numberOfBytes = bitSize / BitsPerByte;
+
+	if(bitSize % BitsPerByte)
+	{
+		numberOfBytes++;
+	}
 
 	vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 
@@ -459,6 +472,11 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 	for (vector<unsigned char>::iterator it = packedDataBlocks.begin();
 			it != packedDataBlocks.end(); ++it)
 	{
+		if(it == packedDataBlocks.begin())
+		{
+			mySource->setEncodedByteLocation(totalBitCount/BitsPerByte);
+		}
+
 		//retrieves block and converts it to a char*
 		mySource->sendEncodedData(reinterpret_cast<char*>(&*it));
 
@@ -470,6 +488,10 @@ void Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDat
 			break;
 		}
 	}
+
+	totalBitCount += bitSize;
+
+	return totalBitCount;
 }
 
 bool Sensor::getLastByte(unsigned char *lastByte)

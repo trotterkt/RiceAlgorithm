@@ -62,6 +62,8 @@ class ImagePersistence
 
         unsigned char* getEncodedData() { return myEncodedData; }
 
+        void setEncodedByteLocation(long byteLocation) { myEncodedBytesWritten = byteLocation; }
+
         virtual void sendEncodedData(char* encodedData) {
                                                             myEncodedData[myEncodedBytesWritten] = *encodedData;
                                                             myEncodedBytesWritten++;

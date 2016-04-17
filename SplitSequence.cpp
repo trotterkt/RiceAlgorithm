@@ -226,6 +226,23 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
 
 		shiftLeft(encodedDataCopy, bufferSize, (selection - 1));
+
+
+		#ifdef DEBUG
+		//*******************************************
+		if(blockIndex == 16)
+		{
+			cout << "problem encoding (" << (index+1) << ")==>";
+
+			for(int countIndex=0; countIndex < 46; countIndex++)
+			{
+				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			}
+			cout << dec << endl;
+		}
+		//*******************************************
+		#endif
+
 	}
 
 }

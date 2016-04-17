@@ -45,7 +45,6 @@ void GroundSystem::process()
 	// Encoded data should begin right after the header (byte 19)
 
 	// 1st grab the Encoded ID
-	const ulong HeaderLength(19u);
 	ulong totalEncodedLength(HeaderLength * BitsPerByte);
 
 	unsigned int additionalBits(0);
@@ -73,13 +72,13 @@ void GroundSystem::process()
 	    // currentByteLocation2
 	    //=============================================================
         currentByteLocation = totalEncodedLength / BitsPerByte;
-        ulong currentByteLocation2 = totalEncodedLength / BitsPerByte;
+        //ulong currentByteLocation2 = totalEncodedLength / BitsPerByte;
         //=============================================================
 
 		// Account for selection value not being on a byte boundary
 		// The selection ID may span as much as two bytes
 		unsigned char selectionBytes[2] = {0};
-		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation2], 2);
+		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
 		shiftLeft(selectionBytes, 16, additionalBits);
 
 		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
@@ -154,7 +153,7 @@ void GroundSystem::process()
 		// Account for encoded value not being on a byte boundary
         const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
 		unsigned char encodedDataCopy[CopySize];
-		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation2], CopySize);
+		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
 		#ifdef DEBUG
 
@@ -284,7 +283,11 @@ void GroundSystem::process()
 
 		totalEncodedLength += encodedLength;
 
-		//currentByteLocation = (totalEncodedLength / BitsPerByte);
+//		currentByteLocation = (totalEncodedLength / BitsPerByte);
+//		if(totalEncodedLength % BitsPerByte)
+//		{
+//			currentByteLocation++;
+//		}
 
 		#ifdef DEBUG
         if(((count >= LowerRange1) && (count <= UpperRange1)) ||
