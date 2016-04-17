@@ -86,6 +86,7 @@ public:
         																				        //===================================================================================
         																				    }
 
+        																				    myEncodedBlockSize = encodedStream.size();
 
 
         																				    return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
