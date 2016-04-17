@@ -113,7 +113,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     }
     encodedStream[0] |= 1;
 
-    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     // after the zero sequence number that was split off, then we add that value to the stream
     // for each of the samples
@@ -137,27 +136,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
         totalEncodedSize = encodedStream.size();
         //===================================================================================
     }
-    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
-
-//    // Alternate approach
-//    //************************************************
-//    // what is the largest size in bits possible? 32*K14 = 448 bits = 56 bytes
-//    unsigned long long encodedSample2(0); // 8 bytes == 64 bits
-//    size_t additionalEncodedSize = selection * 32;
-//    totalEncodedSize = encodedStream.size() + additionalEncodedSize;
-//    encodedStream.resize(totalEncodedSize);
-//    encodedStream <<= additionalEncodedSize;
-//
-//
-//    for(int index = 0; index < 32; index++)
-//    {
-//        ushort maskedSample = myInputSamples[index] & mask;
-//        encodedSample2 |= maskedSample;
-//        encodedSample2 <<= selection;
-//    }
-//    boost::dynamic_bitset<> mergedEncodedSample(totalEncodedSize, encodedSample2);
-//    encodedStream |= mergedEncodedSample;
-//    //************************************************
 
 
     size_t numberEncodedBytes;
@@ -177,7 +155,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
     encodedStream |= encodedSelectionStream;
 
-    //cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     // Determine the shift amount if we are not on a full byte, as is probably normally
     // the case. There would otherwise often be leading zero bits
@@ -187,7 +164,6 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     encodedStream.resize(encodedStream.size() + shiftBits);
     encodedStream <<= shiftBits;
 
-    // cout << "totalEncodedSize=" << totalEncodedSize << ", encodedStream(size:" << encodedStream.size() << ")= " << encodedStream << endl;
 
     return code_len;
 }

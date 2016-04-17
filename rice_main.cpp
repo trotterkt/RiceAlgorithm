@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
     // Write out the decoded data. This is outside of the decompression processing
     image.writeDecodedData();
 
-#ifdef DEBUG
+
+
+	#ifdef DEBUG
 
     // Check what I have
     //===============================================================================
@@ -95,7 +97,8 @@ int main(int argc, char *argv[])
         }
     }
     //===============================================================================
-#endif
+	#endif
+
 
     return 0;
 }

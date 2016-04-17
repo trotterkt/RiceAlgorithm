@@ -33,7 +33,7 @@ GroundSystem::~GroundSystem()
 
 void GroundSystem::process()
 {
-	// :TODO: This begins the decoding
+	// This begins the decoding
 	readHeader();
 
 	// Having the raw sample dimensions from the header, allocate space for
@@ -56,7 +56,7 @@ void GroundSystem::process()
 
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
-	//:TODO: This might better belong in an object that reverses the prediction
+	//:TODO: It is possible this might better belong in an object that reverses the prediction
 	ushort* residualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
 
 	// Read in one 32-sample block at a time (not on byte boundary)
@@ -67,12 +67,12 @@ void GroundSystem::process()
 	{
         count++;
 
-	    //:KLUDGE: At least on Windows...currentByteLocation is being
-	    // corrupted somehow. So using an identical variable
-	    // currentByteLocation2
+	    //:Possible :KLUDGE: required, at least on Windows...
+        // currentByteLocation was being corrupted somehow. So used
+        // an identical variable currentByteLocation2 declaration
+        // May need to revisit this.
 	    //=============================================================
         currentByteLocation = totalEncodedLength / BitsPerByte;
-        //ulong currentByteLocation2 = totalEncodedLength / BitsPerByte;
         //=============================================================
 
 		// Account for selection value not being on a byte boundary
@@ -283,11 +283,6 @@ void GroundSystem::process()
 
 		totalEncodedLength += encodedLength;
 
-//		currentByteLocation = (totalEncodedLength / BitsPerByte);
-//		if(totalEncodedLength % BitsPerByte)
-//		{
-//			currentByteLocation++;
-//		}
 
 		#ifdef DEBUG
         if(((count >= LowerRange1) && (count <= UpperRange1)) ||
@@ -318,8 +313,8 @@ void GroundSystem::process()
 
 
 	delete[] encodedBlockSizes;
-    //delete[] residualsPtr; // :KLUDGE: Do not delete residualsPtr here, since it will be destroyed in the
-	                         // destructor
+    // :KLUDGE: (delete[] residualsPtr;) Do not delete residualsPtr here,
+	// since it will be destroyed in the destructor. Not best approach
     delete[] samples;
 }
 

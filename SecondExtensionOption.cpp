@@ -66,7 +66,7 @@ void SecondExtensionOption::decode(CodingSelection selection, ushort* splitValue
         // :TODO: This encoding does not seem to be applicable to my current test image.
         // When it does may need to reassess how encoded samples are read back out before
         // sending encodedStream
-//        encodedStream.append(secondExtentionOption);
+        // encodedStream.append(secondExtentionOption);
     }
 
 }

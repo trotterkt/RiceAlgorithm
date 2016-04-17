@@ -58,19 +58,13 @@ public:
 																							selection = NoCompressionOpt; // :TODO: is this necessary any more?
 
 																							totalEncodedSize = 32 * sizeof(ushort);
-        																					// include space for the  code option
-        																				    //totalEncodedSize += CodeOptionBitFieldFundamentalOrNoComp;
-
-																							//encodedStream.append(int(selection));
 
     																				        encodedStream.resize((totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp);
 
        																				        // see Lossless Data Compression, Blue Book, sec 5.1.2
         																				    // place the code encoding selection
         																				    boost::dynamic_bitset<> encodedSelectionStream((totalEncodedSize*BitsPerByte)+CodeOptionBitFieldFundamentalOrNoComp, selection);
-        																			        //encodedStream <<= CodeOptionBitFieldFundamentalOrNoComp;
         																			        encodedStream |= encodedSelectionStream;
-        																			        //encodedStream <<= (sizeof(ushort) * BitsPerByte);
 
 
         																				    for(int index = 0; index < 32; index++)
@@ -86,6 +80,7 @@ public:
         																				        //===================================================================================
         																				    }
 
+        																					// include space for the  code option
         																				    myEncodedBlockSize = encodedStream.size();
 
 
@@ -97,13 +92,14 @@ public:
 	size_t getEncodedBlockSize() { return myEncodedBlockSize; }
 
 	 bool operator<(unsigned int encodedSize){
+
 		 	 	 	 	 	 	 	 	 	  	  if(myEncodedBlockSize < encodedSize)
 		 	 	 	 	 	 	 	 	 	  	  {
 		 	 	 	 	 	 	 	 	 	 	 	 return true;
 		 	 	 	 	 	 	 	 	 	  	  }
 
 		 	 	 	 	 	 	 	 	 	  	  return false;
-	 	 	 	 	 	 	 	 	 	 	   }
+	 	 	 	 	 	 	 	 	 	 	 }
 
 protected:
 	ushort* myInputSamples; // use input for final encoding as well, with sync frame
@@ -118,7 +114,6 @@ protected:
     inline void appendLsb(boost::dynamic_bitset<> &data, boost::dynamic_bitset<> &appendData)
     {
     	size_t sizeAppend = appendData.size();
-
     	data.resize(data.size() + sizeAppend);
     	data <<= sizeAppend;
     	data |= appendData;

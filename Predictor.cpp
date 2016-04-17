@@ -161,8 +161,10 @@ void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
                 #endif
 
                 matrixBsqIndex(mySamples, x, y, z) = unmappedSample;
+
                 // For Debugging
                 //matrixBsqIndex(mySamples, x, y, z) = myXDimension*((z)*myYDimension + (y)) + (x);
+
                 if (x == 0 && y == 0)
                 {
                     //  weights initialization

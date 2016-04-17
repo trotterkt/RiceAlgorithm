@@ -5,6 +5,9 @@
  *      Author: trottke1
  */
 
+// These are for isolating certain segments of the
+// execution, so that I can see what is happening
+
 #ifndef DEBUGGINGPARAMETERS_H_
 #define DEBUGGINGPARAMETERS_H_
 

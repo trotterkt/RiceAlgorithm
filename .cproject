@@ -30,7 +30,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\MinGW\PthreadWin32\include&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.preprocessor.def.1851296036" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1851296036" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
 								<option id="gnu.cpp.compiler.option.optimization.level.631011263" name="Optimization Level" superClass="gnu.cpp.compiler.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.debugging.level.1606093331" name="Debug Level" superClass="gnu.cpp.compiler.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1346009512" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -61,7 +63,6 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.246813700" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1024937080.723903475.1935624996" name="Rice.h" rcbsApplicability="disable" resourcePath="Rice.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1024937080.723903475.1235871079" name="Sensor.h" rcbsApplicability="disable" resourcePath="Sensor.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1024937080.723903475.274853313" name="SecondExtensionOption.h" rcbsApplicability="disable" resourcePath="SecondExtensionOption.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1024937080.723903475.1367598007" name="AdaptiveEntropyEncoder.h" rcbsApplicability="disable" resourcePath="AdaptiveEntropyEncoder.h" toolsToInvoke="">

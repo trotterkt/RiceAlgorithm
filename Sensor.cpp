@@ -427,7 +427,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
 
 	#ifdef DEBUG
-		//*****************************************************
+	//*****************************************************
 	//	static int debugCount(0);
 	//	if(debugCount >=3)
 	//	{
@@ -435,7 +435,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 	//	   exit(0);
 	//	}
 	//	debugCount++;
-		//*****************************************************
+	//*****************************************************
 	#endif
 }
 
@@ -464,9 +464,9 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 	//populate vector blocks
 	boost::to_block_range(packedData, packedDataBlocks.begin());
 
-//	#ifdef DEBUG
-//		cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
-//	#endif
+	#ifdef DEBUG
+	//	cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
+	#endif
 
 	//write out each block
 	for (vector<unsigned char>::iterator it = packedDataBlocks.begin();

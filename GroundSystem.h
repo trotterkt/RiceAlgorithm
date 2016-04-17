@@ -21,16 +21,19 @@ class GroundSystem
 
 		void process();
 
-        // For validation
-        ushort* getSamples() { return myRawSamples; }
+		// For validation
+		ushort* getSamples()
+		{
+			return myRawSamples;
+		}
 
 	private:
 		void readHeader();
-	    CompressedHeader myHeader;
+		CompressedHeader myHeader;
 
-        RiceAlgorithm::ImagePersistence* mySource;
+		RiceAlgorithm::ImagePersistence* mySource;
 
-        ushort* myRawSamples;
+		ushort* myRawSamples;
 
 };
 
