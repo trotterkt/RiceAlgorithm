@@ -18,6 +18,10 @@
 #include <Endian.h>
 #include <DebuggingParameters.h>
 
+#ifdef DEBUG
+#include <fstream>
+#endif
+
 using namespace std;
 using namespace RiceAlgorithm;
 
@@ -77,6 +81,20 @@ void Sensor::process()
 
 	// Should only need to get the residuals once for a given raw image set
 	ushort* residualsPtr = myPreprocessor.getResiduals(mySamples);
+
+	#ifdef DEBUG
+    std::ofstream residualsStream;
+    residualsStream.open("residuals.bin", ios::out | ios::in | ios::binary | ios::trunc);
+
+    if (!residualsStream.is_open())
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    residualsStream.write(reinterpret_cast<char*>(residualsPtr), (1024*1024*6*2));
+    residualsStream.close();
+	#endif
+
 
 	timestamp_t t1 = getTimestamp();
 

@@ -156,7 +156,7 @@ void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
 
                     if(index > 999 && index < 1090)
                     {
-                        cout << " Debug Prediction ==> Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << "... predictedSample=" << predictedSample << " unmappedSample=" << unmappedSample << endl;
+                        cout << " Debug Prediction ==> Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << "... predictedSample=" << predictedSample << " unmappedSample=" << unmappedSample << " (0x" << hex << unmappedSample << dec << ")" << endl;
                     }
                 #endif
 

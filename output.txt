@@ -1,5 +1,5 @@
 Compressing Landsat_agriculture-u16be-6x1024x1024...
-Prediction processing time ==> 1.1481 seconds
+Prediction processing time ==> 1.1462 seconds
 And the Winner is: K10 of code length: 397 (total=152) on Block Sample [0], count=1
 winning encoding==>101100000000000000000000010000100100100111111101010001011111000011111100011101111011111111100000000001111111111100000000000000000001000000000011111111110000000001000000000100000000001111111111111111111111111111101111111111111111111111111111101111111110000000000111111111100000000000000000000000000000010000000001000000000100000000010000000001111111111011111111110000000001000000000011111111100000000000000000
  Byte Index=69 additionalBits=1...And the Winner is: K10 of code length: 391 (total=553) on Block Sample [32], count=2
@@ -760,11 +760,11 @@ Representative intermediate Encoding processing times ==>
 (intermediate t1-t2): 0.0000 seconds
 (intermediate t2-t3): 0.0000 seconds
 
-Encoding processing time ==> 14.1476 seconds
-Compression processing time ==> 15.2959 seconds
+Encoding processing time ==> 14.0627 seconds
+Compression processing time ==> 15.2090 seconds
 Encoding Selection = K10, currentByteLocation=19, count=1
 winning encoding          ==>b0 0 0 42 49 fd 45 f0 fc 77 bf e0 7 ff 0 0 10 3 ff 0 40 10 3 ff ff ff ef ff ff ff bf e0 7 fe 0 0 0 4 1 0 40 10 7 fe ff c0 10 3 fe 0 5e 85 90 ab e 47 4b 14 61 f0 1 ff 80 20 8 
-winning encoding (shifted)==>0 0 4 24 9f d4 5f f c7 7b fe 0 7f f0 0 1 0 3f f0 4 1 0 3f ff ff fe ff ff ff fb fe 0 7f e0 0 0 0 40 10 4 1 0 7f ef fc 1 0 3f e0 5 e8 59 a b0 e4 74 b1 46 1f 0 1f f8 2 0 8e 
+winning encoding (shifted)==>0 0 4 24 9f d4 5f f c7 7b fe 0 7f f0 0 1 0 3f f0 4 1 0 3f ff ff fe ff ff ff fb fe 0 7f e0 0 0 0 40 10 4 1 0 7f ef fc 1 0 3f e0 5 e8 59 a b0 e4 74 b1 46 1f 0 1f f8 2 0 83 
 
 encodedSizeList[0]=22
 
@@ -833,7 +833,7 @@ currentByteLocation=19, totalEncodedLength=553
 additional bits=1
 Encoding Selection = K10, currentByteLocation=69, count=2
 winning encoding          ==>5e 85 90 ab e 47 4b 14 61 f0 1 ff 80 20 8 1 ff ff df f0 3 ff ff e0 f fc 0 0 3f f0 0 0 7f e0 8 0 0 0 1f f0 2 0 0 0 f fe 0 80 3f fb e0 86 47 7c 94 c9 8 4d 0 20 17 7f e0 0 2 
-winning encoding (shifted)==>d0 b2 15 61 c8 e9 62 8c 3e 0 3f f0 4 1 0 3f ff fb fe 0 7f ff fc 1 ff 80 0 7 fe 0 0 f fc 1 0 0 0 3 fe 0 40 0 0 1 ff c0 10 7 ff 7c 10 c8 ef 92 99 21 9 a0 4 2 ef fc 0 0 4d 
+winning encoding (shifted)==>d0 b2 15 61 c8 e9 62 8c 3e 0 3f f0 4 1 0 3f ff fb fe 0 7f ff fc 1 ff 80 0 7 fe 0 0 f fc 1 0 0 0 3 fe 0 40 0 0 1 ff c0 10 7 ff 7c 10 c8 ef 92 99 21 9 a0 4 2 ef fc 0 0 59 
 
 encodedSizeList[0]=1
 
@@ -1943,28 +1943,28 @@ problem encoding (7)==>80 1f f0 3 ff ff e0 8 3 ff 80 3f ff fe 0 ff c0 0 0 0 ff e
 problem encoding (8)==>7f c0 f ff ff 80 20 f fe 0 ff ff f8 3 ff 0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 
 problem encoding (9)==>0 3f ff fe 0 80 3f f8 3 ff ff e0 f fc 0 0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 
 problem encoding (10)==>ff ff f8 2 0 ff e0 f ff ff 80 3f f0 0 0 0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 
-problem encoding (11)==>ff e0 8 3 ff 80 3f ff fe 0 ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 
-problem encoding (12)==>80 20 f fe 0 ff ff f8 3 ff 0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 
-problem encoding (13)==>80 3f f8 3 ff ff e0 f fc 0 0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 49 2c 0 0 
-problem encoding (14)==>ff e0 f ff ff 80 3f f0 0 0 0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 24 b0 0 0 0 
-problem encoding (15)==>80 3f ff fe 0 ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 c0 0 0 0 0 
-problem encoding (16)==>ff ff f8 3 ff 0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 0 0 0 0 0 
-problem encoding (17)==>ff e0 f fc 0 0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 49 2c 0 0 0 0 0 2 0 
-problem encoding (18)==>80 3f f0 0 0 0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 24 b0 0 0 0 0 0 8 2 0 
-problem encoding (19)==>ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 c0 0 0 0 0 0 20 8 2 0 
-problem encoding (20)==>0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 0 0 0 0 0 80 20 8 2 0 
-problem encoding (21)==>0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 49 2c 0 0 0 0 0 2 0 80 20 8 2 0 
-problem encoding (22)==>0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 24 b0 0 0 0 0 0 8 2 0 80 20 8 2 0 
-problem encoding (23)==>ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 c0 0 0 0 0 0 20 8 2 0 80 20 8 2 0 
-problem encoding (24)==>80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 0 0 0 0 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (25)==>80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 49 2c 0 0 0 0 0 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (26)==>ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 24 b0 0 0 0 0 0 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (27)==>0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 c0 0 0 0 0 0 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (28)==>7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 0 0 0 0 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (29)==>0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 49 2c 0 0 0 0 0 2 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (30)==>0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 24 b0 0 0 0 0 0 8 2 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (31)==>78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e4 92 c0 0 0 0 0 0 20 8 2 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
-problem encoding (32)==>b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 92 4b 0 0 0 0 0 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 80 20 8 2 0 
+problem encoding (11)==>ff e0 8 3 ff 80 3f ff fe 0 ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 
+problem encoding (12)==>80 20 f fe 0 ff ff f8 3 ff 0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 
+problem encoding (13)==>80 3f f8 3 ff ff e0 f fc 0 0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 71 0 0 0 
+problem encoding (14)==>ff e0 f ff ff 80 3f f0 0 0 0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 c4 0 0 0 0 
+problem encoding (15)==>80 3f ff fe 0 ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 0 0 0 0 0 
+problem encoding (16)==>ff ff f8 3 ff 0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 0 0 0 0 0 
+problem encoding (17)==>ff e0 f fc 0 0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 71 0 0 0 0 0 0 0 0 
+problem encoding (18)==>80 3f f0 0 0 0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 c4 0 0 0 0 0 0 0 0 0 
+problem encoding (19)==>ff c0 0 0 0 ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 0 0 0 0 0 0 0 0 0 0 
+problem encoding (20)==>0 0 0 3 ff 80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (21)==>0 0 f fe 0 80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 71 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (22)==>0 3f f8 2 0 ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 c4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (23)==>ff e0 8 3 ff 0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (24)==>80 20 f fc 0 7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (25)==>80 3f f0 1 ff 0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 71 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (26)==>ff c0 7 fc 0 0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 c4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (27)==>0 1f f0 0 0 78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (28)==>7f c0 0 1 e0 b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (29)==>0 0 7 82 d4 7e 23 d9 d5 fe 9a 0 40 f ff ff 0 7f ef fc 1 e 71 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (30)==>0 1e b 51 f8 8f 67 57 fa 68 1 0 3f ff fc 1 ff bf f0 4 39 c4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (31)==>78 2d 47 e2 3d 9d 5f e9 a0 4 0 ff ff f0 7 fe ff c0 10 e7 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+problem encoding (32)==>b5 1f 88 f6 75 7f a6 80 10 3 ff ff c0 1f fb ff 0 43 9c 40 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
 currentByteLocation=799, totalEncodedLength=6773
 additional bits=5
 Encoding Selection = K10, currentByteLocation=846, count=18
