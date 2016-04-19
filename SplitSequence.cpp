@@ -188,18 +188,44 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 
     // Combine the individual values per the split sequence method
     // and save in the preprocessed array
-	size_t bufferSize(CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp);
+    //size_t bufferSize(CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp);
+    size_t bufferSize(CopySize * BitsPerByte);
 
 	shiftLeft(encodedDataCopy, bufferSize, bitLocation);
 
 	for(int index=0; index<32; index++)
 	{
 		ushort value(0);
+
 		memcpy(&value, encodedDataCopy, sizeof(ushort));
-		bigEndianVersusLittleEndian(value);
+
+        bigEndianVersusLittleEndian(value);
 
 		value >>= (sizeof(ushort) * BitsPerByte - (selection - 1));
+
+
+
+		//Debugging
+		// This corrects issue up to this point
+		//if(index == 31 && blockIndex == 16) value = 511; //***********************
+
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
+
+        #ifdef DEBUG
+        //*******************************************
+        if(blockIndex == 16)
+        {
+            cout << "problem encoding-1 (" << (index+1) << ")==>";
+
+            for(int countIndex=0; countIndex < 64; countIndex++)
+            {
+                cout << hex << int(encodedDataCopy[countIndex]) << " ";
+            }
+            cout << dec << endl;
+        }
+        //*******************************************
+        #endif
+
 
 		shiftLeft(encodedDataCopy, bufferSize, (selection - 1));
 
@@ -208,9 +234,9 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		//*******************************************
 		if(blockIndex == 16)
 		{
-			cout << "problem encoding (" << (index+1) << ")==>";
+			cout << "problem encoding-2 (" << (index+1) << ")==>";
 
-			for(int countIndex=0; countIndex < 46; countIndex++)
+			for(int countIndex=0; countIndex < 64; countIndex++)
 			{
 				cout << hex << int(encodedDataCopy[countIndex]) << " ";
 			}

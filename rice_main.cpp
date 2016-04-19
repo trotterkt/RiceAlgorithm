@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
             {
                 int index = (Rows*((z)*Columns + (y)) + (x));
 
-                if(index > 999 && index < 1090)
+                if(index >= 0 && index <= 1090)
                 {
                     ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
                     ushort outSample = matrixBsqIndexCheck(image.getDecodedData(), x, y, z);

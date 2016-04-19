@@ -440,6 +440,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
     ulong totalBitCount(0);
 
+    cout << "****previousSize=" << previousSize << " encodedLength=" << encodedLength << endl;
     //totalBitCount = writeCompressedData(convertedStream, previousSize, true);
     totalBitCount = writeCompressedData(convertedStream, encodedLength, true);
 
@@ -506,6 +507,8 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 			break;
 		}
 	}
+
+
 
 	totalBitCount += bitSize;
 

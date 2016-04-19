@@ -155,6 +155,8 @@ void GroundSystem::process()
 		unsigned char encodedDataCopy[CopySize];
 		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
+
+
 		#ifdef DEBUG
 
 		//*******************************************
@@ -165,7 +167,9 @@ void GroundSystem::process()
 
 			for(int countIndex=0; countIndex < CopySize; countIndex++)
 			{
-				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
+                boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
+                cout << encodedBits;
 			}
 			cout << dec << endl;
 		}
@@ -185,7 +189,9 @@ void GroundSystem::process()
 
 			for(int countIndex=0; countIndex < CopySize; countIndex++)
 			{
-				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
+			    boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
+			    cout << encodedBits;
 			}
 			cout << dec << endl;
 		}
