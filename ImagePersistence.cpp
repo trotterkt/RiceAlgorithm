@@ -31,6 +31,8 @@ ImagePersistence::ImagePersistence(unsigned int x, unsigned int y, unsigned int 
 			* myZDimension]);
 
 	myEncodedSizes = new ushort[(myXDimension * myYDimension * myZDimension)/32];
+
+	myEncodedBitPosition = new ulong[(myXDimension * myYDimension * myZDimension)/32];
 }
 
 ImagePersistence::~ImagePersistence()
@@ -42,6 +44,9 @@ ImagePersistence::~ImagePersistence()
 	delete[] myDecodedData;
 
 	delete[] myEncodedSizes;
+
+	delete[] myEncodedBitPosition;
+
 }
 
 } /* namespace RiceAlgorithm */

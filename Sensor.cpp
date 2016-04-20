@@ -504,6 +504,12 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 		if(it == packedDataBlocks.begin())
 		{
 			mySource->setEncodedByteLocation(totalBitCount/BitsPerByte);
+
+			// bit position is the totalBitCount minus the Header bits
+			if(totalBitCount)
+			{
+				mySource->setEncodedBitLocation((blockCount-1), totalBitCount - (HeaderLength*BitsPerByte));
+			}
 		}
 
 		//retrieves block and converts it to a char*

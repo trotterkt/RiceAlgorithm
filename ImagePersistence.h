@@ -84,6 +84,7 @@ class ImagePersistence
         unsigned long long getBytesWritten() { return myEncodedBytesWritten; }
 
         void setBlockBitSize(ulong index, ushort bitCount) { myEncodedSizes[index] = bitCount; }
+        void setEncodedBitLocation(ulong index, ulong bitPosition) { myEncodedBitPosition[index] = bitPosition; }
 
     protected:
 
@@ -103,6 +104,7 @@ class ImagePersistence
         long myDecodedBytesToWrite;
 
         ushort* myEncodedSizes;
+        ulong* myEncodedBitPosition;
 };
 
 } /* namespace RiceAlgorithm */
