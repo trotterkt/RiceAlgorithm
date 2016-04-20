@@ -461,6 +461,16 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize,
 		bool flag)
 {
+	// Capture the bit sizes, except for header
+	static ulong blockCount(0);
+
+	if(blockCount)
+	{
+		mySource->setBlockBitSize((blockCount-1), bitSize);
+	}
+	blockCount++;
+
+
 	static ulong totalBitCount(0);
 
 	// A non-default bit size might be specified, but this must be adjusted to the nearest

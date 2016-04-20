@@ -29,6 +29,8 @@ ImagePersistence::ImagePersistence(unsigned int x, unsigned int y, unsigned int 
 
 	myDecodedData = reinterpret_cast<unsigned char*>(new ushort[myXDimension * myYDimension
 			* myZDimension]);
+
+	myEncodedSizes = new ushort[(myXDimension * myYDimension * myZDimension)/32];
 }
 
 ImagePersistence::~ImagePersistence()
@@ -38,6 +40,8 @@ ImagePersistence::~ImagePersistence()
 	delete[] myEncodedData;
 
 	delete[] myDecodedData;
+
+	delete[] myEncodedSizes;
 }
 
 } /* namespace RiceAlgorithm */

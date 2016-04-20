@@ -13,6 +13,7 @@
 
 #include <sys/types.h>
 #include <string.h>
+#include <vector>
 
 // Note that if member types are not defined as being of similar size
 // there can be an alignment problem. See Annotated  C++ Ref Manual,
@@ -82,6 +83,8 @@ class ImagePersistence
 
         unsigned long long getBytesWritten() { return myEncodedBytesWritten; }
 
+        void setBlockBitSize(ulong index, ushort bitCount) { myEncodedSizes[index] = bitCount; }
+
     protected:
 
         ushort* mySampleData;
@@ -98,6 +101,8 @@ class ImagePersistence
 
         long myEncodedBytesWritten;
         long myDecodedBytesToWrite;
+
+        ushort* myEncodedSizes;
 };
 
 } /* namespace RiceAlgorithm */
