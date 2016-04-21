@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ShiftFunctions.h>
+#include <AdaptiveEntropyEncoder.h>
+
+using namespace RiceAlgorithm;
 
 // Taken from the CUDA implementation
 //***************************************************************

@@ -17,6 +17,7 @@
 #include <Timing.h>
 #include <Endian.h>
 #include <DebuggingParameters.h>
+#include <ShiftFunctions.h>
 
 #ifdef DEBUG
 #include <fstream>
@@ -108,6 +109,9 @@ void Sensor::process()
 	ulong count(0);
 
 	long totalSamples = myXDimension * myYDimension * myZDimension;
+
+	vector<unsigned long> completeEncodeing;
+	completeEncodeing.reserve(1572864);
 
 	//:TODO: This is one of the 1st places where we will start looking
 	// at applying Amdahl's Law!!!
@@ -268,6 +272,57 @@ void Sensor::process()
 		int additionalBits(myEncodedBitCount % BitsPerByte);
 		byteCount = (myEncodedBitCount / BitsPerByte);
 
+		//*************************************************************
+		size_t numBlocks(0);
+
+	    numBlocks = winningEncodedStream.num_blocks();
+
+		cout << "num bits = " << winningEncodedStream.size() << endl;
+		vector<unsigned long> packedDataBlocks(numBlocks);
+
+		boost::to_block_range(winningEncodedStream, packedDataBlocks.begin());
+		std::reverse(packedDataBlocks.begin(), packedDataBlocks.end());
+
+		unsigned long firstElement = packedDataBlocks[0];
+		unsigned long lastElement = packedDataBlocks[packedDataBlocks.size() - 1];
+
+		if(!completeEncodeing.empty())
+		{
+		   lastElement = completeEncodeing[completeEncodeing.size()-1];
+
+		   cout << "firstElement=" << hex << firstElement << ", lastElement=" << hex << lastElement << dec << endl;
+
+		   lastElement |= firstElement;
+		   completeEncodeing[completeEncodeing.size()-1] = lastElement;
+		   packedDataBlocks.erase(packedDataBlocks.begin());
+
+//
+//		   // merge the first with the last
+//		   size_t shiftBits = mySource->getEncodedDataSizes()[blockIndex/32 - 1] % BitsPerByte;
+//		   firstElement >>= (BitsPerByte - shiftBits);
+//		   lastElement |= firstElement;
+//		   completeEncodeing[completeEncodeing.size()-1] = lastElement;
+//
+//		   // all other blocks will shift left by shiftBits, and subtract shiftBits from encodedSize
+//		   for(int elementIndex=0; elementIndex < packedDataBlocks.size()-1; elementIndex++)
+//		   {
+//			   unsigned long firstEncodedElement = packedDataBlocks[elementIndex];
+//			   unsigned long nextEncodedElement = packedDataBlocks[elementIndex+1];
+//
+//			   firstEncodedElement <<= shiftBits;
+//			   nextEncodedElement >>= (BitsPerByte - shiftBits);
+//
+//			   firstEncodedElement |= nextEncodedElement;
+//
+//			   packedDataBlocks[elementIndex] = firstEncodedElement;
+//			   packedDataBlocks[elementIndex+1] = nextEncodedElement;
+//		   }
+//
+		}
+
+		completeEncodeing.insert(completeEncodeing.end(), packedDataBlocks.begin(), packedDataBlocks.end());
+        //**************************************************************
+
 		sendEncodedSamples(winningEncodedStream, encodedSize);
 
 		#ifdef DEBUG
@@ -285,6 +340,10 @@ void Sensor::process()
 	}
 
 	timestamp_t t3 = getTimestamp();
+
+	ofstream test("test.bin", ios::out | ios::binary | ios::trunc);
+	test.write((char*)&completeEncodeing[0], 100);
+	test.close();
 
 	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
 			<< "\n(intermediate t0-t1): " << fixed
@@ -464,6 +523,7 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 	// Capture the bit sizes, except for header
 	static ulong blockCount(0);
 
+
 	if(blockCount)
 	{
 		mySource->setBlockBitSize((blockCount-1), bitSize);
@@ -488,10 +548,34 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 		numberOfBytes++;
 	}
 
+	//populate vector blocks
 	vector<unsigned char> packedDataBlocks(packedData.num_blocks());
 
 	//populate vector blocks
 	boost::to_block_range(packedData, packedDataBlocks.begin());
+
+//	ushort shiftedBits = totalBitCount % BitsPerByte;
+//	//=============================================================================
+//	// Merge first with the last byte
+//	unsigned char firstByte = packedDataBlocks[0];
+//	firstByte >>= shiftedBits;
+//	firstByte |= lastByte;
+//
+//	//=============================================================================
+//
+//
+//	// Shift the entire block before adding
+//	if(shiftedBits)
+//	{
+//		unsigned int packetSize = bitSize;
+//		unsigned char shiftedArray[65]; // room for 32 samples + the id
+//		std::copy(packedDataBlocks.begin(), packedDataBlocks.end(), shiftedArray);
+//		shiftLeft(shiftedArray, packetSize, shiftedBits);
+//		unsigned int newArraySize = (bitSize - shiftedBits)/ BitsPerByte; // this should be whole bytes now
+//		std::copy(shiftedArray, shiftedArray, packedDataBlocks.begin());
+//		packedDataBlocks.resize(newArraySize);
+//	}
+//
 
 	#ifdef DEBUG
 	//	cout << "Writing Byte:" << mySource->getBytesWritten() << endl;
@@ -505,15 +589,30 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 		{
 			mySource->setEncodedByteLocation(totalBitCount/BitsPerByte);
 
+
+			
+
 			// bit position is the totalBitCount minus the Header bits
 			if(totalBitCount)
 			{
-				mySource->setEncodedBitLocation((blockCount-1), totalBitCount - (HeaderLength*BitsPerByte));
+				// First time active is after the header. This is the reason from indexing from 2
+				mySource->setEncodedBitLocation((blockCount-2), totalBitCount - (HeaderLength*BitsPerByte));
 			}
+
+			continue;
 		}
 
 		//retrieves block and converts it to a char*
-		mySource->sendEncodedData(reinterpret_cast<char*>(&*it));
+		mySource->sendEncodedData(reinterpret_cast<unsigned char*>(&*it));
+
+
+		// if this is the last byte, capture it for consolidation
+		// with next packet byte
+//		if (numberOfBytes == 1)
+//		{
+//			getLastByte(&lastByte);
+//			break;
+//		}
 
 		// if we've written the targeted number of bytes
 		// return
@@ -533,6 +632,7 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 
 bool Sensor::getLastByte(unsigned char *lastByte)
 {
+
 	// Get the last byte written, and in some cases, reset the file pointer to the one previous
 
 	bool partialByteFlag(false);

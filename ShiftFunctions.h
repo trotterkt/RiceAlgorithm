@@ -10,8 +10,6 @@
 #include <sys/types.h>
 
 
-const ushort BitsPerByte(8);
-
 // Taken from the CUDA implementation
 //***************************************************************
 void shiftRight(unsigned char* array, unsigned int bitSize, unsigned int arrayBitShift);

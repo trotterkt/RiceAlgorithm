@@ -62,13 +62,14 @@ class ImagePersistence
                                                }
 
         unsigned char* getEncodedData() { return myEncodedData; }
+        ushort* getEncodedDataSizes() { return myEncodedSizes; }
 
         void setEncodedByteLocation(long byteLocation) { myEncodedBytesWritten = byteLocation; }
 
-        virtual void sendEncodedData(char* encodedData) {
-                                                            myEncodedData[myEncodedBytesWritten] = *encodedData;
-                                                            myEncodedBytesWritten++;
-                                                        }
+        virtual void sendEncodedData(unsigned char* encodedData) {
+                                                                    myEncodedData[myEncodedBytesWritten] = *encodedData;
+                                                                    myEncodedBytesWritten++;
+                                                                 }
 
         virtual void sendDecodedData(char* decodedData, const long long imageSize) {
                                                                                        memcpy(myDecodedData, decodedData, imageSize);
@@ -77,7 +78,20 @@ class ImagePersistence
 
         ushort* getDecodedData() { return reinterpret_cast<ushort*>(myDecodedData); }
 
-        unsigned char getLastByte() { return myEncodedData[myEncodedBytesWritten-1]; }
+        unsigned char getLastByte() {
+//        								const ulong HeaderLength(19u);
+//        								unsigned char empty;
+//
+//        								if(myEncodedBytesWritten <= HeaderLength)
+//        								{
+//        									return empty;
+//        								}
+//        								else
+//        								{
+        									return myEncodedData[myEncodedBytesWritten-1];
+//        								}
+//    									return empty;
+        							}
 
         void setNextInsertionByte(unsigned long long byteIndex) { myEncodedBytesWritten = byteIndex; }
 
