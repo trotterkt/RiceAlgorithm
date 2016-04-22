@@ -119,7 +119,7 @@ void Sensor::process()
 	//:TODO: This is one of the 1st places where we will start looking
 	// at applying Amdahl's Law!!!
 
-	totalSamples = 256; // Debugging
+	totalSamples = 320; // Debugging
 
 	for (blockIndex = 0; blockIndex < totalSamples; blockIndex += 32)
 	{
@@ -303,64 +303,69 @@ void Sensor::process()
 
         memcpy(packedData, &packedDataBlocks[0], (packedDataBlocks.size() * sizeof(unsigned long)));
 
+	    //:KLUDGE: This is very much a kludge to fix the data available
+        size_t dataBitLength = (packedDataBlocks.size() * sizeof(unsigned long) + 3) *  BitsPerByte; // Extra 3 bytes is to allow for shifting
+	    adjustPackeDataPosition(packedData, dataBitLength);
+
+
 		if(!completeEncoding.empty())
 		{
-		    //:KLUDGE: This is very much a kludge - since I only expect to see non-zero
-		    // selection id's, look for the first non-zero data. I'll use this to determine
-		    // where to shift left. If this ever turned into production code it should be fixed
-            //*********************************************************************************
-            int shiftIndex=0;
-            for(shiftIndex; shiftIndex<5; shiftIndex++) // expect it to be fairly soon
-            {
-                if(packedData[shiftIndex])
-                {
-                    break;
-                }
-            }
-            shiftIndex *= BitsPerByte;
-		    //*********************************************************************************
-	       
-           shiftLeft(packedData, (packedDataBlocks.size() * sizeof(unsigned long) + 1), shiftIndex);
-
-           shiftRight(packedData, (packedDataBlocks.size() * sizeof(unsigned long) + 1), partialBits);
+	       shiftRight(packedData, dataBitLength, partialBits);
 
            unsigned char firstElement = packedData[0];
 
            currentEncodedSize += mySource->getEncodedDataSizes()[blockIndex/32 - 1];
 
-           int elementLocation = (currentEncodedSize / BitsPerByte) - 1;
+           int elementLocation = (currentEncodedSize / BitsPerByte);
+
            if(currentEncodedSize % BitsPerByte)
            {
-               elementLocation++;
+			   unsigned char lastElement = completeEncoding[elementLocation];
+
+			   cout << "firstElement=" << hex << int(firstElement) << ", lastElement=" << hex << int(lastElement) << dec << endl;
+
+			   size_t shiftBits = mySource->getEncodedDataSizes()[blockIndex/32 - 1] % BitsPerByte;
+
+			   lastElement |= (firstElement);
+			   cout << "Combined lastElement=" << hex << int(lastElement) << dec << " current completeEncoding size=" << completeEncoding.size() << endl;
+
+			   // We might be off by one in size, if so, add a byte
+			   if(elementLocation == completeEncoding.size())
+			   {
+				   lastElement = 0;
+				   lastElement |= (firstElement);
+
+				   completeEncoding.push_back(lastElement);
+			   }
+
+			   completeEncoding[elementLocation] = lastElement;
+
+               // Add all of the remaining bytes
+			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+(winningEncodedStream.size()/BitsPerByte)-1);
            }
-           unsigned char lastElement = completeEncoding[elementLocation];
+           else
+           {
+               // Add all of the bytes
+               completeEncoding.insert(completeEncoding.end(), &packedData[0],  &packedData[0]+(winningEncodedStream.size()/BitsPerByte));
+           }
 
-           cout << "firstElement=" << hex << int(firstElement) << ", lastElement=" << hex << int(lastElement) << dec << endl;
-
-           size_t shiftBits = mySource->getEncodedDataSizes()[blockIndex/32 - 1] % BitsPerByte;
-
-           lastElement |= (firstElement);
-           cout << "Combined lastElement=" << hex << int(lastElement) << dec << endl;
-
-           completeEncoding[elementLocation] = lastElement;
-
-           // Add all of the remaining bytes
-           completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+(winningEncodedStream.size()/BitsPerByte)-1);
 
 		   delete []packedData;
 
 		}
         else
         {
-            shiftLeft(packedData, (packedDataBlocks.size() * sizeof(unsigned long) + 1), 8);
+            //shiftLeft(packedData, (packedDataBlocks.size() * sizeof(unsigned long) + 1), 8);
 
             completeEncoding.insert(completeEncoding.end(), &packedData[0],  &packedData[0]+(winningEncodedStream.size()/BitsPerByte));
         }
 
 		cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
 
-		
-	    boost::dynamic_bitset<unsigned char> packedData2;
+		ulong numberOfBlocks = completeEncoding.size();
+        mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
+
+	    // boost::dynamic_bitset<unsigned char> packedData2;
         //boost::from_block_range(completeEncoding.begin(), completeEncoding.end(), packedData2);
 
 	    //packCompressedData(completeEncoding, packedData1);
@@ -387,7 +392,7 @@ void Sensor::process()
 	timestamp_t t3 = getTimestamp();
 
 	ofstream test("test.bin", ios::out | ios::binary | ios::trunc);
-	test.write((char*)&completeEncoding[0], 100);
+	test.write((char*)&completeEncoding[0], 10000);
 	test.close();
 
 	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed

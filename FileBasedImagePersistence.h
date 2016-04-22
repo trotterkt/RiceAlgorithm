@@ -38,6 +38,7 @@ class FileBasedImagePersistence: public ImagePersistence
 
         const char* getBaseName() { return myBaseFileStream.str().c_str(); }
 
+
     protected:
         virtual void setSamples(uint scanNumber);
 

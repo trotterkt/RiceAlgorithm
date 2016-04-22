@@ -100,6 +100,12 @@ class ImagePersistence
         void setBlockBitSize(ulong index, ushort bitCount) { myEncodedSizes[index] = bitCount; }
         void setEncodedBitLocation(ulong index, ulong bitPosition) { myEncodedBitPosition[index] = bitPosition; }
 
+        void writeEncodedData(unsigned char* encodedData, ulong numberOfBytes)
+         {
+         	memcpy(&myEncodedData[myEncodedBytesWritten], encodedData, numberOfBytes);
+         	myEncodedBytesWritten += numberOfBytes;
+         }
+
     protected:
 
         ushort* mySampleData;
