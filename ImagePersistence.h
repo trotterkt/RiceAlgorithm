@@ -102,8 +102,9 @@ class ImagePersistence
 
         void writeEncodedData(unsigned char* encodedData, ulong numberOfBytes)
          {
-         	memcpy(&myEncodedData[myEncodedBytesWritten], encodedData, numberOfBytes);
-         	myEncodedBytesWritten += numberOfBytes;
+         	//memcpy(&myEncodedData[myEncodedBytesWritten], encodedData, numberOfBytes);
+         	memcpy(&myEncodedData[19], encodedData, numberOfBytes);
+         	//myEncodedBytesWritten += numberOfBytes;
          }
 
     protected:

@@ -119,7 +119,7 @@ void Sensor::process()
 	//:TODO: This is one of the 1st places where we will start looking
 	// at applying Amdahl's Law!!!
 
-	totalSamples = 320; // Debugging
+	//totalSamples = 320; // Debugging
 
 	for (blockIndex = 0; blockIndex < totalSamples; blockIndex += 32)
 	{
@@ -362,8 +362,6 @@ void Sensor::process()
 
 		cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
 
-		ulong numberOfBlocks = completeEncoding.size();
-        mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
 
 	    // boost::dynamic_bitset<unsigned char> packedData2;
         //boost::from_block_range(completeEncoding.begin(), completeEncoding.end(), packedData2);
@@ -388,6 +386,9 @@ void Sensor::process()
 		lastWinningEncodedLength = winningEncodedStream.size();
 
 	}
+
+	ulong numberOfBlocks = completeEncoding.size();
+    mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
 
 	timestamp_t t3 = getTimestamp();
 
@@ -591,7 +592,7 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 	}
 
 
-	ulong numberOfBytes = bitSize / BitsPerByte;
+	long numberOfBytes = bitSize / BitsPerByte;
 
 	if(bitSize % BitsPerByte)
 	{
@@ -649,7 +650,7 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 				mySource->setEncodedBitLocation((blockCount-2), totalBitCount - (HeaderLength*BitsPerByte));
 			}
 
-			continue;
+			//continue;
 		}
 
 		//retrieves block and converts it to a char*
@@ -667,7 +668,7 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 		// if we've written the targeted number of bytes
 		// return
 		numberOfBytes--;
-		if (!numberOfBytes)
+		if (numberOfBytes<0)
 		{
 			break;
 		}

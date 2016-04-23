@@ -23,7 +23,6 @@
 #include <ImagePersistence.h>
 #include <boost/dynamic_bitset.hpp>
 #include <ShiftFunctions.h>
-
 #include <GroundSystem.h>
 
 const double LandsatDownlinkRate(384);
