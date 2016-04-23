@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #include <Predictor.h>
 #include <boost/dynamic_bitset.hpp>
+#include <iostream>
 
 
 namespace RiceAlgorithm
@@ -67,6 +68,7 @@ public:
         																			        encodedStream |= encodedSelectionStream;
 
 
+
         																				    for(int index = 0; index < 32; index++)
         																				    {
         																				        ushort sample = myInputSamples[index];
@@ -80,11 +82,16 @@ public:
         																				        //===================================================================================
         																				    }
 
+        																			        std::cout << encodedStream << std::endl;
+
         																					// include space for the  code option
-        																				    myEncodedBlockSize = encodedStream.size();
+        																				    //myEncodedBlockSize = encodedStream.size();
 
+        																				    //return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
 
-        																				    return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
+        																			        myEncodedBlockSize = (totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp;
+
+        																				    return myEncodedBlockSize;
 																						};
 
 	CodingSelection getSelection() { return myCodingSelection; }

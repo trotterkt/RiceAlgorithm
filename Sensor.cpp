@@ -322,12 +322,12 @@ void Sensor::process()
            {
 			   unsigned char lastElement = completeEncoding[elementLocation];
 
-			   cout << "firstElement=" << hex << int(firstElement) << ", lastElement=" << hex << int(lastElement) << dec << endl;
+			   //cout << "firstElement=" << hex << int(firstElement) << ", lastElement=" << hex << int(lastElement) << dec << endl;
 
 			   size_t shiftBits = mySource->getEncodedDataSizes()[blockIndex/32 - 1] % BitsPerByte;
 
 			   lastElement |= (firstElement);
-			   cout << "Combined lastElement=" << hex << int(lastElement) << dec << " current completeEncoding size=" << completeEncoding.size() << endl;
+			   //cout << "Combined lastElement=" << hex << int(lastElement) << dec << " current completeEncoding size=" << completeEncoding.size() << endl;
 
 			   // We might be off by one in size, if so, add a byte
 			   if(elementLocation == completeEncoding.size())
@@ -351,24 +351,14 @@ void Sensor::process()
 
 
 		   delete []packedData;
-
 		}
         else
         {
-            //shiftLeft(packedData, (packedDataBlocks.size() * sizeof(unsigned long) + 1), 8);
-
             completeEncoding.insert(completeEncoding.end(), &packedData[0],  &packedData[0]+(winningEncodedStream.size()/BitsPerByte));
         }
 
-		cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+		//cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
 
-
-	    // boost::dynamic_bitset<unsigned char> packedData2;
-        //boost::from_block_range(completeEncoding.begin(), completeEncoding.end(), packedData2);
-
-	    //packCompressedData(completeEncoding, packedData1);
-
-	    //writeCompressedData(packedData2, packedData2.size(), true);
 		//**************************************************************
 
 		sendEncodedSamples(winningEncodedStream, encodedSize);

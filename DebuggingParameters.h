@@ -15,7 +15,7 @@ const int LowerRange1(0);
 const int UpperRange1(100);
 
 const int LowerRange2(4500);
-const int UpperRange2(4600);
+const int UpperRange2(10000);
 
 
 #endif /* DEBUGGINGPARAMETERS_H_ */

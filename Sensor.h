@@ -129,7 +129,7 @@ class Sensor
 		void adjustPackeDataPosition(unsigned char* packedData, size_t dataBitLength)
 		{
 			int shiftIndex=0;
-			for(shiftIndex; shiftIndex<7; shiftIndex++) // expect it to be fairly soon
+			for(shiftIndex; shiftIndex<10; shiftIndex++) // expect it to be fairly soon
 			{
 				if(packedData[shiftIndex])
 				{
@@ -138,6 +138,14 @@ class Sensor
 			}
 			shiftIndex *= RiceAlgorithm::BitsPerByte;
 			shiftLeft(packedData, dataBitLength, shiftIndex);
+
+			// Look again within a byte, since I currently don't expect
+			// selection values less than K7 (binary 1000)
+			// So, shift left until I get non-zero bit
+			while(!(packedData[0] & 0x80))
+			{
+				shiftLeft(packedData, dataBitLength, 1);
+			}
 		}
 
 };

@@ -63,30 +63,25 @@ void GroundSystem::process()
 	const long MaximumBlocks(NumberOfSamples / 32);
     ulong currentByteLocation = totalEncodedLength / BitsPerByte;
 
+    // Set the next encoding selection, starting with
+    // that located after the header
+    //**********************************************
+    CodingSelection nextSelection;
+    currentByteLocation = totalEncodedLength / BitsPerByte;
+	unsigned char selectionByte(0);
+	memcpy(&selectionByte, &mySource->getEncodedData()[currentByteLocation], 1);
+	selectionByte >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+	selectionByte = selectionByte & 0xf;
+	nextSelection = CodingSelection(selectionByte);
+    //**********************************************
+
+
 	for (long blockIndex = 0; blockIndex < MaximumBlocks; blockIndex++)
 	{
         count++;
 
-	    //:Possible :KLUDGE: required, at least on Windows...
-        // currentByteLocation was being corrupted somehow. So used
-        // an identical variable currentByteLocation2 declaration
-        // May need to revisit this.
-	    //=============================================================
-        currentByteLocation = totalEncodedLength / BitsPerByte;
-        //=============================================================
 
-		// Account for selection value not being on a byte boundary
-		// The selection ID may span as much as two bytes
-		unsigned char selectionBytes[2] = {0};
-		memcpy(selectionBytes, &mySource->getEncodedData()[currentByteLocation], 2);
-		shiftLeft(selectionBytes, 16, additionalBits);
-
-		selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
-		selectionBytes[0] = selectionBytes[0] & 0xf;
-
-
-		CodingSelection selection = CodingSelection(selectionBytes[0]);
-
+		CodingSelection selection = nextSelection;
 
 		#ifdef DEBUG
             if(((count >= LowerRange1) && (count <= UpperRange1)) ||
@@ -151,7 +146,10 @@ void GroundSystem::process()
 		int encodeCount(0);
 
 		// Account for encoded value not being on a byte boundary
-        const unsigned int CopySize(32 * sizeof(ushort) + 1); // Encoded data will be no larger than this
+        const unsigned int CopySize(32 * sizeof(ushort) + HeaderLength + 1); // Encoded data will be no larger than this
+                                                                             // (include room for header and and next selection ID
+                                                                             // since I now have the accurate length of the previous)
+
 		unsigned char encodedDataCopy[CopySize];
 		memcpy(encodedDataCopy, &mySource->getEncodedData()[currentByteLocation], CopySize);
 
@@ -177,7 +175,7 @@ void GroundSystem::process()
 
 		#endif
 
-        shiftLeft(encodedDataCopy, CopySize * BitsPerByte + CodeOptionBitFieldFundamentalOrNoComp,
+        shiftLeft(encodedDataCopy, 512 + CodeOptionBitFieldFundamentalOrNoComp + 16, // all more shift room for next bytes
                   (CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
 
 		#ifdef DEBUG
@@ -226,6 +224,9 @@ void GroundSystem::process()
 
 				while (encodeCount < 32)
 				{
+					// Ignore the ID position
+					//encodedDataCopy[copyIndex] &= (0x0f);
+
 					// Count the bit if its '1'
 					encodeCount += ((encodedDataCopy[copyIndex] >> (shiftPosition)) & 1);
 
@@ -265,6 +266,25 @@ void GroundSystem::process()
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));
+
+				// capture the next encoding selection
+				//**********************************************************************
+		        shiftLeft(encodedDataCopy, 512 +                                        // Space for non-encoded option
+		        		                   CodeOptionBitFieldFundamentalOrNoComp +      // Note, not counting the previous selection twice
+		        		                   CodeOptionBitFieldFundamentalOrNoComp + 16,  // and also allowing for the next selection ID
+		        		  (encodedLength-CodeOptionBitFieldFundamentalOrNoComp));
+		    	memcpy(&selectionByte, encodedDataCopy, 1);
+		    	//if(selectionByte >> (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp)) //:KLUDGE: Don't know why no comp option is shifted
+		    	//{
+		    		selectionByte >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+		    	//}
+
+		    	selectionByte = selectionByte & 0xf;
+		    	nextSelection = CodingSelection(selectionByte);
+
+				//**********************************************************************
+
+
 				break;
 
 			case RiceAlgorithm::SecondExtensionOpt:
@@ -282,12 +302,30 @@ void GroundSystem::process()
 
 				memcpy(&residualsPtr[blockIndex*32], encodedDataCopy, sizeof(ushort)*32);
 
+				// capture the next encoding selection
+				//**********************************************************************
+		        shiftLeft(encodedDataCopy, 512 +                                   // Space for non-encoded option
+		        		                   CodeOptionBitFieldFundamentalOrNoComp + // Note, not counting the previous selection twice
+		        		                   CodeOptionBitFieldFundamentalOrNoComp,  // and also allowing for the next selection ID
+		        		  (encodedLength-CodeOptionBitFieldFundamentalOrNoComp));
+		    	memcpy(&selectionByte, encodedDataCopy, 1);
+		    	//if(selectionByte >> (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp)) //:KLUDGE: Don't know why no comp option is shifted
+		    	//{
+		    		selectionByte >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+		    	//}
+
+		    	selectionByte = selectionByte & 0xf;
+		    	nextSelection = CodingSelection(selectionByte);
+
+				//**********************************************************************
+
 				break;
 
 
 		}
 
 		totalEncodedLength += encodedLength;
+    	currentByteLocation = totalEncodedLength/BitsPerByte;
 
 
 		#ifdef DEBUG
