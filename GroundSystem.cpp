@@ -273,6 +273,8 @@ void GroundSystem::process()
 		        		                   CodeOptionBitFieldFundamentalOrNoComp +      // Note, not counting the previous selection twice
 		        		                   CodeOptionBitFieldFundamentalOrNoComp + 16,  // and also allowing for the next selection ID
 		        		  (encodedLength-CodeOptionBitFieldFundamentalOrNoComp));
+
+
 		    	memcpy(&selectionByte, encodedDataCopy, 1);
 		    	//if(selectionByte >> (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp)) //:KLUDGE: Don't know why no comp option is shifted
 		    	//{
@@ -290,7 +292,7 @@ void GroundSystem::process()
 			case RiceAlgorithm::SecondExtensionOpt:
 			case RiceAlgorithm::ZeroBlockOpt:
 
-			    cout << "Unexpected code" << endl;
+			    cout << "Unexpected code on count=" << count << endl;
 			    exit(-1);
 				break;
 
@@ -304,10 +306,15 @@ void GroundSystem::process()
 
 				// capture the next encoding selection
 				//**********************************************************************
-		        shiftLeft(encodedDataCopy, 512 +                                   // Space for non-encoded option
-		        		                   CodeOptionBitFieldFundamentalOrNoComp + // Note, not counting the previous selection twice
-		        		                   CodeOptionBitFieldFundamentalOrNoComp,  // and also allowing for the next selection ID
-		        		  (encodedLength-CodeOptionBitFieldFundamentalOrNoComp));
+		        shiftLeft(encodedDataCopy, 512 +                                        // Space for non-encoded option
+		        		                   CodeOptionBitFieldFundamentalOrNoComp +      // Note, not counting the previous selection twice
+		        		                   CodeOptionBitFieldFundamentalOrNoComp + 16,  // and also allowing for the next selection ID
+		        			        	   (encodedLength-CodeOptionBitFieldFundamentalOrNoComp-additionalBits));
+
+		        //adjustPackeDataPosition(encodedDataCopy, (512+
+		        //		                                  CodeOptionBitFieldFundamentalOrNoComp +
+		        //                                          CodeOptionBitFieldFundamentalOrNoComp + 16));
+
 		    	memcpy(&selectionByte, encodedDataCopy, 1);
 		    	//if(selectionByte >> (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp)) //:KLUDGE: Don't know why no comp option is shifted
 		    	//{
