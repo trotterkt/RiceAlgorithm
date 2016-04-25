@@ -358,15 +358,16 @@ void Sensor::process()
 			   int packetStart = completeEncoding[completeEncoding.size()-1];
 			   packetSize = actualPacketBytes; // Try
 			   //***************************************************************
-               if(count >= 4510)
+               if(count >= 4519)
                {
-        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart]) << " " << int(completeEncoding[packetStart+1]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
                }
 
 			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+packetSize-1);
-               if(count >= 4510)
+
+			   if(count >= 4519)
                {
-        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart]) << " " << int(completeEncoding[packetStart+1]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
                }
 
            }
