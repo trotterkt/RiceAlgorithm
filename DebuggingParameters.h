@@ -12,7 +12,7 @@
 #define DEBUGGINGPARAMETERS_H_
 
 const int LowerRange1(0);
-const int UpperRange1(100);
+const int UpperRange1(400);
 
 const int LowerRange2(4500);
 const int UpperRange2(10000);

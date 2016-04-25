@@ -307,6 +307,10 @@ void Sensor::process()
         size_t dataBitLength = (packedDataBlocks.size() * sizeof(unsigned long) + 3) *  BitsPerByte; // Extra 3 bytes is to allow for shifting
 	    adjustPackeDataPosition(packedData, dataBitLength);
 
+	    //Packet size adjustment
+	    float actualPacketBytes = ceil((encodedSize + partialBits +
+	    		                   additionalBits +
+	    		                   CodeOptionBitFieldFundamentalOrNoComp)/float(BitsPerByte));
 
 		if(!completeEncoding.empty())
 		{
@@ -340,8 +344,31 @@ void Sensor::process()
 
 			   completeEncoding[elementLocation] = lastElement;
 
+			   //int packetSize = (winningEncodedStream.size()/BitsPerByte) - 1;
+			   int packetSize = (winningEncodedStream.size()/BitsPerByte);
+			   cout << "packetSize=" << packetSize << endl;
+			   if(winningEncodedStream.size()%BitsPerByte)
+			   {
+				   cout << " Remainder = " << (winningEncodedStream.size()%BitsPerByte) << " ... extra=" << additionalBits << endl;
+				   packetSize++;
+			   }
+
+			   //***************************************************************
                // Add all of the remaining bytes
-			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+(winningEncodedStream.size()/BitsPerByte)-1);
+			   int packetStart = completeEncoding[completeEncoding.size()-1];
+			   packetSize = actualPacketBytes; // Try
+			   //***************************************************************
+               if(count >= 4510)
+               {
+        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart]) << " " << int(completeEncoding[packetStart+1]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+               }
+
+			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+packetSize-1);
+               if(count >= 4510)
+               {
+        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart]) << " " << int(completeEncoding[packetStart+1]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+               }
+
            }
            else
            {
@@ -374,6 +401,16 @@ void Sensor::process()
 		t3_intermediate = getTimestamp();
 
 		lastWinningEncodedLength = winningEncodedStream.size();
+
+
+		// Debug
+		if(count == 4521)
+		{
+//			ulong numberOfBlocks = completeEncoding.size();
+//		    mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
+
+			break;
+		}
 
 	}
 
