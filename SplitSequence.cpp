@@ -99,6 +99,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
 
     // include space for the  code option
     totalEncodedSize += CodeOptionBitFieldFundamentalOrNoComp;
+    code_len += CodeOptionBitFieldFundamentalOrNoComp;
 
     encodedStream.resize(totalEncodedSize);
     encodedStream.reset();

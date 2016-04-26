@@ -93,8 +93,8 @@ public:
 
         																				    //return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
 
-        																			        //myEncodedBlockSize = (totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp;
-        																			        myEncodedBlockSize = totalEncodedSize * BitsPerByte;
+        																			        myEncodedBlockSize = (totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp;
+        																			        //myEncodedBlockSize = totalEncodedSize * BitsPerByte;
 
         																				    return myEncodedBlockSize;
 																						};

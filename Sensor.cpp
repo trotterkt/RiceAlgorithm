@@ -267,7 +267,8 @@ void Sensor::process()
 			#endif
 		}
 
-		myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
+        //myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
+        myEncodedBitCount += myWinningEncodedLength;
 
 		t2_intermediate = getTimestamp();
 
@@ -356,7 +357,7 @@ void Sensor::process()
 			   //***************************************************************
                // Add all of the remaining bytes
 			   int packetStart = completeEncoding[completeEncoding.size()-1];
-			   packetSize = actualPacketBytes; // Try
+			   //packetSize = actualPacketBytes; // Try
 			   //***************************************************************
                if(count >= 4519)
                {
@@ -387,6 +388,14 @@ void Sensor::process()
 
 		//cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
 
+		//*************************************************
+		int packetBitLength = encodedSize;
+		int byte;
+		int bit;
+		RiceAlgorithm::CodingSelection currentSelection;
+		getExpectedNextPacketPosition(&completeEncoding[0], packetBitLength, byte, bit);
+        //*************************************************
+
 		//**************************************************************
 
 		sendEncodedSamples(winningEncodedStream, encodedSize);
@@ -410,7 +419,7 @@ void Sensor::process()
 //			ulong numberOfBlocks = completeEncoding.size();
 //		    mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
 
-			break;
+//			break;
 		}
 
 	}
@@ -735,3 +744,25 @@ bool Sensor::getLastByte(unsigned char *lastByte)
 
 	return partialByteFlag;
 }
+
+void Sensor::getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit)
+{
+    static double currentTotalLength(0); // Start with the header
+    
+    double endLength = currentTotalLength / double(BitsPerByte);
+    int previousLocationByte = endLength;
+    int previousLocationBit = (endLength - (long)endLength) * BitsPerByte;
+
+    unsigned char selectionBytes[2]; // might span 2 bytes
+    memcpy(selectionBytes, (currentEncodingPtr + previousLocationByte), 2);
+    shiftLeft(selectionBytes, 16, previousLocationBit);
+    selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+
+    RiceAlgorithm::CodingSelection previousSelection;
+    previousSelection = CodingSelection(selectionBytes[0]);
+    cout << "Previous ID:K" << int(previousSelection-1) << endl;
+
+    currentTotalLength += packetBitLength;
+    endLength = currentTotalLength / double(BitsPerByte);
+}
+

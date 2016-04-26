@@ -117,6 +117,8 @@ class Sensor
 
 		bool getLastByte(unsigned char *lastByte);
 
+		void getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit);
+
 		unsigned int myEncodedBitCount;
 
 		RiceAlgorithm::GroundSystem* groundPtr;
