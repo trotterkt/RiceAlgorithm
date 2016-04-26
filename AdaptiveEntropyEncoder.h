@@ -99,6 +99,11 @@ public:
         																				    return myEncodedBlockSize;
 																						};
 
+    void decode(CodingSelection selection, ushort* splitValue,
+    		    unsigned char* encodedStream, ulong blockIndex,
+    		    ushort* preprocessedStream);
+
+
 	CodingSelection getSelection() { return myCodingSelection; }
 	ushort* getEncodedBlock() { return myEncodedBlock; }
 	size_t getEncodedBlockSize() { return myEncodedBlockSize; }

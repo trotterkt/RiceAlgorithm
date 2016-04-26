@@ -309,7 +309,11 @@ void GroundSystem::process()
 		        shiftLeft(encodedDataCopy, 512 +                                        // Space for non-encoded option
 		        		                   CodeOptionBitFieldFundamentalOrNoComp +      // Note, not counting the previous selection twice
 		        		                   CodeOptionBitFieldFundamentalOrNoComp + 16,  // and also allowing for the next selection ID
-		        			        	   (encodedLength-CodeOptionBitFieldFundamentalOrNoComp-additionalBits));
+		        			        	   512);
+//		        shiftLeft(encodedDataCopy, 512 +                                        // Space for non-encoded option
+//		        		                   CodeOptionBitFieldFundamentalOrNoComp +      // Note, not counting the previous selection twice
+//		        		                   CodeOptionBitFieldFundamentalOrNoComp + 16,  // and also allowing for the next selection ID
+//		        			        	   (encodedLength-CodeOptionBitFieldFundamentalOrNoComp-additionalBits));
 
 		        //adjustPackeDataPosition(encodedDataCopy, (512+
 		        //		                                  CodeOptionBitFieldFundamentalOrNoComp +
