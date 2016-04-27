@@ -61,6 +61,8 @@ class Sensor
 
 		// For validation
 		ushort* getSamples() { return mySamples; }
+		ushort* getResiduals() { return  myPreprocessor.getResiduals(); }
+		ushort* getUnprocessedResiduals() { return groundPtr->getResiduals(); }
 
 	private:
 		RiceAlgorithm::ImagePersistence* mySource;

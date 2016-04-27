@@ -24,10 +24,9 @@ class GroundSystem
 		void process();
 
 		// For validation
-		ushort* getSamples()
-		{
-			return myRawSamples;
-		}
+		ushort* getSamples(){ return myRawSamples; }
+
+		ushort* getResiduals() { return myResidualsPtr; }
 
 
 	private:
@@ -37,7 +36,8 @@ class GroundSystem
 		RiceAlgorithm::ImagePersistence* mySource;
 
 		ushort* myRawSamples;
-
+		ushort* myResidualsPtr;
+		
 		//:KLUDGE: method
 	    // This is very much a kludge - since I only expect to see non-zero
 	    // selection id's, look for the first non-zero data. I'll use this to determine

@@ -29,6 +29,11 @@ GroundSystem::~GroundSystem()
     {
         delete [] myRawSamples;
     }
+
+    if(myResidualsPtr)
+    {
+    	delete [] myResidualsPtr; // note: not allocated in constructor
+    }
 }
 
 void GroundSystem::process()
@@ -57,7 +62,7 @@ void GroundSystem::process()
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
 	//:TODO: It is possible this might better belong in an object that reverses the prediction
-	ushort* residualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
+    myResidualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
 
 	// Read in one 32-sample block at a time (not on byte boundary)
 	const long MaximumBlocks(NumberOfSamples / 32);
@@ -262,7 +267,7 @@ void GroundSystem::process()
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
 
-				decodedSequence.decode(selection, splitValue, encodedDataCopy, blockIndex, residualsPtr);
+				decodedSequence.decode(selection, splitValue, encodedDataCopy, blockIndex, myResidualsPtr);
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));
@@ -302,7 +307,7 @@ void GroundSystem::process()
 				encodedLength *= BitsPerByte;
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
-				memcpy(&residualsPtr[blockIndex*32], encodedDataCopy, sizeof(ushort)*32);
+				memcpy(&myResidualsPtr[blockIndex*32], encodedDataCopy, sizeof(ushort)*32);
 
 				// capture the next encoding selection
 				//**********************************************************************
@@ -369,7 +374,7 @@ void GroundSystem::process()
 	RiceAlgorithm::Predictor unprocessor(myHeader.xDimension, myHeader.yDimension, myHeader.zDimension);
 
 	ushort* samples = new ushort[NumberOfSamples];
-	unprocessor.getSamples(residualsPtr, samples);
+	unprocessor.getSamples(myResidualsPtr, samples);
 
 
 	mySource->sendDecodedData(reinterpret_cast<char*>(samples), NumberOfSamples*sizeof(short));

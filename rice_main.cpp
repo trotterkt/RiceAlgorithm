@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
                     ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
                     ushort outSample = matrixBsqIndexCheck(image.getDecodedData(), x, y, z);
 
+
                     count++;
 
                     if (inSample != outSample)
