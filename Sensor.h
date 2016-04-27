@@ -117,7 +117,7 @@ class Sensor
 
 		bool getLastByte(unsigned char *lastByte);
 
-		void getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit);
+		void getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit, ulong count);
 
 		unsigned int myEncodedBitCount;
 

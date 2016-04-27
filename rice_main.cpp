@@ -90,8 +90,6 @@ int main(int argc, char *argv[])
                     }
 
                     cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << endl;
-
-                    //if(count > 100) exit(0);
                 }
             }
         }

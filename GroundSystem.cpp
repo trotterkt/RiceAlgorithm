@@ -155,46 +155,46 @@ void GroundSystem::process()
 
 
 
-		#ifdef DEBUG
-
-		//*******************************************
-        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-           ((count >= LowerRange2) && (count <= UpperRange2)))
-		{
-			cout << "winning encoding          ==>";
-
-			for(int countIndex=0; countIndex < CopySize; countIndex++)
-			{
-				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
-                boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
-                cout << encodedBits;
-			}
-			cout << dec << endl;
-		}
-		//*******************************************
-
-		#endif
+//		#ifdef DEBUG
+//
+//		//*******************************************
+//        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+//           ((count >= LowerRange2) && (count <= UpperRange2)))
+//		{
+//			cout << "winning encoding          ==>";
+//
+//			for(int countIndex=0; countIndex < CopySize; countIndex++)
+//			{
+//				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
+//                boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
+//                cout << encodedBits;
+//			}
+//			cout << dec << endl;
+//		}
+//		//*******************************************
+//
+//		#endif
 
         shiftLeft(encodedDataCopy, 512 + CodeOptionBitFieldFundamentalOrNoComp + 16, // all more shift room for next bytes
                   (CodeOptionBitFieldFundamentalOrNoComp + additionalBits));
 
-		#ifdef DEBUG
-		//*******************************************
-        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-           ((count >= LowerRange2) && (count <= UpperRange2)))
-		{
-			cout << "winning encoding (shifted)==>";
-
-			for(int countIndex=0; countIndex < CopySize; countIndex++)
-			{
-				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
-			    boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
-			    cout << encodedBits;
-			}
-			cout << dec << endl;
-		}
-		//*******************************************
-		#endif
+//		#ifdef DEBUG
+//		//*******************************************
+//        if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+//           ((count >= LowerRange2) && (count <= UpperRange2)))
+//		{
+//			cout << "winning encoding (shifted)==>";
+//
+//			for(int countIndex=0; countIndex < CopySize; countIndex++)
+//			{
+//				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
+//			    boost::dynamic_bitset<> encodedBits(8, encodedDataCopy[countIndex]);
+//			    cout << encodedBits;
+//			}
+//			cout << dec << endl;
+//		}
+//		//*******************************************
+//		#endif
 
 		size_t encodedLength(0);
 
@@ -239,11 +239,11 @@ void GroundSystem::process()
 					{
 						splitValue[index] = splitCount;
 
-						#ifdef DEBUG
-			            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-			               ((count >= LowerRange2) && (count <= UpperRange2)))
-				                cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
-						#endif
+//						#ifdef DEBUG
+//			            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+//			               ((count >= LowerRange2) && (count <= UpperRange2)))
+//				                cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
+//						#endif
 
 						index++;
 						splitCount = 0;
@@ -338,6 +338,14 @@ void GroundSystem::process()
 		totalEncodedLength += encodedLength;
     	currentByteLocation = totalEncodedLength/BitsPerByte;
 
+        //*************************************************
+        int packetBitLength = encodedLength;
+        int byte;
+        int bit;
+        RiceAlgorithm::CodingSelection currentSelection;
+        getExpectedNextPacketPosition(mySource->getEncodedData(), packetBitLength, byte, bit, count);
+        //*************************************************
+
 
 		#ifdef DEBUG
         if(((count >= LowerRange1) && (count <= UpperRange1)) ||
@@ -393,3 +401,46 @@ void GroundSystem::readHeader()
     bigEndianVersusLittleEndian(myHeader.yDimension);
     bigEndianVersusLittleEndian(myHeader.zDimension);
 }
+
+void GroundSystem::getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit, ulong count)
+{
+    static double currentTotalLength(19); // In bytes...skip the header
+
+    double endLength = currentTotalLength; // In bytes
+    int currentLocationByte = endLength;
+    int currentLocationBit = (endLength - (long)endLength) * BitsPerByte;
+
+    unsigned char selectionBytes[2]; // might span 2 bytes
+    memcpy(selectionBytes, (currentEncodingPtr + currentLocationByte), 2);
+    shiftLeft(selectionBytes, 16, currentLocationBit);
+    selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+
+    RiceAlgorithm::CodingSelection selection;
+    selection = CodingSelection(selectionBytes[0]);
+
+    #ifdef DEBUG
+    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+       ((count >= LowerRange2) && (count <= UpperRange2)))
+            cout << "count=" << count << " Current ID:K" << int(selection-1);
+    #endif
+
+    currentTotalLength += (double(packetBitLength)/double(BitsPerByte));
+    endLength = currentTotalLength;
+
+    int nextLocationByte = endLength;
+    int nextLocationBit = (endLength - (long)endLength) * BitsPerByte;
+
+    memcpy(selectionBytes, (currentEncodingPtr + nextLocationByte), 2);
+    shiftLeft(selectionBytes, 16, nextLocationBit);
+    selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
+
+    selection = CodingSelection(selectionBytes[0]);
+
+    #ifdef DEBUG
+    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+       ((count >= LowerRange2) && (count <= UpperRange2)))
+            cout << "...Next ID:K" << int(selection-1) << endl;
+    #endif
+}
+
+

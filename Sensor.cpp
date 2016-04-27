@@ -248,23 +248,23 @@ void Sensor::process()
 		// the next piece of encoded data
 		if (getLastByte(&lastByte))
 		{
-			#ifdef DEBUG
-                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-                   ((count >= LowerRange2) && (count <= UpperRange2)))
-                        cout << "Before partial appendage: " << winningEncodedStream << endl;
-			#endif
-
+//			#ifdef DEBUG
+//                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+//                   ((count >= LowerRange2) && (count <= UpperRange2)))
+//                        cout << "Before partial appendage: " << winningEncodedStream << endl;
+//			#endif
+//
 //			unsigned int appendedSize = winningEncodedStream.size() + partialBits;
 //			winningEncodedStream.resize(appendedSize);
 //			boost::dynamic_bitset<> lastByteStream(winningEncodedStream.size(), ulong(lastByte));
 //			lastByteStream <<= (winningEncodedStream.size() - BitsPerByte);
 //			winningEncodedStream |= lastByteStream;
-
-			#ifdef DEBUG
-                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-                   ((count >= LowerRange2) && (count <= UpperRange2)))
-                        cout << "After partial appendage : " << winningEncodedStream << endl;
-			#endif
+//
+//			#ifdef DEBUG
+//                if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+//                   ((count >= LowerRange2) && (count <= UpperRange2)))
+//                        cout << "After partial appendage : " << winningEncodedStream << endl;
+//			#endif
 		}
 
         //myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
@@ -283,7 +283,7 @@ void Sensor::process()
 
 	    numBlocks = winningEncodedStream.num_blocks();
 
-		cout << "num bits = " << winningEncodedStream.size() << endl;
+//		cout << "num bits = " << winningEncodedStream.size() << endl;
 		vector<unsigned long> packedDataBlocks(numBlocks);
 
 		boost::to_block_range(winningEncodedStream, packedDataBlocks.begin());
@@ -347,10 +347,10 @@ void Sensor::process()
 
 			   //int packetSize = (winningEncodedStream.size()/BitsPerByte) - 1;
 			   int packetSize = (winningEncodedStream.size()/BitsPerByte);
-			   cout << "packetSize=" << packetSize << endl;
+//			   cout << "packetSize=" << packetSize << endl;
 			   if(winningEncodedStream.size()%BitsPerByte)
 			   {
-				   cout << " Remainder = " << (winningEncodedStream.size()%BitsPerByte) << " ... extra=" << additionalBits << endl;
+//				   cout << " Remainder = " << (winningEncodedStream.size()%BitsPerByte) << " ... extra=" << additionalBits << endl;
 				   packetSize++;
 			   }
 
@@ -359,17 +359,17 @@ void Sensor::process()
 			   int packetStart = completeEncoding[completeEncoding.size()-1];
 			   //packetSize = actualPacketBytes; // Try
 			   //***************************************************************
-               if(count >= 4519)
-               {
-        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
-               }
-
+//               if(count >= 4519)
+//               {
+//        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+//               }
+//
 			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+packetSize-1);
-
-			   if(count >= 4519)
-               {
-        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
-               }
+//
+//			   if(count >= 4519)
+//               {
+//        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
+//               }
 
            }
            else
@@ -393,7 +393,7 @@ void Sensor::process()
 		int byte;
 		int bit;
 		RiceAlgorithm::CodingSelection currentSelection;
-		getExpectedNextPacketPosition(&completeEncoding[0], packetBitLength, byte, bit);
+		getExpectedNextPacketPosition(&completeEncoding[0], packetBitLength, byte, bit, count);
         //*************************************************
 
 		//**************************************************************
@@ -587,7 +587,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
     ulong totalBitCount(0);
 
-    cout << "****previousSize=" << previousSize << " encodedLength=" << encodedLength << endl;
+    //cout << "****previousSize=" << previousSize << " encodedLength=" << encodedLength << endl;
     //totalBitCount = writeCompressedData(convertedStream, previousSize, true);
     totalBitCount = writeCompressedData(convertedStream, encodedLength, true);
 
@@ -745,9 +745,9 @@ bool Sensor::getLastByte(unsigned char *lastByte)
 	return partialByteFlag;
 }
 
-void Sensor::getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit)
+void Sensor::getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit, ulong count)
 {
-    static double currentTotalLength(0); // Start with the header
+    static double currentTotalLength(0); // Starting after the header
     
     double endLength = currentTotalLength / double(BitsPerByte);
     int previousLocationByte = endLength;
@@ -758,11 +758,23 @@ void Sensor::getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, in
     shiftLeft(selectionBytes, 16, previousLocationBit);
     selectionBytes[0] >>= (BitsPerByte - CodeOptionBitFieldFundamentalOrNoComp);
 
-    RiceAlgorithm::CodingSelection previousSelection;
-    previousSelection = CodingSelection(selectionBytes[0]);
-    cout << "Previous ID:K" << int(previousSelection-1) << endl;
+    RiceAlgorithm::CodingSelection selection;
+    selection = CodingSelection(selectionBytes[0]);
+
+    #ifdef DEBUG
+    if(((count >= LowerRange1) && (count <= UpperRange1)) ||
+       ((count >= LowerRange2) && (count <= UpperRange2)))
+            cout << "Current ID:K" << int(selection-1) << endl;
+    #endif
 
     currentTotalLength += packetBitLength;
     endLength = currentTotalLength / double(BitsPerByte);
+ 
+    // compare to what I expect
+    if(myEncodedBitCount != (currentTotalLength + 152))
+    {
+        cout << "For count=" << count << " myEncodedBitCount=" << myEncodedBitCount << " while (currentTotalLength + 152)=" << (currentTotalLength + 152) << endl;
+        exit(-1);
+    }
 }
 

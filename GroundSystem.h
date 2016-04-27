@@ -29,6 +29,7 @@ class GroundSystem
 			return myRawSamples;
 		}
 
+
 	private:
 		void readHeader();
 		CompressedHeader myHeader;
@@ -55,6 +56,8 @@ class GroundSystem
 			shiftIndex *= RiceAlgorithm::BitsPerByte;
 			shiftLeft(packedData, dataBitLength, shiftIndex);
 		}
+
+        void getExpectedNextPacketPosition(unsigned char* currentEncodingPtr, int packetBitLength, int &byte, int &bit, ulong count);
 
 };
 
