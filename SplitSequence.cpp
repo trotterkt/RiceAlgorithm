@@ -213,6 +213,7 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
 
+		// :KLUDGE: temporary resolution of known error.
         //***********************
         int tempIndex = (index + blockIndex*32);
         if((tempIndex == 543) || (tempIndex == 607) || (tempIndex == 703) || (tempIndex == 1055))

@@ -244,12 +244,6 @@ void GroundSystem::process()
 					{
 						splitValue[index] = splitCount;
 
-//						#ifdef DEBUG
-//			            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-//			               ((count >= LowerRange2) && (count <= UpperRange2)))
-//				                cout << "\nencodedSizeList[" << index << "]=" << splitValue[index] << endl;
-//						#endif
-
 						index++;
 						splitCount = 0;
 					}
