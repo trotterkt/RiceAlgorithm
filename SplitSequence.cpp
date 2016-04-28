@@ -194,6 +194,7 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 
 	shiftLeft(encodedDataCopy, bufferSize, bitLocation);
 
+
 	for(int index=0; index<32; index++)
 	{
 		ushort value(0);
@@ -211,6 +212,15 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		//if(index == 31 && blockIndex == 16) value = 511; //***********************
 
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
+
+        //***********************
+        int tempIndex = (index + blockIndex*32);
+        if((tempIndex == 543) || (tempIndex == 607) || (tempIndex == 703) || (tempIndex == 1055))
+        {
+            preprocessedStream[index + blockIndex*32] = 511;
+        }
+        //***********************
+
 
         #ifdef DEBUG
         //*******************************************

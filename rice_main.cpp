@@ -62,6 +62,23 @@ int main(int argc, char *argv[])
 
     // Check what I have
     //===============================================================================
+    const int arraySize = (Rows*Columns*Bands);
+    ushort* sensorResiduals = new ushort[arraySize];
+    ushort* groundResiduals = new ushort[arraySize];
+
+    ifstream sensorResidualsStream;
+    sensorResidualsStream.open("residualsSensor.bin", std::ifstream::binary);
+    sensorResidualsStream.read(reinterpret_cast<char*>(sensorResiduals), arraySize*2);
+
+    ifstream groundResidualsStream;
+    groundResidualsStream.open("residualsGround.bin", std::ifstream::binary);
+    groundResidualsStream.read(reinterpret_cast<char*>(groundResiduals), arraySize*2);
+
+
+    sensorResidualsStream.close();
+    groundResidualsStream.close();
+
+
     #define matrixBsqIndexCheck(matrix, x, y, z) matrix[Rows*((z)*Columns + (y)) + (x)]
     int count = 0;
     for(int x=0; x<Rows; x++)
@@ -77,10 +94,14 @@ int main(int argc, char *argv[])
                     ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
                     ushort outSample = matrixBsqIndexCheck(image.getDecodedData(), x, y, z);
 
+                    ushort inResidual = matrixBsqIndexCheck(sensorResiduals, x, y, z);
+                    ushort outResidual = matrixBsqIndexCheck(groundResiduals, x, y, z);
+
 
                     count++;
 
-                    if (inSample != outSample)
+                    //if (inSample != outSample)
+                    if (inResidual != outResidual)
                     {
                         cout << "Mismatch at Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << " --Delta=" << (outSample - inSample);
                     }
@@ -90,11 +111,15 @@ int main(int argc, char *argv[])
                              << y << ", z=" << z;
                     }
 
-                    cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << endl;
+                    cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
                 }
             }
         }
     }
+
+    delete []sensorResiduals;
+    delete []groundResiduals;
+
     //===============================================================================
 	#endif
 

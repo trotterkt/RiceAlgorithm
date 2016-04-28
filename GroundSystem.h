@@ -26,9 +26,6 @@ class GroundSystem
 		// For validation
 		ushort* getSamples(){ return myRawSamples; }
 
-		ushort* getResiduals() { return myResidualsPtr; }
-
-
 	private:
 		void readHeader();
 		CompressedHeader myHeader;
@@ -36,7 +33,6 @@ class GroundSystem
 		RiceAlgorithm::ImagePersistence* mySource;
 
 		ushort* myRawSamples;
-		ushort* myResidualsPtr;
 		
 		//:KLUDGE: method
 	    // This is very much a kludge - since I only expect to see non-zero

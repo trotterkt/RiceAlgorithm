@@ -85,11 +85,18 @@ void Sensor::process()
 
 	#ifdef DEBUG
     std::ofstream residualsStream;
-    residualsStream.open("residuals.bin", ios::out | ios::in | ios::binary | ios::trunc);
+    residualsStream.open("residualsSensor.bin", ios::out | ios::in | ios::binary | ios::trunc);
 
     if (!residualsStream.is_open())
     {
         exit(EXIT_FAILURE);
+    }
+    //const long NumberOfSamples(myXDimension * myYDimension * myZDimension);
+    const long NumberOfSamples(2000);
+
+    for(long index=0; index<NumberOfSamples; index++)
+    {
+        cout << "residualsSensor[" << index << "]=" << residualsPtr[index] << endl;
     }
 
     residualsStream.write(reinterpret_cast<char*>(residualsPtr), (1024*1024*6*2));

@@ -23,7 +23,7 @@ namespace RiceAlgorithm
 {
 
 Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
-        myXDimension(x), myYDimension(y), myZDimension(z), mySamples(0)
+        myXDimension(x), myYDimension(y), myZDimension(z), mySamples(0), myResidualsFlag(true)
 {
     myResiduals = reinterpret_cast<ushort*>(new ushort[myXDimension * myYDimension * myZDimension]);
 
@@ -33,7 +33,7 @@ Predictor::Predictor(unsigned int x, unsigned int y, unsigned int z) :
 
 Predictor::~Predictor()
 {
-    if(myResiduals)
+    if(myResiduals && myResidualsFlag)
     {
         delete[] myResiduals;
         myResiduals = 0;
@@ -111,16 +111,18 @@ void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
     if(mySamples)
     {
         delete [] mySamples;
+        mySamples = 0;
     }
 
     mySamples = samples;
 
-
+    // allocate a new set of residuals - the predictor now takes control of whatever exist
     if(myResiduals)
     {
         delete [] myResiduals;
+        myResiduals = 0;
     }
-
+    myResidualsFlag = false;
     myResiduals = residualsPtr;
 
 
@@ -147,7 +149,6 @@ void Predictor::getSamples(ushort* residualsPtr, ushort* samples)
 
                 // prediction of the current sample and saving the residual
                 predictedSample = calculatePredictedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum);
-
 
                 unmappedSample = computeUnmappedSample(x, y, z, sampleMinimum, sampleMidway, sampleMaximum, predictedSample);
 
@@ -228,6 +229,7 @@ int Predictor::calculatePredictedSample(unsigned int x, unsigned int y, unsigned
         scaledPredicted = modRstar(diffPredicted + ((localSum - 4 * sampleMidway) << PredictionWeightResolution), RegisterSize);
         scaledPredicted = scaledPredicted >> (PredictionWeightResolution + 1);
         scaledPredicted = scaledPredicted + 1 + 2 * sampleMidway;
+
         if (scaledPredicted < 2 * sampleMinimum) scaledPredicted = 2 * sampleMinimum;
         if (scaledPredicted > (2 * sampleMaximum + 1)) scaledPredicted = (2 * sampleMaximum + 1);
     }

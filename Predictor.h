@@ -52,6 +52,7 @@ class Predictor
 
 
         ushort* getResiduals(ushort* samples);
+        ushort* getResiduals() { return myResiduals; }
 
         void getSamples(ushort* residualsPtr, ushort* samples);
 
@@ -66,6 +67,9 @@ class Predictor
         unsigned int myXDimension;
         unsigned int myYDimension;
         unsigned int myZDimension;
+
+        // only delete the residuals if this class created it
+        bool myResidualsFlag;
 
         // based on the local differences and the samples, determine the scaled predicted
         // sample value
