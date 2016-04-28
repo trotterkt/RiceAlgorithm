@@ -206,11 +206,6 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		value >>= (sizeof(ushort) * BitsPerByte - (selection - 1));
 
 
-
-		//Debugging
-		// This corrects issue up to this point
-		//if(index == 31 && blockIndex == 16) value = 511; //***********************
-
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
 
 		// :KLUDGE: temporary resolution of known error.
