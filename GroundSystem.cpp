@@ -21,7 +21,6 @@ using namespace std;
 using namespace RiceAlgorithm;
 
 
-
 GroundSystem::GroundSystem(ImagePersistence* image) : mySource(image), myRawSamples(0)
 {
     memset(&myHeader, 0, sizeof(CompressedHeader));
@@ -38,6 +37,7 @@ GroundSystem::~GroundSystem()
 
 void GroundSystem::process()
 {
+
 	// This begins the decoding
 	readHeader();
 

@@ -14,11 +14,15 @@
 #include <Predictor.h>
 #include <Timing.h>
 #include <FileBasedImagePersistence.h>
+#include <DebuggingParameters.h>
 
 
     
 using namespace RiceAlgorithm;
 using namespace std;
+
+static unsigned char watchEncoded1(0);
+static unsigned char watchEncoded2(0);
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +36,11 @@ int main(int argc, char *argv[])
     cout << "Compressing Landsat_agriculture-u16be-6x1024x1024..." << endl;
    
     FileBasedImagePersistence image("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
+
+	//***********************************************
+	watchEncoded1 = image.getEncodedData()[700];
+	watchEncoded2 = image.getEncodedData()[750];
+	//***********************************************
 
     // Construct my LandSat sensor, which performs the compression of the supplied
     // raw image data per the Rice algorithm
