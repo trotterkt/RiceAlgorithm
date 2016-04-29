@@ -23,6 +23,9 @@
 #include <fstream>
 #endif
 
+unsigned char* watchComp1(0);
+unsigned char* watchComp2(0);
+
 using namespace std;
 using namespace RiceAlgorithm;
 
@@ -118,7 +121,11 @@ void Sensor::process()
 	long totalSamples = myXDimension * myYDimension * myZDimension;
 
 	vector<unsigned char> completeEncoding;
-	completeEncoding.reserve(totalSamples*sizeof(unsigned char));
+	completeEncoding.reserve(totalSamples*sizeof(ushort));
+
+    watchComp1 = &completeEncoding[778];
+    watchComp2 = &completeEncoding[779];
+
 
 	 // For a running total of just the encoded data (no header)
 	 ulong currentEncodedSize(0);
@@ -419,16 +426,6 @@ void Sensor::process()
 
 		lastWinningEncodedLength = winningEncodedStream.size();
 
-
-		// Debug
-		if(count == 4521)
-		{
-//			ulong numberOfBlocks = completeEncoding.size();
-//		    mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
-
-//			break;
-		}
-
 	}
 
 	ulong numberOfBlocks = completeEncoding.size();
@@ -568,6 +565,7 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 		encodedStream.resize(newSize);
 		encodedStream <<= (newSize - previousSize);
 	}
+
 
 	// this does two things - (1) changes the block size from ulong to
 	// unsigned char and (2) reverses the byte order

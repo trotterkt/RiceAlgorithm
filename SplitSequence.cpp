@@ -124,6 +124,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     {
         ushort maskedSample = myInputSamples[index] & mask;
 
+
         //:TODO: this section appears to be responsible for about 8 seconds in the
         // total encoding time
         //===================================================================================
@@ -155,8 +156,7 @@ unsigned int SplitSequence::encode(boost::dynamic_bitset<> &encodedStream, Codin
     boost::dynamic_bitset<> encodedSelectionStream(totalEncodedSize, selection);
     encodedSelectionStream <<= (totalEncodedSize-CodeOptionBitFieldFundamentalOrNoComp);
     encodedStream |= encodedSelectionStream;
-
-
+    
     // Determine the shift amount if we are not on a full byte, as is probably normally
     // the case. There would otherwise often be leading zero bits
     size_t shiftBits = numberEncodedBytes*BitsPerByte - encodedStream.size();
@@ -222,13 +222,13 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
         //*******************************************
         if(blockIndex == 16)
         {
-            cout << "problem encoding-1 (" << (index+1) << ")==>";
+            //cout << "problem encoding-1 (" << (index+1) << ")==>";
 
             for(int countIndex=0; countIndex < 64; countIndex++)
             {
-                cout << hex << int(encodedDataCopy[countIndex]) << " ";
+                //cout << hex << int(encodedDataCopy[countIndex]) << " ";
             }
-            cout << dec << endl;
+            //cout << dec << endl;
         }
         //*******************************************
         #endif
@@ -241,13 +241,13 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		//*******************************************
 		if(blockIndex == 16)
 		{
-			cout << "problem encoding-2 (" << (index+1) << ")==>";
+			//cout << "problem encoding-2 (" << (index+1) << ")==>";
 
 			for(int countIndex=0; countIndex < 64; countIndex++)
 			{
-				cout << hex << int(encodedDataCopy[countIndex]) << " ";
+				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
 			}
-			cout << dec << endl;
+			//cout << dec << endl;
 		}
 		//*******************************************
 		#endif
