@@ -30,8 +30,8 @@ using namespace std;
 using namespace RiceAlgorithm;
 
 Sensor::Sensor(ImagePersistence* image, unsigned int x, unsigned int y, unsigned int z) :
-		mySource(image), mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z), myPreprocessor(
-				x, y, z), myWinningEncodedLength((unsigned int) -1)
+		mySource(image), mySamples(0), myXDimension(x), myYDimension(y), myZDimension(z),
+		myPreprocessor(x, y, z), myWinningEncodedLength((unsigned int) -1)
 {
 
 	mySamples = mySource->getSampleData(1); //:TODO: only one scan, need to address multiple
@@ -114,7 +114,7 @@ void Sensor::process()
 
 	timestamp_t t2 = getTimestamp();
 
-	int blockIndex(0);
+	ulong blockIndex(0);
 	unsigned int encodedLength(0);
 	ulong count(0);
 
