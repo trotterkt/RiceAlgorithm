@@ -277,8 +277,6 @@ void GroundSystem::process(ushort* referenceResiduals)
 				encodedLength *= BitsPerByte;
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
-				//memcpy(&residualsPtr[blockIndex*32], encodedDataAnotherCopy, sizeof(ushort)*32);
-
 				break;
 
 		}

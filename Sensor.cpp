@@ -168,16 +168,9 @@ void Sensor::process()
 				winningSelection = selection;
 
 				encodedSize = (*iteration)->getEncodedBlockSize();
-				//encodedStream.resize(encodedSize);
 				winningEncodedStream = encodedStream;
 			}
 
-			#ifdef DEBUG
-						//******************************
-						//if(blockIndex > 32)
-						//  break; // debugging
-						//******************************
-			#endif
 		}
 
 		t1_intermediate = getTimestamp();

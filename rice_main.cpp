@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
    
     FileBasedImagePersistence image("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
 
+    // Watchpoint Debugging
 	//***********************************************
 	watchEncoded1 = image.getEncodedData()[700];
 	watchEncoded2 = image.getEncodedData()[750];
@@ -116,20 +117,19 @@ int main(int argc, char *argv[])
 
                     count++;
 
-                    //if (inSample != outSample)
                     if (inResidual != outResidual)
                     {
                         cout << "Mismatch at Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << " --Delta=" << (outSample - inSample);
                         cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
-
                     }
                     else
                     {
+                    	// Right now, I'm just interested in mismatches
                         //cout << "***Match at Index:[" << (Rows * ((z) * Columns + (y)) + (x)) << "] x=" << x << ", y="
                         //     << y << ", z=" << z;
+                        //cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
                     }
 
-                    //cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
                 }
             }
         }
