@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     cout.precision(4);
 
-    cout << "Compressing Landsat_agriculture-u16be-6x1024x1024..." << endl;
+    cout << "\n\nCompressing Landsat_agriculture-u16be-6x1024x1024...\n" << endl;
    
     FileBasedImagePersistence image("Landsat_agriculture-u16be-6x1024x1024", Rows, Columns, Bands);
 
@@ -54,10 +54,15 @@ int main(int argc, char *argv[])
 
     timestamp_t t1 = getTimestamp();
 
-    cout << "Compression processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
 
     // Write out the encoded data. This is outside of the compression processing
     image.writeEncodedData();
+
+
+
+    cout << "\n\nDecompressing Landsat_agriculture-u16be-6x1024x1024...\n" << endl;
+
+    timestamp_t t2 = getTimestamp();
 
 
     // Kick off the associated decompression
@@ -69,6 +74,12 @@ int main(int argc, char *argv[])
     	landsat.getGround()->process();
 	#endif
 
+    timestamp_t t3 = getTimestamp();
+
+    cout << "========================================================" << endl;
+    cout << "Rice Compression processing time   ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"<< endl;
+    cout << "Rice Decompression processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"<< endl;
+    cout << "========================================================" << endl;
 
     // Write out the decoded data. This is outside of the decompression processing
     image.writeDecodedData();
