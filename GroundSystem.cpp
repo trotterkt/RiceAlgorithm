@@ -240,6 +240,7 @@ void GroundSystem::process(ushort* referenceResiduals)
 
 				decodedSequence.decode(selection, splitValue, encodedDataAnotherCopy, blockIndex, residualsPtr);
 
+				#ifdef DEBUG
 				for(int index=0; index<32; index++)
 				{
 					if(referenceResiduals[blockIndex*32 + index] != residualsPtr[blockIndex*32 + index])
@@ -247,6 +248,7 @@ void GroundSystem::process(ushort* referenceResiduals)
 						cout << "Mismatch residual value at Block:" << blockIndex << " Index:" << index << endl;
 					}
 				}
+				#endif
 
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));
@@ -265,6 +267,8 @@ void GroundSystem::process(ushort* referenceResiduals)
 
 				decodedNocomp.decode(selection, splitValue, encodedDataAnotherCopy, blockIndex, residualsPtr);
 
+				#ifdef DEBUG
+
 				for(int index=0; index<32; index++)
 				{
 					if(referenceResiduals[blockIndex*32 + index] != residualsPtr[blockIndex*32 + index])
@@ -272,6 +276,7 @@ void GroundSystem::process(ushort* referenceResiduals)
 						cout << "Mismatch residual value at Block:" << blockIndex << " Index:" << index << endl;
 					}
 				}
+				#endif
 
 				encodedLength = (32 * sizeof(ushort));
 				encodedLength *= BitsPerByte;
