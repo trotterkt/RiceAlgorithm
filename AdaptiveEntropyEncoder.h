@@ -73,28 +73,22 @@ public:
         																				    for(int index = 0; index < 32; index++)
         																				    {
         																				        ushort sample = myInputSamples[index];
-        																				        //sample = (index+1); // Debugging
 
         																				        //:TODO: this section appears to be responsible for about 8 seconds in the
         																				        // total encoding time
         																				        //===================================================================================
         																				        boost::dynamic_bitset<> encodedSample((encodedStream.size()), sample);
         																				        encodedStream |= encodedSample;
-
+        																				        
+        																				        // prepare space for each sample
         																				        if(index != 31)
+        																				        {
         														        						   encodedStream <<= (sizeof(ushort) * BitsPerByte);
+        														        						}
         																				        //===================================================================================
         																				    }
 
-        																			        //std::cout << encodedStream << " size=" << encodedStream.size() << std::endl;
-
-        																					// include space for the  code option
-        																				    //myEncodedBlockSize = encodedStream.size();
-
-        																				    //return (encodedStream.size() - CodeOptionBitFieldFundamentalOrNoComp);
-
         																			        myEncodedBlockSize = (totalEncodedSize * BitsPerByte) + CodeOptionBitFieldFundamentalOrNoComp;
-        																			        //myEncodedBlockSize = totalEncodedSize * BitsPerByte;
 
         																				    return myEncodedBlockSize;
 																						};
