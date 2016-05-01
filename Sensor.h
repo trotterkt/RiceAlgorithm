@@ -44,6 +44,7 @@ class Sensor
 			memcpy(myEncodedBlock, right.getEncodedBlock(), right.getEncodedBlockSize());
 			myWinningEncodedLength = right.getEncodedBlockSize();
 		}
+
 		bool operator>(RiceAlgorithm::AdaptiveEntropyEncoder& right)
 		{
 			return false;

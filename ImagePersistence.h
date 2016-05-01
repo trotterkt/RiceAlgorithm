@@ -72,11 +72,11 @@ class ImagePersistence
                                                                  }
 
         virtual void sendEncodedPacket(unsigned char* encodedData, unsigned int encodedLength) {
-        																							myAlternateEncodedData.push_back(encodedData);
-        																							myEncodedSizes[myAlternateEncodedData.size()-1] = encodedLength;
+        																							myEncodedDataList.push_back(encodedData);
+        																							myEncodedSizes[myEncodedDataList.size()-1] = encodedLength;
                                                                    	   	   	   	   	   	   	   }
 
-        unsigned char* getEncodedPacket(long blockIndex) { return myAlternateEncodedData[blockIndex]; }
+        unsigned char* getEncodedPacket(long blockIndex) { return myEncodedDataList[blockIndex]; }
 
 
         virtual void sendDecodedData(char* decodedData, const long long imageSize) {
@@ -123,11 +123,7 @@ class ImagePersistence
         ushort* myEncodedSizes;
         ulong* myEncodedBitPosition;
 
-    	// Try this
-    	//***************************************************
-    	std::vector<unsigned char*> myAlternateEncodedData;
-    	//***************************************************
-
+    	std::vector<unsigned char*> myEncodedDataList;
 };
 
 } /* namespace RiceAlgorithm */
