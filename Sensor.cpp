@@ -328,9 +328,6 @@ void Sensor::process()
 
 	timestamp_t t3 = getTimestamp();
 
-	ofstream test("test.bin", ios::out | ios::binary | ios::trunc);
-	test.write((char*)&completeEncoding[0], 10000);
-	test.close();
 
 	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
 			<< "\n(intermediate t0-t1): " << fixed
