@@ -113,14 +113,16 @@ int main(int argc, char *argv[])
                     if (inResidual != outResidual)
                     {
                         cout << "Mismatch at Index:[" << index << "] x=" << x << ", y=" << y << ", z=" << z << " --Delta=" << (outSample - inSample);
+                        cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
+
                     }
                     else
                     {
-                        cout << "***Match at Index:[" << (Rows * ((z) * Columns + (y)) + (x)) << "] x=" << x << ", y="
-                             << y << ", z=" << z;
+                        //cout << "***Match at Index:[" << (Rows * ((z) * Columns + (y)) + (x)) << "] x=" << x << ", y="
+                        //     << y << ", z=" << z;
                     }
 
-                    cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
+                    //cout << "...In_Sample=" << inSample << " Out_Sample=" << outSample << " In_Residual=" << inResidual << " Out_Residual=" << outResidual << endl;
                 }
             }
         }

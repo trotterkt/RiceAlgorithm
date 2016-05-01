@@ -75,6 +75,7 @@ void Sensor::process()
 	boost::dynamic_bitset<> encodedStream;
 	boost::dynamic_bitset<> winningEncodedStream;
 
+
 	// To combine encoded blocks, current is dependent on the previous.
 	// Specifically need the last byte
 	boost::dynamic_bitset<> previousEncodedStream;
@@ -135,7 +136,7 @@ void Sensor::process()
 
 	//totalSamples = 320; // Debugging
 
-	for (blockIndex = 0; blockIndex < totalSamples; blockIndex += 32)
+	for(blockIndex = 0; blockIndex < totalSamples; blockIndex += 32)
 	{
 
 		size_t encodedSize(0);
@@ -288,16 +289,15 @@ void Sensor::process()
 
 		static unsigned int lastWinningEncodedLength(0);
 
-		ulong byteCount(0);
-		int additionalBits(myEncodedBitCount % BitsPerByte);
-		byteCount = (myEncodedBitCount / BitsPerByte);
+//		ulong byteCount(0);
+//		int additionalBits(myEncodedBitCount % BitsPerByte);
+//		byteCount = (myEncodedBitCount / BitsPerByte);
 
 		//*************************************************************
 		size_t numBlocks(0);
 
 	    numBlocks = winningEncodedStream.num_blocks();
 
-//		cout << "num bits = " << winningEncodedStream.size() << endl;
 		vector<unsigned long> packedDataBlocks(numBlocks);
 
 		boost::to_block_range(winningEncodedStream, packedDataBlocks.begin());
@@ -307,129 +307,31 @@ void Sensor::process()
 		// Make a char array to manipulate
         unsigned char* packedData = reinterpret_cast<unsigned char*>(new char[(packedDataBlocks.size() + 1)* sizeof(unsigned long)]);
         memset(packedData, 0, (packedDataBlocks.size() + 1)* sizeof(unsigned long));
-        
+
+        unsigned long* packedData2 = new unsigned long[numBlocks];
+        memset(packedData2, 0, numBlocks * sizeof(unsigned long));
+        copy(packedDataBlocks.begin(), packedDataBlocks.end(), packedData2);
+
         // not certain why endian swap on each element is nessassary
-        for(int index=0; index<packedDataBlocks.size(); index++)
+        for(int index=0; index<numBlocks; index++)
         {
-           unsigned long temp = packedDataBlocks[index];
-           bigEndianVersusLittleEndian(temp);
-           packedDataBlocks[index] = temp;
-	    }
+        	bigEndianVersusLittleEndian(packedData2[index]);
+        	memcpy(&packedData[index*sizeof(unsigned long)], &packedData2[index], sizeof(unsigned long));
+        
+            unsigned long temp = packedDataBlocks[index];
+            bigEndianVersusLittleEndian(temp);
+            packedDataBlocks[index] = temp;
+        }
 
-        memcpy(packedData, &packedDataBlocks[0], (packedDataBlocks.size() * sizeof(unsigned long)));
-
-	    //:KLUDGE: This is very much a kludge to fix the data available
+        //:KLUDGE: This is very much a kludge to fix the data available
         size_t dataBitLength = (packedDataBlocks.size() * sizeof(unsigned long) + 3) *  BitsPerByte; // Extra 3 bytes is to allow for shifting
 	    adjustPackeDataPosition(packedData, dataBitLength);
 
-	    //Packet size adjustment
-	    float actualPacketBytes = ceil((encodedSize + partialBits +
-	    		                   additionalBits +
-	    		                   CodeOptionBitFieldFundamentalOrNoComp)/float(BitsPerByte));
+    	mySource->sendEncodedPacket(packedData, myWinningEncodedLength);
 
-		if(!completeEncoding.empty())
-		{
-	       shiftRight(packedData, dataBitLength, partialBits);
-
-           unsigned char firstElement = packedData[0];
-
-           currentEncodedSize += mySource->getEncodedDataSizes()[blockIndex/32 - 1];
-
-           int elementLocation = (currentEncodedSize / BitsPerByte);
-
-           if(currentEncodedSize % BitsPerByte)
-           {
-			   unsigned char lastElement = completeEncoding[elementLocation];
-
-			   //cout << "firstElement=" << hex << int(firstElement) << ", lastElement=" << hex << int(lastElement) << dec << endl;
-
-			   size_t shiftBits = mySource->getEncodedDataSizes()[blockIndex/32 - 1] % BitsPerByte;
-
-			   lastElement |= (firstElement);
-			   //cout << "Combined lastElement=" << hex << int(lastElement) << dec << " current completeEncoding size=" << completeEncoding.size() << endl;
-
-			   // We might be off by one in size, if so, add a byte
-			   if(elementLocation == completeEncoding.size())
-			   {
-				   lastElement = 0;
-				   lastElement |= (firstElement);
-
-				   completeEncoding.push_back(lastElement);
-			   }
-
-			   completeEncoding[elementLocation] = lastElement;
-
-			   //int packetSize = (winningEncodedStream.size()/BitsPerByte) - 1;
-			   int packetSize = (winningEncodedStream.size()/BitsPerByte);
-//			   cout << "packetSize=" << packetSize << endl;
-			   if(winningEncodedStream.size()%BitsPerByte)
-			   {
-//				   cout << " Remainder = " << (winningEncodedStream.size()%BitsPerByte) << " ... extra=" << additionalBits << endl;
-				   packetSize++;
-			   }
-
-			   //***************************************************************
-               // Add all of the remaining bytes
-			   int packetStart = completeEncoding[completeEncoding.size()-1];
-			   //packetSize = actualPacketBytes; // Try
-			   //***************************************************************
-//               if(count >= 4519)
-//               {
-//        	       cout << count << " Before completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
-//               }
-//
-			   completeEncoding.insert(completeEncoding.end(), &packedData[1],  &packedData[1]+packetSize-1);
-//
-//			   if(count >= 4519)
-//               {
-//        	       cout << count << " After completeEncoding==>" << hex << int(completeEncoding[packetStart-1]) << " " << int(completeEncoding[packetStart]) << " ... " << int(completeEncoding[completeEncoding.size()-3]) << " " << int(completeEncoding[completeEncoding.size()-2]) << " " << int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
-//               }
-
-           }
-           else
-           {
-               // Add all of the bytes
-               completeEncoding.insert(completeEncoding.end(), &packedData[0],  &packedData[0]+(winningEncodedStream.size()/BitsPerByte));
-           }
-
-
-		   delete []packedData;
-		}
-        else
-        {
-            completeEncoding.insert(completeEncoding.end(), &packedData[0],  &packedData[0]+(winningEncodedStream.size()/BitsPerByte));
-        }
-
-		//cout << "Complete Encoding==>" << hex << int(completeEncoding[0]) << " " <<  int(completeEncoding[1]) << " ... " <<  int(completeEncoding[completeEncoding.size()-1]) << dec << endl;
-
-		//*************************************************
-		int packetBitLength = encodedSize;
-		int byte;
-		int bit;
-		RiceAlgorithm::CodingSelection currentSelection;
-		getExpectedNextPacketPosition(&completeEncoding[0], packetBitLength, byte, bit, count);
-        //*************************************************
-
-		//**************************************************************
-
-		sendEncodedSamples(winningEncodedStream, encodedSize);
-
-		#ifdef DEBUG
-            if(((count >= LowerRange1) && (count <= UpperRange1)) ||
-               ((count >= LowerRange2) && (count <= UpperRange2)))
-                    cout << " Byte Index=" << byteCount << " additionalBits=" << additionalBits << "...";
-		#endif
-
-		previousEncodedStream = winningEncodedStream;
 
 		t3_intermediate = getTimestamp();
-
-		lastWinningEncodedLength = winningEncodedStream.size();
-
 	}
-
-	ulong numberOfBlocks = completeEncoding.size();
-    mySource->writeEncodedData(&completeEncoding[0], numberOfBlocks);
 
 	timestamp_t t3 = getTimestamp();
 
@@ -592,27 +494,14 @@ void Sensor::sendEncodedSamples(boost::dynamic_bitset<> &encodedStream, unsigned
 
     ulong totalBitCount(0);
 
-    //cout << "****previousSize=" << previousSize << " encodedLength=" << encodedLength << endl;
-    //totalBitCount = writeCompressedData(convertedStream, previousSize, true);
     totalBitCount = writeCompressedData(convertedStream, encodedLength, true);
 
-
-	#ifdef DEBUG
-	//*****************************************************
-	//	static int debugCount(0);
-	//	if(debugCount >=3)
-	//	{
-	//	   myEncodedStream.close(); // temporary test
-	//	   exit(0);
-	//	}
-	//	debugCount++;
-	//*****************************************************
-	#endif
 }
 
 ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedData, size_t bitSize,
 		bool flag)
 {
+
 	// Capture the bit sizes, except for header
 	static ulong blockCount(0);
 
@@ -699,14 +588,6 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 		mySource->sendEncodedData(reinterpret_cast<unsigned char*>(&*it));
 
 
-		// if this is the last byte, capture it for consolidation
-		// with next packet byte
-//		if (numberOfBytes == 1)
-//		{
-//			getLastByte(&lastByte);
-//			break;
-//		}
-
 		// if we've written the targeted number of bytes
 		// return
 		numberOfBytes--;
@@ -715,8 +596,6 @@ ulong Sensor::writeCompressedData(boost::dynamic_bitset<unsigned char> &packedDa
 			break;
 		}
 	}
-
-
 
 	totalBitCount += bitSize;
 
