@@ -97,7 +97,6 @@ ushort* Predictor::getResiduals(ushort* samples)
                     error = 2 * (matrixBsqIndex(mySamples, x, y, z)) - predictedSample;
                     updateWeights(x, y, z, error);
                 }
-
             }
         }
     }

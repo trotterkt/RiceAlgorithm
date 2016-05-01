@@ -36,7 +36,7 @@ GroundSystem::~GroundSystem()
     }
 }
 
-void GroundSystem::process()
+void GroundSystem::process(ushort* referenceResiduals)
 {
 
 	// This begins the decoding
@@ -61,6 +61,7 @@ void GroundSystem::process()
 	ulong count(0);
 
 	SplitSequence decodedSequence(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
+	AdaptiveEntropyEncoder decodedNocomp(myHeader.xDimension * myHeader.yDimension * myHeader.zDimension);
 
 	//:TODO: It is possible this might better belong in an object that reverses the prediction
     ushort* residualsPtr = reinterpret_cast<ushort*>(new ushort[myHeader.xDimension * myHeader.yDimension * myHeader.zDimension]);
@@ -239,6 +240,14 @@ void GroundSystem::process()
 
 				decodedSequence.decode(selection, splitValue, encodedDataAnotherCopy, blockIndex, residualsPtr);
 
+				for(int index=0; index<32; index++)
+				{
+					if(referenceResiduals[blockIndex*32 + index] != residualsPtr[blockIndex*32 + index])
+					{
+						cout << "Mismatch residual value at Block:" << blockIndex << " Index:" << index << endl;
+					}
+				}
+
 				// Total encoded length will be the current bit count, plus 32 x k-split
 				encodedLength += (32 * (selection-1));
 
@@ -253,14 +262,24 @@ void GroundSystem::process()
 
 
 			case RiceAlgorithm::NoCompressionOpt:
+
+				decodedNocomp.decode(selection, splitValue, encodedDataAnotherCopy, blockIndex, residualsPtr);
+
+				for(int index=0; index<32; index++)
+				{
+					if(referenceResiduals[blockIndex*32 + index] != residualsPtr[blockIndex*32 + index])
+					{
+						cout << "Mismatch residual value at Block:" << blockIndex << " Index:" << index << endl;
+					}
+				}
+
 				encodedLength = (32 * sizeof(ushort));
 				encodedLength *= BitsPerByte;
 				encodedLength += CodeOptionBitFieldFundamentalOrNoComp;
 
-				memcpy(&residualsPtr[blockIndex*32], encodedDataAnotherCopy, sizeof(ushort)*32);
+				//memcpy(&residualsPtr[blockIndex*32], encodedDataAnotherCopy, sizeof(ushort)*32);
 
 				break;
-
 
 		}
 

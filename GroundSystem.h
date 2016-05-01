@@ -21,7 +21,7 @@ class GroundSystem
 		GroundSystem(ImagePersistence* image);
 		virtual ~GroundSystem();
 
-		void process();
+		void process(ushort* referenceResiduals = 0);
 
 		// For validation
 		ushort* getSamples(){ return myRawSamples; }

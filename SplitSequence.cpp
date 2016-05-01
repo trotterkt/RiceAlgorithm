@@ -209,41 +209,7 @@ void SplitSequence::decode(CodingSelection selection, ushort* splitValue, unsign
 		preprocessedStream[index + blockIndex*32] = ((splitValue[index]-1) << (selection - 1)) |  value;
 
 
-
-        #ifdef DEBUG
-        //*******************************************
-        if(blockIndex == 16)
-        {
-            //cout << "problem encoding-1 (" << (index+1) << ")==>";
-
-            for(int countIndex=0; countIndex < 64; countIndex++)
-            {
-                //cout << hex << int(encodedDataCopy[countIndex]) << " ";
-            }
-            //cout << dec << endl;
-        }
-        //*******************************************
-        #endif
-
-
 		shiftLeft(encodedDataCopy, bufferSize, (selection - 1));
-
-
-		#ifdef DEBUG
-		//*******************************************
-		if(blockIndex == 16)
-		{
-			//cout << "problem encoding-2 (" << (index+1) << ")==>";
-
-			for(int countIndex=0; countIndex < 64; countIndex++)
-			{
-				//cout << hex << int(encodedDataCopy[countIndex]) << " ";
-			}
-			//cout << dec << endl;
-		}
-		//*******************************************
-		#endif
-
 	}
 
 }

@@ -60,7 +60,14 @@ int main(int argc, char *argv[])
 
 
     // Kick off the associated decompression
-    landsat.getGround()->process();
+	#ifdef DEBUG
+    	ushort* sensorResidualCompare(0);
+    	sensorResidualCompare = landsat.getResiduals();
+        landsat.getGround()->process(sensorResidualCompare);
+	#else
+    	landsat.getGround()->process();
+	#endif
+
 
     // Write out the decoded data. This is outside of the decompression processing
     image.writeDecodedData();
@@ -98,7 +105,7 @@ int main(int argc, char *argv[])
             {
                 int index = (Rows*((z)*Columns + (y)) + (x));
 
-                if(index >= 0 && index <= 1090)
+                if(index >= 0 && index <= 6291456)
                 {
                     ushort inSample = matrixBsqIndexCheck(landsat.getSamples(), x, y, z);
                     ushort outSample = matrixBsqIndexCheck(image.getDecodedData(), x, y, z);
