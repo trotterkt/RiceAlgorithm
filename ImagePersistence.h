@@ -71,6 +71,14 @@ class ImagePersistence
                                                                     myEncodedBytesWritten++;
                                                                  }
 
+        virtual void sendEncodedPacket(unsigned char* encodedData, unsigned int encodedLength) {
+        																							myAlternateEncodedData.push_back(encodedData);
+        																							myEncodedSizes[myAlternateEncodedData.size()-1] = encodedLength;
+                                                                   	   	   	   	   	   	   	   }
+
+        unsigned char* getEncodedPacket(long blockIndex) { return myAlternateEncodedData[blockIndex]; }
+
+
         virtual void sendDecodedData(char* decodedData, const long long imageSize) {
                                                                                        memcpy(myDecodedData, decodedData, imageSize);
                                                                                        myDecodedBytesToWrite = imageSize;
@@ -79,21 +87,10 @@ class ImagePersistence
         ushort* getDecodedData() { return reinterpret_cast<ushort*>(myDecodedData); }
 
         unsigned char getLastByte() {
-//        								const ulong HeaderLength(19u);
-//        								unsigned char empty;
-//
-//        								if(myEncodedBytesWritten <= HeaderLength)
-//        								{
-//        									return empty;
-//        								}
-//        								else
-//        								{
         									return myEncodedData[myEncodedBytesWritten-1];
-//        								}
-//    									return empty;
         							}
 
-        void setNextInsertionByte(unsigned long long byteIndex) { myEncodedBytesWritten = byteIndex; }
+        void setNextInsertionByte(long byteIndex) { myEncodedBytesWritten = byteIndex; }
 
         unsigned long long getBytesWritten() { return myEncodedBytesWritten; }
 
@@ -101,11 +98,10 @@ class ImagePersistence
         void setEncodedBitLocation(ulong index, ulong bitPosition) { myEncodedBitPosition[index] = bitPosition; }
 
         void writeEncodedData(unsigned char* encodedData, ulong numberOfBytes)
-         {
-         	//memcpy(&myEncodedData[myEncodedBytesWritten], encodedData, numberOfBytes);
+        {
          	memcpy(&myEncodedData[19], encodedData, numberOfBytes);
-         	//myEncodedBytesWritten += numberOfBytes;
-         }
+        }
+
 
     protected:
 
@@ -126,6 +122,12 @@ class ImagePersistence
 
         ushort* myEncodedSizes;
         ulong* myEncodedBitPosition;
+
+    	// Try this
+    	//***************************************************
+    	std::vector<unsigned char*> myAlternateEncodedData;
+    	//***************************************************
+
 };
 
 } /* namespace RiceAlgorithm */
