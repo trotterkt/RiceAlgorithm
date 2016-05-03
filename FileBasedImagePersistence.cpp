@@ -9,7 +9,9 @@
  */
 
 #include <FileBasedImagePersistence.h>
+#include <AdaptiveEntropyEncoder.h>
 #include <stdlib.h>
+#include <ShiftFunctions.h>
 
 using namespace std;
 
@@ -58,7 +60,13 @@ FileBasedImagePersistence::~FileBasedImagePersistence()
 
 void FileBasedImagePersistence::writeEncodedData()
 {
-    myEncodedStream.write(reinterpret_cast<char*>(myEncodedData), myEncodedBytesWritten);
+    // myEncoded data happens to currently have the header. Just write this
+    // part. The remainder will be written by stitchEncoded()
+    const int HeaderSize(19);
+    myEncodedStream.write(reinterpret_cast<char*>(myEncodedData), HeaderSize);
+
+    stitchEncoded();
+
 }
 
 void FileBasedImagePersistence::readEncodedData(size_t bytesToRead)
@@ -111,6 +119,70 @@ void FileBasedImagePersistence::setSamples(uint scanNumber)
 
 
     myCurrentScanNumber = scanNumber;
+}
+
+void FileBasedImagePersistence::stitchEncoded()
+{
+    vector<unsigned int> shiftRightList;
+    vector<unsigned char> mergedLastFirstByteList;
+
+    const int NumberOfEncodedBlocks((myXDimension * myYDimension * myZDimension)/32);
+
+    int shiftRightValue(0);
+    unsigned long totalEncodedLength(0);
+
+    // gather the offsets between sequential blocks
+    for(int index=0; index<NumberOfEncodedBlocks; index++)
+    {
+        totalEncodedLength += myEncodedSizes[index];
+
+        // populate an array for the shift right values
+        shiftRightValue =  totalEncodedLength % BitsPerByte;
+        shiftRightList.push_back(shiftRightValue);
+
+
+        // create these except for the last block
+        if(index != (NumberOfEncodedBlocks-1))
+        {
+            unsigned char lastByte = (myEncodedDataList[index])[myEncodedSizes[index]/BitsPerByte];
+            unsigned char firstByte = (myEncodedDataList[index+1])[0];
+
+            if(shiftRightValue)
+            {
+                mergedLastFirstByteList.push_back(lastByte | (firstByte >> shiftRightValue));
+            }
+            else
+            {
+                mergedLastFirstByteList.push_back(lastByte);
+            }
+        }
+
+    }
+
+    // write the merged encoded blocks
+    for(int index=0; index<NumberOfEncodedBlocks; index++)
+    {
+        const int EncodedBufferSize(sizeof(ushort)*32 + CodeOptionBitFieldFundamentalOrNoComp);
+        char encodedBuffer[EncodedBufferSize] = {0};
+        memcpy(encodedBuffer, myEncodedDataList[index], EncodedBufferSize);
+
+        int encodedByteLength = myEncodedSizes[index]/BitsPerByte;
+
+        if(index != 0 && shiftRightList[index-1])
+        {
+            shiftRight(reinterpret_cast<unsigned char*>(encodedBuffer), EncodedBufferSize, shiftRightList[index-1]);
+            // first everything, but the first and last bytes
+            myEncodedStream.write(reinterpret_cast<char*>(&encodedBuffer[1]), encodedByteLength-1);
+        }
+        else
+        {
+            // first everything, but the first and last bytes
+            myEncodedStream.write(reinterpret_cast<char*>(encodedBuffer), encodedByteLength);
+        }
+        
+        // then the merged byte
+        myEncodedStream.put(mergedLastFirstByteList[index]);
+    }
 }
 
 } /* namespace RiceAlgorithm */

@@ -53,6 +53,13 @@ class FileBasedImagePersistence: public ImagePersistence
 
 
         std::ofstream myDecodedStream;
+
+        // Stitch together the separate encoded blocks for final
+        // output to compressed file. Since application primarily
+        // will work with the separate encoded blocks, this is
+        // mainly for verification. File I/O times are not included
+        // in the performance parameters.
+        void stitchEncoded();
 };
 
 } /* namespace RiceAlgorithm */
