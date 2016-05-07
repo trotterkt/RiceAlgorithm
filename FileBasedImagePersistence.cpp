@@ -22,11 +22,15 @@ using namespace std;
 namespace RiceAlgorithm
 {
 
-FileBasedImagePersistence::FileBasedImagePersistence(char* filename, unsigned int x, unsigned int y, unsigned int z) :
+FileBasedImagePersistence::FileBasedImagePersistence(const char* baseFilename, unsigned int x, unsigned int y, unsigned int z) :
         ImagePersistence(x, y, z)
 {
+    cout << "\n\nCompressing " << baseFilename << ".raw...\n" << endl;
+    cout << "to " << baseFilename << ".comp" << endl;
+    cout << "Round trip decoded image file to " << baseFilename << ".raw_decoded\n\n" << endl;
+
     // Filename ignores extension :TODO: will need to isolate persistence later
-    myBaseFileStream << filename;
+    myBaseFileStream << baseFilename;
 
     mySampleStream.open((myBaseFileStream.str() + ".raw").c_str(), ios::in | ios::binary);
 

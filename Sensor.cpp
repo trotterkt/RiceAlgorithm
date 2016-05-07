@@ -80,12 +80,14 @@ void Sensor::process()
 	// Specifically need the last byte
 	boost::dynamic_bitset<> previousEncodedStream;
 
-	timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
+	//timestamp_t t0_intermediate, t1_intermediate, t2_intermediate, t3_intermediate;
 
 	timestamp_t t0 = getTimestamp();
 
 	// Should only need to get the residuals once for a given raw image set
 	ushort* residualsPtr = myPreprocessor.getResiduals(mySamples);
+
+	timestamp_t t1 = getTimestamp();
 
 	#ifdef DEBUG
     std::ofstream residualsStream;
@@ -108,10 +110,9 @@ void Sensor::process()
 	#endif
 
 
-	timestamp_t t1 = getTimestamp();
 
 	cout << "Prediction processing time ==> " << fixed << getSecondsDiff(t0, t1) << " seconds"
-			<< endl;
+		 << endl;
 
 	timestamp_t t2 = getTimestamp();
 
@@ -144,7 +145,7 @@ void Sensor::process()
 		// Reset for each capture of the winning length
 		myWinningEncodedLength = (unsigned int) -1;
 
-		t0_intermediate = getTimestamp();
+//		t0_intermediate = getTimestamp();
 
 		// Loop through each one of the possible encoders
 		for (std::vector<AdaptiveEntropyEncoder*>::iterator iteration = myEncoderList.begin();
@@ -173,7 +174,7 @@ void Sensor::process()
 
 		}
 
-		t1_intermediate = getTimestamp();
+//		t1_intermediate = getTimestamp();
 
         count++;
 
@@ -278,7 +279,7 @@ void Sensor::process()
         //myEncodedBitCount += (myWinningEncodedLength + CodeOptionBitFieldFundamentalOrNoComp);
         myEncodedBitCount += myWinningEncodedLength;
 
-		t2_intermediate = getTimestamp();
+//		t2_intermediate = getTimestamp();
 
 		static unsigned int lastWinningEncodedLength(0);
 
@@ -323,22 +324,22 @@ void Sensor::process()
     	mySource->sendEncodedPacket(packedData, myWinningEncodedLength);
 
 
-		t3_intermediate = getTimestamp();
+//		t3_intermediate = getTimestamp();
 	}
 
 	timestamp_t t3 = getTimestamp();
 
 
-	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
-			<< "\n(intermediate t0-t1): " << fixed
-			<< getSecondsDiff(t0_intermediate, t1_intermediate) << " seconds"
-			<< "\n(intermediate t1-t2): " << fixed
-			<< getSecondsDiff(t1_intermediate, t2_intermediate) << " seconds"
-			<< "\n(intermediate t2-t3): " << fixed
-			<< getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
+//	cout << "\nRepresentative intermediate Encoding processing times ==> " << fixed
+//			<< "\n(intermediate t0-t1): " << fixed
+//			<< getSecondsDiff(t0_intermediate, t1_intermediate) << " seconds"
+//			<< "\n(intermediate t1-t2): " << fixed
+//			<< getSecondsDiff(t1_intermediate, t2_intermediate) << " seconds"
+//			<< "\n(intermediate t2-t3): " << fixed
+//			<< getSecondsDiff(t2_intermediate, t3_intermediate) << " seconds\n" << endl;
 
 	cout << "Encoding processing time ==> " << fixed << getSecondsDiff(t2, t3) << " seconds"
-			<< endl;
+		 << endl;
 }
 
 void Sensor::sendHeader()

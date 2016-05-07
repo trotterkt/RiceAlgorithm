@@ -25,7 +25,7 @@ namespace RiceAlgorithm
 class FileBasedImagePersistence: public ImagePersistence
 {
     public:
-        FileBasedImagePersistence(char* filename, unsigned int x=0, unsigned int y=0, unsigned int z=0);
+        FileBasedImagePersistence(const char* baseFilename, unsigned int x=0, unsigned int y=0, unsigned int z=0);
         virtual ~FileBasedImagePersistence();
 
         // The idea here is to write all encoded data at once to persistence
