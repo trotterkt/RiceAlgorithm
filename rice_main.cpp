@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     //******************************************************************************
     // Rice Decompression Processing
     //******************************************************************************
-    cout << "\n\nDecompressing Landsat_agriculture-u16be-6x1024x1024...\n" << endl;
+    cout << "\n\nDecompressing " << baseImageFilename.c_str() << "...\n" << endl;
 
     timestamp_t t2 = getTimestamp();
 
